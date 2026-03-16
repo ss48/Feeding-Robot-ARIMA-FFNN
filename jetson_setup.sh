@@ -74,8 +74,6 @@ sudo apt install -y \
     ros-humble-joint-trajectory-controller \
     ros-humble-ros2-control \
     ros-humble-ros2-controllers \
-    ros-humble-gazebo-ros2-control \
-    ros-humble-gazebo-ros-pkgs \
     python3-colcon-common-extensions \
     python3-rosdep
 
