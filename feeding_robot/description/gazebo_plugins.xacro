@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ==================== GAZEBO MATERIALS ==================== -->
+  <gazebo reference="base_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <gazebo reference="turntable_link">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <gazebo reference="shoulder_riser_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo reference="lower_arm_link">
+    <material>Gazebo/Red</material>
+  </gazebo>
+
+  <gazebo reference="upper_arm_link">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <gazebo reference="feeder_link">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <gazebo reference="camera_link">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+  <gazebo reference="ultrasonic_link">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <!-- ==================== CAMERA SENSOR ==================== -->
+  <!-- Raspberry Pi Camera Module V2.1: 8MP, FOV 62.2° x 48.8° -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="pi_camera">
+      <always_on>true</always_on>
+      <update_rate>30.0</update_rate>
+      <visualize>true</visualize>
+      <camera name="feeding_camera">
+        <horizontal_fov>1.0857</horizontal_fov>  <!-- 62.2 degrees -->
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>5.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>feeding_robot</namespace>
+          <remapping>image_raw:=camera/image_raw</remapping>
+          <remapping>camera_info:=camera/camera_info</remapping>
+        </ros>
+        <camera_name>pi_camera</camera_name>
+        <frame_name>camera_optical_frame</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ==================== ULTRASONIC SENSOR ==================== -->
+  <!-- HC-SR04: range 2cm - 400cm, beam angle ~15° -->
+  <gazebo reference="ultrasonic_link">
+    <sensor type="ray" name="ultrasonic_sensor">
+      <always_on>true</always_on>
+      <update_rate>20.0</update_rate>
+      <visualize>true</visualize>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.1309</min_angle>  <!-- -7.5 degrees -->
+            <max_angle>0.1309</max_angle>   <!-- +7.5 degrees -->
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.02</min>
+          <max>4.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin name="ultrasonic_controller" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <namespace>feeding_robot</namespace>
+          <remapping>~/out:=ultrasonic/range</remapping>
+        </ros>
+        <output_type>sensor_msgs/Range</output_type>
+        <frame_name>ultrasonic_link</frame_name>
+        <radiation_type>ultrasound</radiation_type>
+        <field_of_view>0.2618</field_of_view>  <!-- 15 degrees total -->
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ==================== GAZEBO ROS2_CONTROL PLUGIN ==================== -->
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find feeding_robot)/config/feeding_robot_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+</robot>

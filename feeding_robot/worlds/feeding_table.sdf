@@ -1,0 +1,214 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="feeding_world">
+
+    <!-- Physics -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Plugins -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Lighting -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground Plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Feeding Table -->
+    <model name="feeding_table">
+      <static>true</static>
+      <pose>0.35 0 0 0 0 0</pose>
+
+      <!-- Table top -->
+      <link name="table_top">
+        <pose>0 0 0.74 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.8 0.6 0.03</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.8 0.6 0.03</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.4 0.2 1</ambient>
+            <diffuse>0.6 0.4 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Table legs -->
+      <link name="leg1">
+        <pose>-0.35 -0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="leg2">
+        <pose>0.35 -0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="leg3">
+        <pose>-0.35 0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="leg4">
+        <pose>0.35 0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- Fixed joints for legs -->
+      <joint name="leg1_joint" type="fixed"><parent>table_top</parent><child>leg1</child></joint>
+      <joint name="leg2_joint" type="fixed"><parent>table_top</parent><child>leg2</child></joint>
+      <joint name="leg3_joint" type="fixed"><parent>table_top</parent><child>leg3</child></joint>
+      <joint name="leg4_joint" type="fixed"><parent>table_top</parent><child>leg4</child></joint>
+    </model>
+
+    <!-- Plate on table -->
+    <model name="plate">
+      <static>true</static>
+      <pose>0.35 0 0.77 0 0 0</pose>
+      <link name="plate_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.12</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.12</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Apple (food item on plate) -->
+    <model name="apple">
+      <static>true</static>
+      <pose>0.35 0.03 0.81 0 0 0</pose>
+      <link name="apple_link">
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.035</radius></sphere>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <sphere><radius>0.035</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.8 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Strawberry (food item on plate) -->
+    <model name="strawberry">
+      <static>true</static>
+      <pose>0.32 -0.04 0.80 0 0 0</pose>
+      <link name="strawberry_link">
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.015</radius></sphere>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <sphere><radius>0.015</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>0.9 0.15 0.15 1</ambient>
+            <diffuse>0.9 0.15 0.15 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

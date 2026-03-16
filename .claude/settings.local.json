@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'c:\\\\Users\\\\shabn\\\\OneDrive - Anglia Ruskin University\\\\FeederProject\\\\Feeding_Robot_New' -type f -name *)",
+      "Bash(grep -E \"\\\\.\\(py|cpp|h|java|cs|sh|bat|launch|urdf|yaml|json|xml|config\\)$\")"
+    ]
+  }
+}

@@ -1,0 +1,368 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ============================================================ -->
+  <!-- Adaptive Feeding Robot - 4 DOF Open Manipulator               -->
+  <!-- Based on: Sadeghi Esfahlani et al. (2025)                    -->
+  <!-- Joints: Base Y, Lower Z, Upper Z, Feeder                     -->
+  <!-- Actuators: 4x Dynamixel XM430-W350R                          -->
+  <!-- ============================================================ -->
+
+  <!-- ==================== PARAMETERS ==================== -->
+
+  <!-- Dimensions (metres) - from paper Figure 2 -->
+  <xacro:property name="base_height" value="0.070"/>
+  <xacro:property name="base_radius" value="0.060"/>
+
+  <xacro:property name="turntable_height" value="0.050"/>
+  <xacro:property name="turntable_radius" value="0.045"/>
+
+  <!-- Shoulder height from base top to lower_z_joint axis -->
+  <xacro:property name="shoulder_height" value="0.16370"/>
+
+  <xacro:property name="lower_arm_length" value="0.20789"/>
+  <xacro:property name="lower_arm_radius" value="0.025"/>
+
+  <xacro:property name="upper_arm_length" value="0.20789"/>
+  <xacro:property name="upper_arm_radius" value="0.022"/>
+
+  <xacro:property name="feeder_length" value="0.15965"/>
+  <xacro:property name="feeder_radius" value="0.018"/>
+
+  <!-- Motor housing dimensions (Dynamixel XM430) -->
+  <xacro:property name="motor_width" value="0.0286"/>
+  <xacro:property name="motor_height" value="0.0466"/>
+  <xacro:property name="motor_depth" value="0.034"/>
+
+  <!-- Joint limits (radians) - from paper Figure 2 -->
+  <!-- Base Y:   -175 to +175 deg -->
+  <!-- Lower Z:  -90 to +90 deg   -->
+  <!-- Upper Z:  -120 to +75 deg  -->
+  <!-- Feeder:   -90 to +115 deg  -->
+
+  <!-- XM430-W350R specs -->
+  <xacro:property name="max_velocity" value="4.8172"/>   <!-- ~46 RPM -->
+  <xacro:property name="max_effort" value="4.1"/>         <!-- Nm stall torque -->
+
+  <!-- Use mesh files if available, otherwise use primitives -->
+  <xacro:arg name="use_meshes" default="false"/>
+  <xacro:property name="use_meshes" value="$(arg use_meshes)"/>
+
+  <!-- ==================== WORLD LINK ==================== -->
+  <link name="world"/>
+
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== BASE LINK ==================== -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_height}"/>
+      </geometry>
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_height}"/>
+      </geometry>
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.8"/>
+      <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+               iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== BASE Y JOINT (Yaw) ==================== -->
+  <!-- Rotates the entire arm around the vertical axis -->
+  <joint name="base_y_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="turntable_link"/>
+    <origin xyz="0 0 ${base_height}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-175.0 * pi / 180.0}" upper="${175.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.5" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== TURNTABLE LINK ==================== -->
+  <link name="turntable_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${turntable_radius}" length="${turntable_height}"/>
+      </geometry>
+      <origin xyz="0 0 ${turntable_height/2}" rpy="0 0 0"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${turntable_radius}" length="${turntable_height}"/>
+      </geometry>
+      <origin xyz="0 0 ${turntable_height/2}" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 ${turntable_height/2}" rpy="0 0 0"/>
+      <inertia ixx="0.0005" ixy="0.0" ixz="0.0"
+               iyy="0.0005" iyz="0.0" izz="0.0003"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== SHOULDER RISER ==================== -->
+  <!-- Vertical column from turntable to shoulder joint -->
+  <link name="shoulder_riser_link">
+    <visual>
+      <geometry>
+        <box size="0.04 0.04 ${shoulder_height}"/>
+      </geometry>
+      <origin xyz="0 0 ${shoulder_height/2}" rpy="0 0 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.04 0.04 ${shoulder_height}"/>
+      </geometry>
+      <origin xyz="0 0 ${shoulder_height/2}" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.35"/>
+      <origin xyz="0 0 ${shoulder_height/2}" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+               iyy="0.001" iyz="0.0" izz="0.0002"/>
+    </inertial>
+  </link>
+
+  <joint name="turntable_to_shoulder_riser" type="fixed">
+    <parent link="turntable_link"/>
+    <child link="shoulder_riser_link"/>
+    <origin xyz="0 0 ${turntable_height}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== LOWER Z JOINT (Shoulder Pitch) ==================== -->
+  <!-- Rotates the lower arm up/down -->
+  <joint name="lower_z_joint" type="revolute">
+    <parent link="shoulder_riser_link"/>
+    <child link="lower_arm_link"/>
+    <origin xyz="0 0 ${shoulder_height}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-90.0 * pi / 180.0}" upper="${90.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.5" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== LOWER ARM LINK ==================== -->
+  <link name="lower_arm_link">
+    <!-- Motor housing at joint -->
+    <visual name="lower_motor">
+      <geometry>
+        <box size="${motor_width} ${motor_depth} ${motor_height}"/>
+      </geometry>
+      <origin xyz="0 0 ${motor_height/2}" rpy="0 0 0"/>
+      <material name="black"/>
+    </visual>
+    <!-- Arm segment -->
+    <visual name="lower_arm">
+      <geometry>
+        <cylinder radius="${lower_arm_radius}" length="${lower_arm_length}"/>
+      </geometry>
+      <origin xyz="${lower_arm_length/2 + motor_width/2} 0 0" rpy="0 ${pi/2} 0"/>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${lower_arm_length + motor_width} ${motor_depth} ${motor_height}"/>
+      </geometry>
+      <origin xyz="${lower_arm_length/2} 0 0" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.4"/>
+      <origin xyz="${lower_arm_length/2} 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0003" ixy="0.0" ixz="0.0"
+               iyy="0.002" iyz="0.0" izz="0.002"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== UPPER Z JOINT (Elbow Pitch) ==================== -->
+  <joint name="upper_z_joint" type="revolute">
+    <parent link="lower_arm_link"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="${lower_arm_length + motor_width/2} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-120.0 * pi / 180.0}" upper="${75.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.3" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== UPPER ARM LINK ==================== -->
+  <link name="upper_arm_link">
+    <!-- Motor housing at joint -->
+    <visual name="upper_motor">
+      <geometry>
+        <box size="${motor_width} ${motor_depth} ${motor_height}"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="black"/>
+    </visual>
+    <!-- Arm segment -->
+    <visual name="upper_arm">
+      <geometry>
+        <cylinder radius="${upper_arm_radius}" length="${upper_arm_length}"/>
+      </geometry>
+      <origin xyz="${upper_arm_length/2 + motor_width/2} 0 0" rpy="0 ${pi/2} 0"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${upper_arm_length + motor_width} ${motor_depth} ${motor_height}"/>
+      </geometry>
+      <origin xyz="${upper_arm_length/2} 0 0" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.35"/>
+      <origin xyz="${upper_arm_length/2} 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0002" ixy="0.0" ixz="0.0"
+               iyy="0.0015" iyz="0.0" izz="0.0015"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== FEEDER JOINT (Wrist Pitch) ==================== -->
+  <joint name="feeder_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="feeder_link"/>
+    <origin xyz="${upper_arm_length + motor_width/2} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-90.0 * pi / 180.0}" upper="${115.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.2" friction="0.05"/>
+  </joint>
+
+  <!-- ==================== FEEDER LINK (End Effector) ==================== -->
+  <link name="feeder_link">
+    <!-- Motor housing -->
+    <visual name="feeder_motor">
+      <geometry>
+        <box size="${motor_width} ${motor_depth} ${motor_height}"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="black"/>
+    </visual>
+    <!-- Fork/spoon shaft -->
+    <visual name="feeder_shaft">
+      <geometry>
+        <cylinder radius="${feeder_radius}" length="${feeder_length}"/>
+      </geometry>
+      <origin xyz="${feeder_length/2 + motor_width/2} 0 0" rpy="0 ${pi/2} 0"/>
+      <material name="orange"/>
+    </visual>
+    <!-- Fork tines / spoon head -->
+    <visual name="feeder_head">
+      <geometry>
+        <box size="0.04 0.03 0.005"/>
+      </geometry>
+      <origin xyz="${feeder_length + motor_width/2 + 0.02} 0 0" rpy="0 0 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${feeder_length + 0.04} ${motor_depth} ${motor_height}"/>
+      </geometry>
+      <origin xyz="${feeder_length/2 + 0.02} 0 0" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.25"/>
+      <origin xyz="${feeder_length/2} 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+               iyy="0.0008" iyz="0.0" izz="0.0008"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== END EFFECTOR FRAME ==================== -->
+  <link name="spoon_tip_frame"/>
+
+  <joint name="feeder_to_spoon_tip" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="spoon_tip_frame"/>
+    <origin xyz="${feeder_length + motor_width/2 + 0.04} 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== CAMERA (Raspberry Pi Camera V2.1) ==================== -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.025 0.024 0.009"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.025 0.024 0.009"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.003"/>
+      <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+               iyy="0.000001" iyz="0.0" izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="camera_link"/>
+    <origin xyz="${motor_width/2 + 0.01} 0 ${motor_height/2 + 0.005}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_optical_frame"/>
+
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_frame"/>
+    <!-- Standard ROS camera optical frame convention: Z forward, X right, Y down -->
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <!-- ==================== ULTRASONIC SENSOR (HC-SR04) ==================== -->
+  <link name="ultrasonic_link">
+    <visual>
+      <geometry>
+        <box size="0.045 0.020 0.015"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.045 0.020 0.015"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.010"/>
+      <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+               iyy="0.000001" iyz="0.0" izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <joint name="ultrasonic_joint" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="ultrasonic_link"/>
+    <origin xyz="${motor_width/2 + 0.01} 0 ${-motor_height/2 - 0.01}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== LOAD CELL (HX711) ==================== -->
+  <!-- Conceptual frame at the fork tip for force sensing -->
+  <link name="load_cell_frame"/>
+
+  <joint name="load_cell_joint" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="load_cell_frame"/>
+    <origin xyz="${feeder_length + motor_width/2} 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
