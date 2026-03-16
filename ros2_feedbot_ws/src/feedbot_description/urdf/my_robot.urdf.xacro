@@ -742,7 +742,7 @@
 </ros2_control>
 
 <gazebo>
-  <plugin name="ign_ros2_control"
+  <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin"
           filename="libign_ros2_control-system.so">
     <parameters>$(find feedbot_description)/config/controllers.yaml</parameters>
   </plugin>

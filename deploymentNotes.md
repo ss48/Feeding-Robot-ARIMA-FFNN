@@ -13,7 +13,7 @@ Once pushed, SSH into your Jetson Orin and run:
 ```bash
 # 1. Clone and set up (one-time)
 git clone git@github.com:ss48/Feeding-Robot-ARIMA-FFNN.git ~/feeding_robot_ws
-or
+##or
 git clone https://github.com/ss48/Feeding-Robot-ARIMA-FFNN.git ~/feeding_robot_ws
 
 cd ~/feeding_robot_ws
@@ -132,3 +132,21 @@ Force  → [force_node]  → /spoon_force
 - Internet connection for initial setup
 - SSH key configured for GitHub access (`ssh-keygen` then add to GitHub)
 - For real hardware: Dynamixel servos powered, camera at `/dev/video0`, HX711 force sensor via Arduino
+
+The vision node is running now — the numpy/opencv fix worked.
+
+The ARIMA-FFNN still shows zeros, which is expected because no hardware is connected — there's no camera feed, no force sensor, and no joint states being published, so every node is receiving zero inputs.
+
+To get real data flowing, you need either:
+
+Real hardware (./run_feeding.sh real) — connect the camera, Dynamixel servos, and force sensor
+Gazebo simulation (./run_feeding.sh sim) — on a dev PC with a display and ros-humble-ros-gz installed
+The system is working correctly — it's just waiting for sensor data. Is the hardware connected to the Jetson, or are you trying to test without it first?
+
+
+sudo apt install -y ros-humble-ign-ros2-control
+
+
+sudo apt install -y ros-humble-gz-ros2-control
+
+dpkg -L ros-humble-gz-ros2-control | grep "\.so"
