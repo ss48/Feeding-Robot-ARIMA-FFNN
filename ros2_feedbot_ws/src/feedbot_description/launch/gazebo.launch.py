@@ -4,9 +4,9 @@ import xacro
 
 from launch import LaunchDescription
 from launch.actions import (
-    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
+    SetEnvironmentVariable,
     TimerAction,
 )
 from launch.event_handlers import OnProcessExit
@@ -37,20 +37,32 @@ def generate_launch_description():
         flags=re.DOTALL
     )
 
+    # Replace package:// URIs with absolute paths so Ignition can find meshes
+    robot_description_raw = robot_description_raw.replace(
+        "package://feedbot_description/",
+        pkg_share + "/"
+    )
+
     robot_description = ParameterValue(
         robot_description_raw,
         value_type=str
     )
 
-    # --------------------------------------------------
-    # Write URDF to a temp file for Gz Sim to read
-    # --------------------------------------------------
+    # Write URDF to a temp file for Ignition to read
     urdf_tmp = "/tmp/feedbot_description.urdf"
     with open(urdf_tmp, "w") as f:
         f.write(robot_description_raw)
 
     # --------------------------------------------------
-    # Gazebo (new Gz Sim via ros_gz_sim)
+    # Set resource path so Ignition can find meshes
+    # --------------------------------------------------
+    ign_resource_path = SetEnvironmentVariable(
+        name="IGN_GAZEBO_RESOURCE_PATH",
+        value=os.path.dirname(pkg_share),
+    )
+
+    # --------------------------------------------------
+    # Ignition Gazebo (Fortress, shipped with Humble)
     # --------------------------------------------------
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -74,7 +86,7 @@ def generate_launch_description():
     )
 
     # --------------------------------------------------
-    # Spawn Robot (pass URDF file directly to Gz Sim)
+    # Spawn Robot
     # --------------------------------------------------
     spawn_robot = Node(
         package="ros_gz_sim",
@@ -83,6 +95,16 @@ def generate_launch_description():
             "-name", "feedbot",
             "-file", urdf_tmp,
         ],
+        output="screen",
+    )
+
+    # --------------------------------------------------
+    # Bridge camera topic from Ignition to ROS 2
+    # --------------------------------------------------
+    gz_bridge = Node(
+        package="ros_gz_image",
+        executable="image_bridge",
+        arguments=["/camera/camera_sensor/image_raw"],
         output="screen",
     )
 
@@ -158,8 +180,10 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        ign_resource_path,
         gz_sim,
         robot_state_publisher,
         spawn_robot,
+        gz_bridge,
         spawn_controllers,
     ])

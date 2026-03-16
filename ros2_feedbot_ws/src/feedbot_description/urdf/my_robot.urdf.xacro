@@ -699,21 +699,13 @@
       </clip>
     </camera>
 
-    <plugin name="gz_ros_camera" filename="libgz_ros_camera.so">
-      <ros>
-        <namespace>/camera</namespace>
-      </ros>
-      <camera_name>camera</camera_name>
-      <frame_name>camera_optical_link</frame_name>
-    </plugin>
-
   </sensor>
 </gazebo>
 
   
 <ros2_control name="FeedbotSystem" type="system">
   <hardware>
-    <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    <plugin>ign_ros2_control/IgnitionSystem</plugin>
   </hardware>
 
 <joint name="joint1">
@@ -750,8 +742,8 @@
 </ros2_control>
 
 <gazebo>
-  <plugin name="gz_ros2_control"
-          filename="libgz_ros2_control-system.so">
+  <plugin name="ign_ros2_control"
+          filename="libign_ros2_control-system.so">
     <parameters>$(find feedbot_description)/config/controllers.yaml</parameters>
   </plugin>
 </gazebo>
