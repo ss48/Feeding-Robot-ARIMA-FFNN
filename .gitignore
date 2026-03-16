@@ -1,0 +1,30 @@
+# ROS 2 build artifacts
+ros2_feedbot_ws/build/
+ros2_feedbot_ws/install/
+ros2_feedbot_ws/log/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.csv
+
+# Temporary
+*.tmp
+*.bak
