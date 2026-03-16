@@ -5,11 +5,8 @@ import xacro
 from launch import LaunchDescription
 from launch.actions import (
     IncludeLaunchDescription,
-    RegisterEventHandler,
     SetEnvironmentVariable,
-    TimerAction,
 )
-from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch_ros.actions import Node
@@ -72,7 +69,7 @@ def generate_launch_description():
                 "gz_sim.launch.py"
             )
         ),
-        launch_arguments={"gz_args": "-r -s empty.sdf"}.items(),
+        launch_arguments={"gz_args": "-r empty.sdf"}.items(),
     )
 
     # --------------------------------------------------
@@ -108,76 +105,8 @@ def generate_launch_description():
         output="screen",
     )
 
-    # --------------------------------------------------
-    # Spawn Controllers AFTER robot spawn
-    # --------------------------------------------------
-    spawn_controllers = RegisterEventHandler(
-        OnProcessExit(
-            target_action=spawn_robot,
-            on_exit=[
-                TimerAction(
-                    period=3.0,
-                    actions=[
-
-                        Node(
-                            package="controller_manager",
-                            executable="spawner",
-                            arguments=[
-                                "joint_state_broadcaster",
-                                "--controller-manager",
-                                "/controller_manager"
-                            ],
-                            output="screen",
-                        ),
-
-                        Node(
-                            package="controller_manager",
-                            executable="spawner",
-                            arguments=[
-                                "joint1_controller",
-                                "--controller-manager",
-                                "/controller_manager"
-                            ],
-                            output="screen",
-                        ),
-
-                        Node(
-                            package="controller_manager",
-                            executable="spawner",
-                            arguments=[
-                                "joint2_controller",
-                                "--controller-manager",
-                                "/controller_manager"
-                            ],
-                            output="screen",
-                        ),
-
-                        Node(
-                            package="controller_manager",
-                            executable="spawner",
-                            arguments=[
-                                "joint3_controller",
-                                "--controller-manager",
-                                "/controller_manager"
-                            ],
-                            output="screen",
-                        ),
-
-                        Node(
-                            package="controller_manager",
-                            executable="spawner",
-                            arguments=[
-                                "joint4_controller",
-                                "--controller-manager",
-                                "/controller_manager"
-                            ],
-                            output="screen",
-                        ),
-                    ],
-                )
-            ],
-        )
-    )
+    # Controllers are auto-activated by the ign_ros2_control plugin
+    # via controllers.yaml — no need to spawn them manually.
 
     return LaunchDescription([
         ign_resource_path,
@@ -185,5 +114,4 @@ def generate_launch_description():
         robot_state_publisher,
         spawn_robot,
         gz_bridge,
-        spawn_controllers,
     ])
