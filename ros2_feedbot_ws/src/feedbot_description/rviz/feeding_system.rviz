@@ -28,7 +28,7 @@ Visualization Manager:
       Name: TF
       Show Arrows: true
       Show Axes: true
-      Show Names: true
+      Show Names: false
       Value: true
 
     - Class: rviz_default_plugins/Image
@@ -37,35 +37,6 @@ Visualization Manager:
         Value: /camera/camera_sensor/image_raw
         Reliability Policy: Best Effort
       Value: true
-
-    # --- Feeding System Algorithm Topics ---
-
-    - Class: rviz_common/Group
-      Name: Sensor Data
-      Displays:
-        - Class: rviz_default_plugins/MarkerArray
-          Name: Food Detection
-          Topic:
-            Value: /food_center
-          Value: true
-
-    - Class: rviz_common/Group
-      Name: ARIMA-FFNN Predictions
-      Displays:
-        - Class: rviz_default_plugins/Odometry
-          Name: Predicted State
-          Topic:
-            Value: /predicted_state
-          Value: true
-
-    - Class: rviz_common/Group
-      Name: Feeding State
-      Displays:
-        - Class: rviz_default_plugins/MarkerArray
-          Name: FSM State
-          Topic:
-            Value: /feeding_state
-          Value: true
 
   Global Options:
     Background Color: 48; 48; 48

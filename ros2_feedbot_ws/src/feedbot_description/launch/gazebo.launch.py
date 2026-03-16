@@ -34,21 +34,22 @@ def generate_launch_description():
         flags=re.DOTALL
     )
 
-    # Replace package:// URIs with absolute paths so Ignition can find meshes
-    robot_description_raw = robot_description_raw.replace(
-        "package://feedbot_description/",
-        pkg_share + "/"
-    )
-
-    robot_description = ParameterValue(
+    # RViz version: keep package:// URIs so RViz can resolve meshes
+    robot_description_rviz = ParameterValue(
         robot_description_raw,
         value_type=str
     )
 
-    # Write URDF to a temp file for Ignition to read
+    # Ignition version: replace package:// with absolute paths
+    robot_description_ign = robot_description_raw.replace(
+        "package://feedbot_description/",
+        pkg_share + "/"
+    )
+
+    # Write Ignition URDF to a temp file for spawning
     urdf_tmp = "/tmp/feedbot_description.urdf"
     with open(urdf_tmp, "w") as f:
-        f.write(robot_description_raw)
+        f.write(robot_description_ign)
 
     # --------------------------------------------------
     # Set resource path so Ignition can find meshes
@@ -78,7 +79,7 @@ def generate_launch_description():
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        parameters=[{"robot_description": robot_description}],
+        parameters=[{"robot_description": robot_description_rviz}],
         output="screen",
     )
 
