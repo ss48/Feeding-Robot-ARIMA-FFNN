@@ -3,9 +3,15 @@ import re
 import xacro
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler, TimerAction
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    RegisterEventHandler,
+    TimerAction,
+)
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -38,16 +44,17 @@ def generate_launch_description():
     )
 
     # --------------------------------------------------
-    # Gazebo
+    # Gazebo (new Gz Sim via ros_gz_sim)
     # --------------------------------------------------
-    gazebo = IncludeLaunchDescription(
+    gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory("gazebo_ros"),
+                get_package_share_directory("ros_gz_sim"),
                 "launch",
-                "gazebo.launch.py"
+                "gz_sim.launch.py"
             )
-        )
+        ),
+        launch_arguments={"gz_args": "-r empty.sdf"}.items(),
     )
 
     # --------------------------------------------------
@@ -64,10 +71,10 @@ def generate_launch_description():
     # Spawn Robot
     # --------------------------------------------------
     spawn_robot = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
+        package="ros_gz_sim",
+        executable="create",
         arguments=[
-            "-entity", "feedbot",
+            "-name", "feedbot",
             "-topic", "robot_description",
         ],
         output="screen",
@@ -145,9 +152,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        gazebo,
+        gz_sim,
         robot_state_publisher,
         spawn_robot,
         spawn_controllers,
     ])
-

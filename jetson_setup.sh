@@ -82,6 +82,7 @@ sudo apt install -y \
 # ---------------------------------------------------------------------------
 echo ""
 echo "[4/8] Installing Python dependencies..."
+sudo apt install -y python3-pip
 pip3 install --upgrade pip
 pip3 install numpy opencv-python trimesh
 
@@ -121,6 +122,9 @@ echo ""
 echo "[7/8] Building ROS 2 workspace..."
 source /opt/ros/humble/setup.bash
 cd "$REPO_DIR/ros2_feedbot_ws"
+
+# Clean stale build cache (may reference a different machine)
+rm -rf build/ install/ log/
 
 colcon build --symlink-install --parallel-workers $(nproc)
 

@@ -72,39 +72,25 @@ case "$MODE" in
 
     nodes)
         echo "Starting individual nodes (for debugging)..."
-        echo "  Launching in separate terminals..."
+        LOG_DIR="/tmp/feedbot_logs"
+        mkdir -p "$LOG_DIR"
 
-        gnome-terminal --title="Vision" -- bash -c \
-            "source /opt/ros/humble/setup.bash && \
-             source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash && \
-             ros2 run feedbot_fusion vision_node; exec bash"
+        NODES=(vision_node force_node fusion_node arima_ffnn fuzzy_controller feeding_fsm)
+        PIDS=()
 
-        gnome-terminal --title="Force" -- bash -c \
-            "source /opt/ros/humble/setup.bash && \
-             source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash && \
-             ros2 run feedbot_fusion force_node; exec bash"
+        for NODE in "${NODES[@]}"; do
+            echo "  Starting $NODE (log: $LOG_DIR/$NODE.log)"
+            ros2 run feedbot_fusion "$NODE" > "$LOG_DIR/$NODE.log" 2>&1 &
+            PIDS+=($!)
+        done
 
-        gnome-terminal --title="Fusion" -- bash -c \
-            "source /opt/ros/humble/setup.bash && \
-             source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash && \
-             ros2 run feedbot_fusion fusion_node; exec bash"
+        echo ""
+        echo "All nodes launched. PIDs: ${PIDS[*]}"
+        echo "Logs: $LOG_DIR/"
+        echo "Press Ctrl+C to stop all nodes."
 
-        gnome-terminal --title="ARIMA-FFNN" -- bash -c \
-            "source /opt/ros/humble/setup.bash && \
-             source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash && \
-             ros2 run feedbot_fusion arima_ffnn; exec bash"
-
-        gnome-terminal --title="Fuzzy" -- bash -c \
-            "source /opt/ros/humble/setup.bash && \
-             source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash && \
-             ros2 run feedbot_fusion fuzzy_controller; exec bash"
-
-        gnome-terminal --title="FSM" -- bash -c \
-            "source /opt/ros/humble/setup.bash && \
-             source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash && \
-             ros2 run feedbot_fusion feeding_fsm; exec bash"
-
-        echo "All nodes launched in separate terminals."
+        trap 'echo "Stopping all nodes..."; kill "${PIDS[@]}" 2>/dev/null; exit 0' INT TERM
+        wait
         ;;
 
     *)

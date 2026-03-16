@@ -13,6 +13,9 @@ Once pushed, SSH into your Jetson Orin and run:
 ```bash
 # 1. Clone and set up (one-time)
 git clone git@github.com:ss48/Feeding-Robot-ARIMA-FFNN.git ~/feeding_robot_ws
+or
+git clone https://github.com/ss48/Feeding-Robot-ARIMA-FFNN.git ~/feeding_robot_ws
+
 cd ~/feeding_robot_ws
 chmod +x jetson_setup.sh run_feeding.sh
 ./jetson_setup.sh
@@ -20,13 +23,10 @@ chmod +x jetson_setup.sh run_feeding.sh
 # 2. Run (after setup)
 source ~/.bashrc
 
-# Simulation mode (Gazebo)
-./run_feeding.sh sim
-
 # Real hardware mode (servos + camera + force sensor connected)
 ./run_feeding.sh real
 
-# Debug mode (each node in its own terminal)
+# Debug mode (each node as a background process, logs in /tmp/feedbot_logs/)
 ./run_feeding.sh nodes
 ```
 
@@ -45,11 +45,43 @@ source ~/.bashrc
 
 | Mode | Command | What it does |
 |------|---------|-------------|
-| `sim` | `./run_feeding.sh sim` | Launches Gazebo + all feeding nodes |
+| `sim` | `./run_feeding.sh sim` | Launches Gazebo + all feeding nodes (dev PC only, see below) |
 | `real` | `./run_feeding.sh real` | Launches feeding nodes only (hardware must be running) |
 | `predict` | `./run_feeding.sh predict` | ARIMA-FFNN node alone (testing) |
 | `fsm` | `./run_feeding.sh fsm` | Feeding FSM alone (testing) |
-| `nodes` | `./run_feeding.sh nodes` | Each node in a separate terminal (debugging) |
+| `nodes` | `./run_feeding.sh nodes` | Each node as a background process, logs in `/tmp/feedbot_logs/` |
+
+## Running Gazebo Simulation (Dev PC Only)
+
+Gazebo simulation requires a **desktop/laptop with a display** — it cannot run on the headless Jetson.
+
+### Prerequisites
+
+- Ubuntu 22.04 (native or WSL2 with GUI support)
+- ROS 2 Humble installed
+- New Gazebo (Gz) packages:
+
+```bash
+sudo apt install ros-humble-ros-gz ros-humble-gz-ros2-control
+```
+
+### Steps
+
+```bash
+# 1. Build the workspace
+cd ~/ros2_feedbot_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+
+# 2a. Launch Gazebo + robot only
+ros2 launch feedbot_description gazebo.launch.py
+
+# 2b. Or launch full system (Gazebo + all feeding nodes)
+./run_feeding.sh sim
+```
+
+This spawns the robot in Gazebo with joint controllers (joint1-4), and in `sim` mode also starts the feeding pipeline nodes after a 10s delay.
 
 ## ARIMA-FFNN Node Architecture
 
