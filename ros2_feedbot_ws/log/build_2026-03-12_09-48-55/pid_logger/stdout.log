@@ -1,0 +1,35 @@
+running egg_info
+creating ../../build/pid_logger/pid_logger.egg-info
+writing ../../build/pid_logger/pid_logger.egg-info/PKG-INFO
+writing dependency_links to ../../build/pid_logger/pid_logger.egg-info/dependency_links.txt
+writing entry points to ../../build/pid_logger/pid_logger.egg-info/entry_points.txt
+writing requirements to ../../build/pid_logger/pid_logger.egg-info/requires.txt
+writing top-level names to ../../build/pid_logger/pid_logger.egg-info/top_level.txt
+writing manifest file '../../build/pid_logger/pid_logger.egg-info/SOURCES.txt'
+reading manifest file '../../build/pid_logger/pid_logger.egg-info/SOURCES.txt'
+writing manifest file '../../build/pid_logger/pid_logger.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/dell/ros2_feedbot_ws/build/pid_logger/build
+creating /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib
+creating /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger
+copying pid_logger/pid_data_recorder.py -> /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger
+copying pid_logger/__init__.py -> /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger
+running install
+running install_lib
+creating /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger
+copying /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger/pid_data_recorder.py -> /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger
+copying /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger/__init__.py -> /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger
+byte-compiling /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger/pid_data_recorder.py to pid_data_recorder.cpython-310.pyc
+byte-compiling /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index
+creating /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index/resource_index
+creating /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index/resource_index/packages
+copying resource/pid_logger -> /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index/resource_index/packages
+copying package.xml -> /home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger
+running install_egg_info
+Copying ../../build/pid_logger/pid_logger.egg-info to /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger-0.0.0-py3.10.egg-info
+running install_scripts
+Installing pid_recorder script to /home/dell/ros2_feedbot_ws/install/pid_logger/lib/pid_logger
+writing list of installed files to '/home/dell/ros2_feedbot_ws/build/pid_logger/install.log'

@@ -1,0 +1,24 @@
+running egg_info
+writing ../../build/feedbot_fusion/feedbot_fusion.egg-info/PKG-INFO
+writing dependency_links to ../../build/feedbot_fusion/feedbot_fusion.egg-info/dependency_links.txt
+writing entry points to ../../build/feedbot_fusion/feedbot_fusion.egg-info/entry_points.txt
+writing requirements to ../../build/feedbot_fusion/feedbot_fusion.egg-info/requires.txt
+writing top-level names to ../../build/feedbot_fusion/feedbot_fusion.egg-info/top_level.txt
+reading manifest file '../../build/feedbot_fusion/feedbot_fusion.egg-info/SOURCES.txt'
+writing manifest file '../../build/feedbot_fusion/feedbot_fusion.egg-info/SOURCES.txt'
+running build
+running build_py
+copying feedbot_fusion/fusion_node.py -> /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+running install
+running install_lib
+copying /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion/fusion_node.py -> /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+byte-compiling /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion/fusion_node.py to fusion_node.cpython-310.pyc
+running install_egg_info
+removing '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/feedbot_fusion/feedbot_fusion.egg-info to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion-0.0.0-py3.10.egg-info
+running install_scripts
+Installing force_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+Installing fusion_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+Installing speed_controller script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+Installing vision_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+writing list of installed files to '/home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log'

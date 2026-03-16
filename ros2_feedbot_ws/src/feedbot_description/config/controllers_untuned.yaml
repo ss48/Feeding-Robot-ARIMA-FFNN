@@ -1,0 +1,67 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 300
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    joint1_controller:
+      type: pid_controller/PidController
+    joint2_controller:
+      type: pid_controller/PidController
+    joint3_controller:
+      type: pid_controller/PidController
+    joint4_controller:
+      type: pid_controller/PidController
+
+
+joint1_controller:
+  ros__parameters:
+    dof_names: ["joint1"]
+    command_interface: "effort"
+    reference_and_state_interfaces: ["position"]
+    gains:
+      joint1:
+        p: 10.0
+        i: 0.0
+        d: 2.0
+
+
+joint2_controller:
+  ros__parameters:
+    dof_names: ["joint2"]
+    command_interface: "effort"
+    reference_and_state_interfaces: ["position"]
+    gains:
+      joint2:
+        p: 15.0
+        i: 0.0
+        d: 3.0
+        i_clamp: 40.0
+
+
+
+
+joint3_controller:
+  ros__parameters:
+    dof_names: ["joint3"]
+    command_interface: "effort"
+    reference_and_state_interfaces: ["position"]
+    gains:
+      joint3:
+        p: 8.0
+        i: 0.0
+        d: 2.0
+
+
+joint4_controller:
+  ros__parameters:
+    dof_names: ["joint4"]
+    command_interface: "effort"
+    reference_and_state_interfaces: ["position"]
+    gains:
+      joint4:
+        p: 6.0
+        i: 0.0
+        d: 1.0
+

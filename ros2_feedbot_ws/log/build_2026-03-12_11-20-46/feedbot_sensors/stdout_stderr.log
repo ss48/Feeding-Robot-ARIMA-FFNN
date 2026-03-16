@@ -1,0 +1,19 @@
+running egg_info
+writing ../build/feedbot_sensors/feedbot_sensors.egg-info/PKG-INFO
+writing dependency_links to ../build/feedbot_sensors/feedbot_sensors.egg-info/dependency_links.txt
+writing entry points to ../build/feedbot_sensors/feedbot_sensors.egg-info/entry_points.txt
+writing requirements to ../build/feedbot_sensors/feedbot_sensors.egg-info/requires.txt
+writing top-level names to ../build/feedbot_sensors/feedbot_sensors.egg-info/top_level.txt
+reading manifest file '../build/feedbot_sensors/feedbot_sensors.egg-info/SOURCES.txt'
+writing manifest file '../build/feedbot_sensors/feedbot_sensors.egg-info/SOURCES.txt'
+running build
+running build_py
+running install
+running install_lib
+running install_data
+running install_egg_info
+removing '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages/feedbot_sensors-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../build/feedbot_sensors/feedbot_sensors.egg-info to /home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages/feedbot_sensors-0.0.0-py3.10.egg-info
+running install_scripts
+Installing sensor_hub script to /home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/feedbot_sensors
+writing list of installed files to '/home/dell/ros2_feedbot_ws/build/feedbot_sensors/install.log'

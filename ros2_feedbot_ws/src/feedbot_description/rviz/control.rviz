@@ -1,0 +1,12 @@
+Panels:
+  - Class: rviz_common/Displays
+  - Class: rviz_common/Selection
+  - Class: rviz_common/Tool Properties
+Visualization Manager:
+  Displays:
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Robot Description: robot_description
+    - Class: rviz_default_plugins/TF
+      Name: TF
+Fixed Frame: base

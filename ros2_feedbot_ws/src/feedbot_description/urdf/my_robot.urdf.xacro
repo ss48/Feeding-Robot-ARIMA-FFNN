@@ -1,0 +1,766 @@
+<?xml version="1.0"?>
+<robot name="feedbot"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Controller config path (ROS 2 safe) -->
+  <xacro:property name="controllers_file"
+                  value="$(find feedbot_description)/config/pid_controllers.yaml"/>
+
+  <xacro:property name="robot_scale" value="0.01"/>
+  <xacro:property name="PI_VAL" value="3.14159"/>
+
+
+
+  <!-- ABSOLUTE ROOT LINK (must be top-level) --> 
+
+<link name="world"/>
+
+<joint name="world_to_base" type="fixed">
+  <parent link="world"/>
+  <child link="base"/>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+</joint>
+
+
+  
+
+<link name="base"> 
+
+  <visual> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/base.stl" 
+
+            scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+    </geometry> 
+
+  </visual> 
+
+  <collision> 
+
+  <geometry> 
+
+    <mesh filename="package://feedbot_description/meshes/base.stl" 
+
+          scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+  </geometry> 
+
+</collision> 
+
+<inertial> 
+
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <mass value="1.2"/>
+  <inertia ixx="0.01" iyy="0.01" izz="0.02" ixy="0" ixz="0" iyz="0"/>
+
+
+</inertial>
+
+</link> 
+
+  
+
+  
+
+  
+
+  
+
+<!-- base → link1 --> 
+
+<joint name="joint1" type="revolute"> 
+
+  <parent link="base"/> 
+
+  <child link="link1"/> 
+
+  <origin xyz="0.0072669 0.00089679 0.152446" rpy="0 0 0"/> <!--0.009249 -0.000629 0.15276" --> 
+
+  <axis xyz="0 0 1"/>   <!-- rotation around Z --> 
+       <limit lower="-3.05433" upper="3.05433" effort="10.0" velocity="1.0"/>
+        <dynamics damping="5.0" friction="1.0"/>
+
+</joint> 
+
+  
+
+<!-- Joint2: link1 → link2 --> 
+
+<joint name="joint2" type="revolute"> 
+
+  <parent link="link1"/> 
+
+  <child link="link2"/> 
+
+  <origin xyz="0.000247 0.0211189 0.04221" rpy="0 0 0"/> <!-- 0.0000924 -0.021915 0.04024 -->  
+
+  <axis xyz="0 1 0"/>   <!-- up-down rotation --> 
+  <limit effort="10.0" velocity="1.0" lower="-1.5708" upper="1.5708"/>
+ <dynamics damping="5.0" friction="3.0"/>
+
+
+</joint> 
+
+  
+
+<!-- Joint3: link2 → link3 --> 
+
+<joint name="joint3" type="revolute"> 
+
+  <parent link="link2"/> 
+
+  <child link="link3"/> 
+
+  <origin xyz="0.0225822 -0.04319 0.18139" rpy="0 0 0"/>  <!--0.022992 -0.000915 0.18334 -->  
+
+  <axis xyz="0 1 0"/>   <!-- up-down rotation --> 
+
+  <limit effort="10.0" velocity="2.0" lower="-2.0944" upper="1.309"/>
+ <dynamics damping="5.0" friction="3.0"/>
+
+
+
+</joint> 
+
+  
+
+  
+
+<!-- Joint4: link3 → feeder_head --> 
+
+<joint name="joint4" type="revolute"> 
+
+  <parent link="link3"/> 
+
+  <child link="feeder_head"/> 
+
+  <origin xyz="0.164298 -0.00024 0.00006" rpy="0 0 0"/>  <!--0.162176 0.001804 0.00004 -->  
+
+  <axis xyz="0 1 0"/>   <!-- up-down rotation --> 
+
+  <limit effort="2.0" velocity="1.0" lower="-1.5708" upper="2.00713"/>
+  <dynamics damping="2.0" friction="1.0"/>
+
+
+
+
+</joint> 
+
+  
+
+  
+
+   
+
+  <!-- Link1 --> 
+
+  <link name="link1"> 
+
+    <visual> 
+
+      <geometry> 
+
+        <mesh filename="package://feedbot_description/meshes/link1.stl" 
+
+              scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+      </geometry> 
+
+    </visual> 
+
+    <collision> 
+
+      <geometry> 
+
+        <mesh filename="package://feedbot_description/meshes/link1.stl" 
+
+              scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+      </geometry> 
+
+    </collision> 
+
+    <inertial> 
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <mass value="0.8"/>
+  <inertia ixx="0.01" iyy="0.01" izz="0.008" ixy="0" ixz="0" iyz="0"/>
+
+
+    </inertial> 
+
+  </link> 
+
+  
+
+  
+
+  
+
+<link name="link2"> 
+
+  <visual> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/link2.stl" 
+
+            scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+    </geometry> 
+
+  </visual> 
+
+  <collision> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/link2.stl" 
+
+            scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+    </geometry> 
+
+  </collision> 
+
+  <inertial> 
+
+<origin xyz="0 0 0" rpy="0 0 0"/>
+  <mass value="0.6"/>
+  <inertia ixx="0.008" iyy="0.008" izz="0.006" ixy="0" ixz="0" iyz="0"/>
+
+
+  </inertial> 
+
+</link> 
+
+  
+
+  
+
+<!-- Link3 --> 
+
+<link name="link3"> 
+
+  <visual> 
+
+    <origin xyz="0 0 0" rpy="0 0 0"/> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/link3.stl" scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+    </geometry> 
+
+  </visual> 
+
+  <collision> 
+
+    <origin xyz="0 0 0" rpy="0 0 0"/> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/link3.stl" scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+    </geometry> 
+
+  </collision> 
+
+  <inertial> 
+
+ <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0.3"/>
+    <inertia ixx="0.005" iyy="0.005" izz="0.004"
+             ixy="0" ixz="0" iyz="0"/>
+
+  </inertial> 
+
+</link> 
+
+  
+
+  
+
+<link name="feeder_head"> 
+
+  <inertial> 
+
+    <origin xyz="0 0 0" rpy="0 0 0"/> 
+
+<mass value="0.1"/>
+<inertia ixx="0.003" iyy="0.003" izz="0.002"
+         ixy="0" ixz="0" iyz="0"/>
+
+
+  </inertial> 
+
+  <visual> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/feeder_head.stl" 
+
+            scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+    </geometry> 
+
+  </visual> 
+
+  <collision> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/feeder_head.stl" 
+
+            scale="${robot_scale} ${robot_scale} ${robot_scale}"/> 
+
+    </geometry> 
+
+  </collision> 
+
+</link> 
+
+  
+
+<link name="table_link"> 
+
+  <visual> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/table.stl" scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+
+  </visual> 
+
+  <collision> 
+
+    <geometry> 
+
+     <mesh filename="package://feedbot_description/meshes/table.stl" scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+
+  </collision> 
+
+  <inertial> 
+
+    <mass value="5.0"/> 
+
+    <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/> 
+
+  </inertial> 
+
+</link> 
+
+  
+
+<joint name="table_to_world" type="fixed"> 
+
+  <parent link="base"/> 
+
+  <child link="table_link"/> 
+
+  <origin xyz="-0.0007485 0.00018135 0.01118" rpy="0 0 0"/> 
+
+</joint> 
+
+  
+
+<link name="plate_link"> 
+
+  <visual> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/plate.stl"  
+
+            scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+    
+  </visual> 
+
+  <collision> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/plate.stl"  
+
+            scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+
+  </collision> 
+
+  <inertial> 
+
+    <mass value="0.1"/> 
+
+    <inertia ixx="0.001" ixy="0" ixz="0"  
+
+             iyy="0.001" iyz="0"  
+
+             izz="0.001"/> 
+
+  </inertial> 
+
+</link> 
+
+<gazebo reference="plate_link">
+  <material>Gazebo/White</material>
+</gazebo>
+
+<joint name="plate_to_table" type="fixed"> 
+
+  <parent link="table_link"/> 
+
+  <child link="plate_link"/> 
+
+  <origin xyz="0.05 0.00 0.0000" rpy="0 0 0"/> 
+
+</joint> 
+
+  
+
+  
+
+  
+
+  
+
+<link name="apple_link">  
+
+<visual>
+  <geometry>
+    <mesh filename="package://feedbot_description/meshes/apple.stl"
+          scale="0.01 0.01 0.01"/>
+  </geometry>
+
+</visual>
+
+  <collision> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/apple.stl" 
+
+            scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+
+  </collision> 
+
+  <inertial> 
+
+    <mass value="0.02"/> 
+
+    <inertia ixx="0.00001" ixy="0" ixz="0" 
+
+             iyy="0.00001" iyz="0" 
+
+             izz="0.00001"/> 
+
+  </inertial>  
+
+  </link> 
+
+<gazebo reference="apple_link">
+  <material>Gazebo/Red</material>
+</gazebo>
+
+
+<joint name="apple_to_plate" type="fixed"> 
+
+  <parent link="plate_link"/> 
+
+  <child link="apple_link"/> 
+
+  <origin xyz="0.05 0 0.0010"/> 
+
+</joint> 
+
+<link name="strawberry_link">  
+
+<visual>
+  <geometry>
+    <mesh filename="package://feedbot_description/meshes/strawberry.stl"
+          scale="0.01 0.01 0.01"/>
+  </geometry>
+
+
+</visual>
+  
+
+  <collision> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/strawberry.stl" 
+
+            scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+
+  </collision> 
+
+  
+
+  <inertial> 
+
+    <mass value="0.015"/> 
+
+    <inertia ixx="0.00001" ixy="0" ixz="0" 
+
+             iyy="0.00001" iyz="0" 
+
+             izz="0.00001"/> 
+
+  </inertial> 
+
+   </link> 
+  
+  
+<gazebo reference="strawberry_link">
+  <material>Gazebo/Red</material>
+</gazebo>
+
+  
+
+<joint name="strawberry_to_plate" type="fixed"> 
+
+  <parent link="plate_link"/> 
+
+  <child link="strawberry_link"/> 
+
+  <origin xyz="-0.03 0.02 0.0010"/> 
+
+</joint> 
+
+  
+
+<!-- MOUTH OPEN MODEL (only one copy!) --> 
+
+<link name="mouth_open_link"> 
+
+  <visual> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/mouth_open.stl" 
+
+            scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+
+    <material name="mouth_color"> 
+
+      <color rgba="1 0.8 0.8 1"/> 
+
+    </material> 
+
+  </visual> 
+
+  
+
+  <collision> 
+
+    <geometry> 
+
+      <mesh filename="package://feedbot_description/meshes/mouth_open.stl" 
+
+            scale="0.01 0.01 0.01"/> 
+
+    </geometry> 
+
+  </collision> 
+
+  
+
+  <inertial> 
+
+    <mass value="0.1"/> 
+
+    <origin xyz="0 0 0"/> 
+
+    <inertia ixx="0.001" ixy="0" ixz="0" 
+
+             iyy="0.001" iyz="0" 
+
+             izz="0.001"/> 
+
+  </inertial> 
+
+</link> 
+
+  
+
+<joint name="mouth_open_to_world" type="fixed"> 
+
+  <parent link="base"/> 
+
+  <child link="mouth_open_link"/> 
+
+  <origin xyz="0.160 0.000 0.140" rpy="0 0 0"/> 
+
+</joint> 
+
+
+<transmission name="trans_joint1">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="joint1">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="motor_joint1">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+
+<transmission name="trans_joint2">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="joint2">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="motor_joint2">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+
+<transmission name="trans_joint3">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="joint3">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="motor_joint3">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+
+
+<transmission name="trans_joint4">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="joint4">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="motor_joint4">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+
+
+<!-- Camera mount -->
+<joint name="camera_joint" type="fixed">
+  <parent link="feeder_head"/>
+  <child link="camera_link"/>
+<origin xyz="0.08 0 0.14" rpy="-1.57 0 1.57"/>
+</joint>
+
+<link name="camera_link">
+  <visual>
+    <geometry>
+      <box size="0.02 0.02 0.02"/>
+    </geometry>
+    <material name="black"/>
+  </visual>
+</link>
+
+<joint name="camera_optical_joint" type="fixed">
+  <parent link="camera_link"/>
+  <child link="camera_optical_link"/>
+  <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+</joint>
+
+<link name="camera_optical_link"/>
+
+<gazebo reference="camera_link">
+  <sensor type="camera" name="camera_sensor">
+    <always_on>true</always_on>
+    <update_rate>30</update_rate>
+
+    <camera>
+      <horizontal_fov>1.3962634</horizontal_fov>
+
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+
+      <clip>
+        <near>0.01</near>
+        <far>10</far>
+      </clip>
+    </camera>
+
+    <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
+      <ros>
+        <namespace>/camera</namespace>
+      </ros>
+      <camera_name>camera</camera_name>
+      <frame_name>camera_optical_link</frame_name>
+    </plugin>
+
+  </sensor>
+</gazebo>
+
+  
+<ros2_control name="FeedbotSystem" type="system">
+  <hardware>
+    <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+  </hardware>
+
+<joint name="joint1">
+  <command_interface name="effort"/>
+  <state_interface name="position"/>
+  <state_interface name="velocity"/>
+  <state_interface name="effort"/>
+</joint>
+
+
+<joint name="joint2">
+  <command_interface name="effort"/>
+  <state_interface name="position"/>
+  <state_interface name="velocity"/>
+  <state_interface name="effort"/>
+</joint>
+
+
+<joint name="joint3">
+  <command_interface name="effort"/>
+  <state_interface name="position"/>
+  <state_interface name="velocity"/>
+  <state_interface name="effort"/>
+</joint>
+
+
+<joint name="joint4">
+  <command_interface name="effort"/>
+  <state_interface name="position"/>
+  <state_interface name="velocity"/>
+  <state_interface name="effort"/>
+</joint>
+
+</ros2_control>
+
+<gazebo>
+  <plugin name="gazebo_ros2_control"
+          filename="libgazebo_ros2_control.so">
+    <parameters>$(find feedbot_description)/config/controllers.yaml</parameters>
+  </plugin>
+</gazebo>
+
+
+</robot>
+
+
+
+
+
+

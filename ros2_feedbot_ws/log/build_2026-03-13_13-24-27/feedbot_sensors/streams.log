@@ -1,0 +1,21 @@
+[1.095s] Invoking command in '/home/dell/ros2_feedbot_ws/feedbot_sensors': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_sensors/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/feedbot_sensors build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_sensors/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_sensors/install.log --single-version-externally-managed install_data
+[1.315s] running egg_info
+[1.315s] writing ../build/feedbot_sensors/feedbot_sensors.egg-info/PKG-INFO
+[1.316s] writing dependency_links to ../build/feedbot_sensors/feedbot_sensors.egg-info/dependency_links.txt
+[1.316s] writing entry points to ../build/feedbot_sensors/feedbot_sensors.egg-info/entry_points.txt
+[1.316s] writing requirements to ../build/feedbot_sensors/feedbot_sensors.egg-info/requires.txt
+[1.316s] writing top-level names to ../build/feedbot_sensors/feedbot_sensors.egg-info/top_level.txt
+[1.317s] reading manifest file '../build/feedbot_sensors/feedbot_sensors.egg-info/SOURCES.txt'
+[1.318s] writing manifest file '../build/feedbot_sensors/feedbot_sensors.egg-info/SOURCES.txt'
+[1.318s] running build
+[1.318s] running build_py
+[1.318s] running install
+[1.319s] running install_lib
+[1.320s] running install_data
+[1.320s] running install_egg_info
+[1.321s] removing '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages/feedbot_sensors-0.0.0-py3.10.egg-info' (and everything under it)
+[1.322s] Copying ../build/feedbot_sensors/feedbot_sensors.egg-info to /home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages/feedbot_sensors-0.0.0-py3.10.egg-info
+[1.322s] running install_scripts
+[1.339s] Installing sensor_hub script to /home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/feedbot_sensors
+[1.340s] writing list of installed files to '/home/dell/ros2_feedbot_ws/build/feedbot_sensors/install.log'
+[1.374s] Invoked command in '/home/dell/ros2_feedbot_ws/feedbot_sensors' returned '0': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_sensors/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/feedbot_sensors build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_sensors/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_sensors/install.log --single-version-externally-managed install_data

@@ -1,0 +1,37 @@
+[3.070s] Invoking command in '/home/dell/ros2_feedbot_ws/src/pid_logger': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/pid_logger/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/pid_logger build --build-base /home/dell/ros2_feedbot_ws/build/pid_logger/build install --record /home/dell/ros2_feedbot_ws/build/pid_logger/install.log --single-version-externally-managed install_data
+[3.687s] running egg_info
+[3.688s] creating ../../build/pid_logger/pid_logger.egg-info
+[3.689s] writing ../../build/pid_logger/pid_logger.egg-info/PKG-INFO
+[3.690s] writing dependency_links to ../../build/pid_logger/pid_logger.egg-info/dependency_links.txt
+[3.690s] writing entry points to ../../build/pid_logger/pid_logger.egg-info/entry_points.txt
+[3.690s] writing requirements to ../../build/pid_logger/pid_logger.egg-info/requires.txt
+[3.690s] writing top-level names to ../../build/pid_logger/pid_logger.egg-info/top_level.txt
+[3.691s] writing manifest file '../../build/pid_logger/pid_logger.egg-info/SOURCES.txt'
+[3.699s] reading manifest file '../../build/pid_logger/pid_logger.egg-info/SOURCES.txt'
+[3.701s] writing manifest file '../../build/pid_logger/pid_logger.egg-info/SOURCES.txt'
+[3.701s] running build
+[3.702s] running build_py
+[3.702s] creating /home/dell/ros2_feedbot_ws/build/pid_logger/build
+[3.702s] creating /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib
+[3.702s] creating /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger
+[3.702s] copying pid_logger/pid_data_recorder.py -> /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger
+[3.703s] copying pid_logger/__init__.py -> /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger
+[3.703s] running install
+[3.706s] running install_lib
+[3.710s] creating /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger
+[3.710s] copying /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger/pid_data_recorder.py -> /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger
+[3.710s] copying /home/dell/ros2_feedbot_ws/build/pid_logger/build/lib/pid_logger/__init__.py -> /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger
+[3.712s] byte-compiling /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger/pid_data_recorder.py to pid_data_recorder.cpython-310.pyc
+[3.714s] byte-compiling /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger/__init__.py to __init__.cpython-310.pyc
+[3.714s] running install_data
+[3.714s] creating /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index
+[3.714s] creating /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index/resource_index
+[3.715s] creating /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index/resource_index/packages
+[3.715s] copying resource/pid_logger -> /home/dell/ros2_feedbot_ws/install/pid_logger/share/ament_index/resource_index/packages
+[3.715s] copying package.xml -> /home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger
+[3.715s] running install_egg_info
+[3.720s] Copying ../../build/pid_logger/pid_logger.egg-info to /home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages/pid_logger-0.0.0-py3.10.egg-info
+[3.721s] running install_scripts
+[3.785s] Installing pid_recorder script to /home/dell/ros2_feedbot_ws/install/pid_logger/lib/pid_logger
+[3.786s] writing list of installed files to '/home/dell/ros2_feedbot_ws/build/pid_logger/install.log'
+[3.960s] Invoked command in '/home/dell/ros2_feedbot_ws/src/pid_logger' returned '0': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/pid_logger/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/pid_logger build --build-base /home/dell/ros2_feedbot_ws/build/pid_logger/build install --record /home/dell/ros2_feedbot_ws/build/pid_logger/install.log --single-version-externally-managed install_data

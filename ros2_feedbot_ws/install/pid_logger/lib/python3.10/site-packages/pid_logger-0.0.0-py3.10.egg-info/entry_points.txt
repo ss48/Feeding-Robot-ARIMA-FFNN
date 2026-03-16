@@ -1,0 +1,3 @@
+[console_scripts]
+pid_recorder = pid_logger.pid_data_recorder:main
+

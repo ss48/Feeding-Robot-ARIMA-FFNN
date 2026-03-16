@@ -1,0 +1,46 @@
+[3.035s] Invoking command in '/home/dell/ros2_feedbot_ws/src/feedbot_fusion': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_fusion/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/feedbot_fusion build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log --single-version-externally-managed
+[3.632s] running egg_info
+[3.634s] creating ../../build/feedbot_fusion/feedbot_fusion.egg-info
+[3.634s] writing ../../build/feedbot_fusion/feedbot_fusion.egg-info/PKG-INFO
+[3.635s] writing dependency_links to ../../build/feedbot_fusion/feedbot_fusion.egg-info/dependency_links.txt
+[3.635s] writing entry points to ../../build/feedbot_fusion/feedbot_fusion.egg-info/entry_points.txt
+[3.635s] writing requirements to ../../build/feedbot_fusion/feedbot_fusion.egg-info/requires.txt
+[3.635s] writing top-level names to ../../build/feedbot_fusion/feedbot_fusion.egg-info/top_level.txt
+[3.636s] writing manifest file '../../build/feedbot_fusion/feedbot_fusion.egg-info/SOURCES.txt'
+[3.640s] reading manifest file '../../build/feedbot_fusion/feedbot_fusion.egg-info/SOURCES.txt'
+[3.643s] writing manifest file '../../build/feedbot_fusion/feedbot_fusion.egg-info/SOURCES.txt'
+[3.644s] running build
+[3.644s] running build_py
+[3.645s] creating /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build
+[3.645s] creating /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib
+[3.645s] creating /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+[3.645s] copying feedbot_fusion/feeding_fsm_node.py -> /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+[3.645s] copying feedbot_fusion/vision_node.py -> /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+[3.646s] copying feedbot_fusion/speed_controller.py -> /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+[3.646s] copying feedbot_fusion/__init__.py -> /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+[3.646s] copying feedbot_fusion/fusion_node.py -> /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+[3.646s] copying feedbot_fusion/force_node.py -> /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion
+[3.646s] running install
+[3.647s] running install_lib
+[3.649s] creating /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+[3.649s] copying /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion/feeding_fsm_node.py -> /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+[3.649s] copying /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion/vision_node.py -> /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+[3.650s] copying /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion/speed_controller.py -> /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+[3.650s] copying /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion/__init__.py -> /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+[3.650s] copying /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion/fusion_node.py -> /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+[3.650s] copying /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build/lib/feedbot_fusion/force_node.py -> /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion
+[3.654s] byte-compiling /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion/feeding_fsm_node.py to feeding_fsm_node.cpython-310.pyc
+[3.656s] byte-compiling /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion/vision_node.py to vision_node.cpython-310.pyc
+[3.657s] byte-compiling /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion/speed_controller.py to speed_controller.cpython-310.pyc
+[3.658s] byte-compiling /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion/__init__.py to __init__.cpython-310.pyc
+[3.659s] byte-compiling /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion/fusion_node.py to fusion_node.cpython-310.pyc
+[3.660s] byte-compiling /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion/force_node.py to force_node.cpython-310.pyc
+[3.660s] running install_egg_info
+[3.665s] Copying ../../build/feedbot_fusion/feedbot_fusion.egg-info to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion-0.0.0-py3.10.egg-info
+[3.666s] running install_scripts
+[3.714s] Installing force_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+[3.715s] Installing fusion_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+[3.715s] Installing speed_controller script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+[3.715s] Installing vision_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion
+[3.716s] writing list of installed files to '/home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log'
+[3.884s] Invoked command in '/home/dell/ros2_feedbot_ws/src/feedbot_fusion' returned '0': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_fusion/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/feedbot_fusion build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log --single-version-externally-managed

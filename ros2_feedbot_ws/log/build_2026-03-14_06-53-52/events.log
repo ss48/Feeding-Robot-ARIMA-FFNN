@@ -1,0 +1,41 @@
+[0.000000] (-) TimerEvent: {}
+[0.000458] (-) JobUnselected: {'identifier': 'feedbot_description'}
+[0.000503] (-) JobUnselected: {'identifier': 'feedbot_moveit_config'}
+[0.000520] (-) JobUnselected: {'identifier': 'feedbot_sensors'}
+[0.000533] (-) JobUnselected: {'identifier': 'pid_logger'}
+[0.000547] (feedbot_fusion) JobQueued: {'identifier': 'feedbot_fusion', 'dependencies': OrderedDict()}
+[0.000563] (feedbot_fusion) JobStarted: {'identifier': 'feedbot_fusion'}
+[0.099732] (-) TimerEvent: {}
+[0.199961] (-) TimerEvent: {}
+[0.300228] (-) TimerEvent: {}
+[0.400450] (-) TimerEvent: {}
+[0.500675] (-) TimerEvent: {}
+[0.551888] (feedbot_fusion) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'egg_info', '--egg-base', '../../build/feedbot_fusion', 'build', '--build-base', '/home/dell/ros2_feedbot_ws/build/feedbot_fusion/build', 'install', '--record', '/home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log', '--single-version-externally-managed'], 'cwd': '/home/dell/ros2_feedbot_ws/src/feedbot_fusion', 'env': {'LANGUAGE': 'en_GB:en', 'USER': 'dell', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:', 'HOME': '/home/dell', 'OLDPWD': '/home/dell/ros2_feedbot_ws', 'DESKTOP_SESSION': 'ubuntu', 'GAZEBO_MASTER_URI': 'http://localhost:11345', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'SYSTEMD_EXEC_PID': '515654', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'COLCON_PREFIX_PATH': '/home/dell/ros2_feedbot_ws/install:/home/dell/ros2_ws/install', 'ROS_DISTRO': 'humble', 'LOGNAME': 'dell', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'dell', 'TERM': 'xterm-256color', 'GAZEBO_MODEL_PATH': '/usr/share/gazebo-11/models::/home/dell/ros2_feedbot_ws/install/feedbot_description/share', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'HISTCONTROL': 'ignoreboth', 'OGRE_RESOURCE_PATH': '/usr/lib/x86_64-linux-gnu/OGRE-1.9.0', 'PATH': '/opt/ros/humble/bin:/usr/lib/ccache:/home/dell/ardupilot/Tools/autotest:/opt/gcc-arm-none-eabi-10-2020-q4-major/bin:/home/dell/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin', 'SESSION_MANAGER': 'local/dell:@/tmp/.ICE-unix/175661,unix/dell:/tmp/.ICE-unix/175661', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_TERMINAL_SCREEN': '/org/gnome/Terminal/screen/efeae8ee_d77e_4536_a204_99c1c9fd19da', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'RMW_IMPLEMENTATION': 'rmw_cyclonedds_cpp', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.GYXJL3', 'GNOME_TERMINAL_SERVICE': ':1.833', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/home/dell/ros2_feedbot_ws/install/feedbot_description:/home/dell/ros2_ws/install/open_manipulator_description:/opt/ros/humble', 'SHELL': '/bin/bash', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'GAZEBO_RESOURCE_PATH': '/usr/share/gazebo-11::/opt/ros/humble/share:/home/dell/ros2_feedbot_ws/install/feedbot_description/share', 'GAZEBO_MODEL_DATABASE_URI': 'http://models.gazebosim.org', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/dell/ros2_feedbot_ws/build/feedbot_fusion', 'LC_ALL': 'en_US.UTF-8', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'GAZEBO_PLUGIN_PATH': '/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/dell/ros2_feedbot_ws/build/feedbot_fusion/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages:/home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages:/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages:/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800', 'CMAKE_PREFIX_PATH': '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config:/home/dell/ros2_feedbot_ws/install/feedbot_description:/home/dell/ros2_ws/install/open_manipulator_description'}, 'shell': False}
+[0.600786] (-) TimerEvent: {}
+[0.701033] (-) TimerEvent: {}
+[0.774574] (feedbot_fusion) StdoutLine: {'line': b'running egg_info\n'}
+[0.775092] (feedbot_fusion) StdoutLine: {'line': b'writing ../../build/feedbot_fusion/feedbot_fusion.egg-info/PKG-INFO\n'}
+[0.775306] (feedbot_fusion) StdoutLine: {'line': b'writing dependency_links to ../../build/feedbot_fusion/feedbot_fusion.egg-info/dependency_links.txt\n'}
+[0.775457] (feedbot_fusion) StdoutLine: {'line': b'writing entry points to ../../build/feedbot_fusion/feedbot_fusion.egg-info/entry_points.txt\n'}
+[0.775529] (feedbot_fusion) StdoutLine: {'line': b'writing requirements to ../../build/feedbot_fusion/feedbot_fusion.egg-info/requires.txt\n'}
+[0.775653] (feedbot_fusion) StdoutLine: {'line': b'writing top-level names to ../../build/feedbot_fusion/feedbot_fusion.egg-info/top_level.txt\n'}
+[0.776926] (feedbot_fusion) StdoutLine: {'line': b"reading manifest file '../../build/feedbot_fusion/feedbot_fusion.egg-info/SOURCES.txt'\n"}
+[0.777650] (feedbot_fusion) StdoutLine: {'line': b"writing manifest file '../../build/feedbot_fusion/feedbot_fusion.egg-info/SOURCES.txt'\n"}
+[0.777729] (feedbot_fusion) StdoutLine: {'line': b'running build\n'}
+[0.777780] (feedbot_fusion) StdoutLine: {'line': b'running build_py\n'}
+[0.778142] (feedbot_fusion) StdoutLine: {'line': b'running install\n'}
+[0.778323] (feedbot_fusion) StdoutLine: {'line': b'running install_lib\n'}
+[0.779598] (feedbot_fusion) StdoutLine: {'line': b'running install_egg_info\n'}
+[0.780901] (feedbot_fusion) StdoutLine: {'line': b"removing '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion-0.0.0-py3.10.egg-info' (and everything under it)\n"}
+[0.781223] (feedbot_fusion) StdoutLine: {'line': b'Copying ../../build/feedbot_fusion/feedbot_fusion.egg-info to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages/feedbot_fusion-0.0.0-py3.10.egg-info\n'}
+[0.781889] (feedbot_fusion) StdoutLine: {'line': b'running install_scripts\n'}
+[0.797043] (feedbot_fusion) StdoutLine: {'line': b'Installing feeding_fsm script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion\n'}
+[0.797263] (feedbot_fusion) StdoutLine: {'line': b'Installing force_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion\n'}
+[0.797427] (feedbot_fusion) StdoutLine: {'line': b'Installing fusion_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion\n'}
+[0.797527] (feedbot_fusion) StdoutLine: {'line': b'Installing speed_controller script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion\n'}
+[0.797615] (feedbot_fusion) StdoutLine: {'line': b'Installing vision_node script to /home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/feedbot_fusion\n'}
+[0.797730] (feedbot_fusion) StdoutLine: {'line': b"writing list of installed files to '/home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log'\n"}
+[0.801114] (-) TimerEvent: {}
+[0.814886] (feedbot_fusion) CommandEnded: {'returncode': 0}
+[0.824544] (feedbot_fusion) JobEnded: {'identifier': 'feedbot_fusion', 'rc': 0}
+[0.824818] (-) EventReactorShutdown: {}

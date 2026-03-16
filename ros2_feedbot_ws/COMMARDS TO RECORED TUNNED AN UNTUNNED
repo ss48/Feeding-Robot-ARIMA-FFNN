@@ -1,0 +1,259 @@
+rosbag2_2026_03_05-13_11_17
+rosbag2_2026_03_05-13_11_17
+ros2 topic pub --once /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub --once /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+sleep 8
+
+ros2 topic pub --once /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 8
+
+mv rosbag2_2026_03_05-12_30_47 untuned_alljoints
+
+
+untuned_alljoints
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+
+ros2 topic pub -r 50 -t 150 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+ros2 topic pub -r 50 -t 300 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.5]}"
+ros2 topic pub -r 50 -t 300 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+ros2 topic pub -r 50 -t 300 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.5]}"
+
+
+ros2 topic pub -r 50 -t 150 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.0]}"
+
+ros2 topic pub -r 50 -t 300 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.5]}"
+
+ros2 topic pub -r 50 -t 300 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.0]}"
+
+ros2 topic pub -r 50 -t 300 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.5]}"
+
+
+ros2 topic pub -r 50 -t 150 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+
+ros2 topic pub -r 50 -t 300 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.5]}"
+
+ros2 topic pub -r 50 -t 300 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+
+ros2 topic pub -r 50 -t 300 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.5]}"
+
+
+ros2 topic pub -r 50 -t 150 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+
+ros2 topic pub -r 50 -t 300 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+
+ros2 topic pub -r 50 -t 300 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+
+ros2 topic pub -r 50 -t 300 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+
+
+
+
+
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+
+sleep 3
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.5]}"
+
+sleep 5
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+
+sleep 5
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.5]}"
+
+
+
+
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+
+sleep 3
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.5]}"
+sleep 5
+
+
+
+
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.5]}"
+sleep 5
+
+
+
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+sleep 5
+
+
+
+
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], 5
+values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint1_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint1'], values: [0.0]}"
+sleep 5
+
+
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint2_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint2'], values: [0.0]}"
+sleep 5
+
+
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint3_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint3'], values: [0.0]}"
+sleep 5
+
+
+
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.5]}"
+sleep 5
+
+ros2 topic pub -1 /joint4_controller/reference control_msgs/msg/MultiDOFCommand "{dof_names: ['joint4'], values: [0.0]}"
+sleep 5
+

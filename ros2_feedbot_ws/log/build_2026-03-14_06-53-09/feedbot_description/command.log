@@ -1,0 +1,1 @@
+Invoking command in '/home/dell/ros2_feedbot_ws/build/feedbot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --build /home/dell/ros2_feedbot_ws/build/feedbot_description -- -j12 -l12

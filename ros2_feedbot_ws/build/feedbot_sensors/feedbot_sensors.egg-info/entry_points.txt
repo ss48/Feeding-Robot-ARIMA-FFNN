@@ -1,0 +1,3 @@
+[console_scripts]
+sensor_hub = feedbot_sensors.sensor_hub:main
+

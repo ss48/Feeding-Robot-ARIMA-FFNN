@@ -1,0 +1,7 @@
+[console_scripts]
+feeding_fsm = feedbot_fusion.feeding_fsm_node:main
+force_node = feedbot_fusion.force_node:main
+fusion_node = feedbot_fusion.fusion_node:main
+speed_controller = feedbot_fusion.speed_controller:main
+vision_node = feedbot_fusion.vision_node:main
+

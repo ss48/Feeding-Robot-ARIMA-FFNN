@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: feedbot_description
+    relative_path: urdf/my_robot.urdf.xacro
+  srdf:
+    relative_path: config/feedbot.srdf
+  package_settings:
+    author_name: zainib
+    author_email: zaidi.716@gmail.com
+    generated_timestamp: 1769598279

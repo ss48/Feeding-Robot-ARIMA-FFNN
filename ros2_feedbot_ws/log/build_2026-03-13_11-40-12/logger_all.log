@@ -1,0 +1,642 @@
+[0.231s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.231s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=12, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x74772df72620>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x74772df70700>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x74772df70700>>)
+[0.654s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.654s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.654s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.654s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.654s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.654s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.654s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/dell/ros2_feedbot_ws'
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extensions ['ignore', 'ignore_ament_install']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'ignore'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'ignore_ament_install'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extensions ['colcon_pkg']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'colcon_pkg'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extensions ['colcon_meta']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'colcon_meta'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extensions ['ros']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'ros'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extensions ['cmake', 'python']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'cmake'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'python'
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extensions ['python_setup_py']
+[0.666s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old) by extension 'python_setup_py'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extensions ['ignore', 'ignore_ament_install']
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'ignore'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'ignore_ament_install'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extensions ['colcon_pkg']
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'colcon_pkg'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extensions ['colcon_meta']
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'colcon_meta'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extensions ['ros']
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'ros'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extensions ['cmake', 'python']
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'cmake'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'python'
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extensions ['python_setup_py']
+[0.667s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/analysis) by extension 'python_setup_py'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extensions ['ignore', 'ignore_ament_install']
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'ignore'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'ignore_ament_install'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extensions ['colcon_pkg']
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'colcon_pkg'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extensions ['colcon_meta']
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'colcon_meta'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extensions ['ros']
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'ros'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extensions ['cmake', 'python']
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'cmake'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'python'
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extensions ['python_setup_py']
+[0.668s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/full_debug) by extension 'python_setup_py'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extensions ['ignore', 'ignore_ament_install']
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'ignore'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'ignore_ament_install'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extensions ['colcon_pkg']
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'colcon_pkg'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extensions ['colcon_meta']
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'colcon_meta'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extensions ['ros']
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'ros'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extensions ['cmake', 'python']
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'cmake'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'python'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extensions ['python_setup_py']
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_A) by extension 'python_setup_py'
+[0.669s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extensions ['ignore', 'ignore_ament_install']
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'ignore'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'ignore_ament_install'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extensions ['colcon_pkg']
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'colcon_pkg'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extensions ['colcon_meta']
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'colcon_meta'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extensions ['ros']
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'ros'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extensions ['cmake', 'python']
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'cmake'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'python'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extensions ['python_setup_py']
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/pid_B) by extension 'python_setup_py'
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extensions ['ignore', 'ignore_ament_install']
+[0.670s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'ignore'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'ignore_ament_install'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extensions ['colcon_pkg']
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'colcon_pkg'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extensions ['colcon_meta']
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'colcon_meta'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extensions ['ros']
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'ros'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extensions ['cmake', 'python']
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'cmake'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'python'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extensions ['python_setup_py']
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/rviz_first_data) by extension 'python_setup_py'
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extensions ['ignore', 'ignore_ament_install']
+[0.671s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'ignore'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'ignore_ament_install'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extensions ['colcon_pkg']
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'colcon_pkg'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extensions ['colcon_meta']
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'colcon_meta'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extensions ['ros']
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'ros'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extensions ['cmake', 'python']
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'cmake'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'python'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extensions ['python_setup_py']
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_full_run) by extension 'python_setup_py'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extensions ['ignore', 'ignore_ament_install']
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'ignore'
+[0.672s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'ignore_ament_install'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extensions ['colcon_pkg']
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'colcon_pkg'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extensions ['colcon_meta']
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'colcon_meta'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extensions ['ros']
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'ros'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extensions ['cmake', 'python']
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'cmake'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'python'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extensions ['python_setup_py']
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(archive_old/sim_sync) by extension 'python_setup_py'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.673s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extensions ['ignore', 'ignore_ament_install']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'ignore'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'ignore_ament_install'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extensions ['colcon_pkg']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'colcon_pkg'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extensions ['colcon_meta']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'colcon_meta'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extensions ['ros']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'ros'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extensions ['cmake', 'python']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'cmake'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'python'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extensions ['python_setup_py']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(cam_motion_light) by extension 'python_setup_py'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extensions ['ignore', 'ignore_ament_install']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'ignore'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'ignore_ament_install'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extensions ['colcon_pkg']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'colcon_pkg'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extensions ['colcon_meta']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'colcon_meta'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extensions ['ros']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'ros'
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extensions ['cmake', 'python']
+[0.674s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'cmake'
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'python'
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extensions ['python_setup_py']
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_camera_test) by extension 'python_setup_py'
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extensions ['ignore', 'ignore_ament_install']
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extension 'ignore'
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extension 'ignore_ament_install'
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extensions ['colcon_pkg']
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extension 'colcon_pkg'
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extensions ['colcon_meta']
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extension 'colcon_meta'
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extensions ['ros']
+[0.675s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_moveit_config) by extension 'ros'
+[0.679s] DEBUG:colcon.colcon_core.package_identification:Package 'feedbot_moveit_config' with type 'ros.ament_cmake' and name 'feedbot_moveit_config'
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extensions ['ignore', 'ignore_ament_install']
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extension 'ignore'
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extension 'ignore_ament_install'
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extensions ['colcon_pkg']
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extension 'colcon_pkg'
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extensions ['colcon_meta']
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extension 'colcon_meta'
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extensions ['ros']
+[0.679s] Level 1:colcon.colcon_core.package_identification:_identify(feedbot_sensors) by extension 'ros'
+[0.680s] DEBUG:colcon.colcon_core.package_identification:Package 'feedbot_sensors' with type 'ros.ament_python' and name 'feedbot_sensors'
+[0.680s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.680s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.680s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.680s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extensions ['ignore', 'ignore_ament_install']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'ignore'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'ignore_ament_install'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extensions ['colcon_pkg']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'colcon_pkg'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extensions ['colcon_meta']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'colcon_meta'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extensions ['ros']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'ros'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extensions ['cmake', 'python']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'cmake'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'python'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extensions ['python_setup_py']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(old_scripts) by extension 'python_setup_py'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extensions ['ignore', 'ignore_ament_install']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'ignore'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'ignore_ament_install'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extensions ['colcon_pkg']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'colcon_pkg'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extensions ['colcon_meta']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'colcon_meta'
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extensions ['ros']
+[0.681s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'ros'
+[0.682s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extensions ['cmake', 'python']
+[0.682s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'cmake'
+[0.682s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'python'
+[0.682s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extensions ['python_setup_py']
+[0.682s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study) by extension 'python_setup_py'
+[0.682s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extensions ['ignore', 'ignore_ament_install']
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'ignore'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'ignore_ament_install'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extensions ['colcon_pkg']
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'colcon_pkg'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extensions ['colcon_meta']
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'colcon_meta'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extensions ['ros']
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'ros'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extensions ['cmake', 'python']
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'cmake'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'python'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extensions ['python_setup_py']
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned) by extension 'python_setup_py'
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extensions ['ignore', 'ignore_ament_install']
+[0.683s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'ignore'
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'ignore_ament_install'
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extensions ['colcon_pkg']
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'colcon_pkg'
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extensions ['colcon_meta']
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'colcon_meta'
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extensions ['ros']
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'ros'
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extensions ['cmake', 'python']
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'cmake'
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'python'
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extensions ['python_setup_py']
+[0.684s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints) by extension 'python_setup_py'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extensions ['ignore', 'ignore_ament_install']
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'ignore'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'ignore_ament_install'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extensions ['colcon_pkg']
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'colcon_pkg'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extensions ['colcon_meta']
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'colcon_meta'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extensions ['ros']
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'ros'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extensions ['cmake', 'python']
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'cmake'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'python'
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extensions ['python_setup_py']
+[0.685s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/tuned/all_joints/tuned_alljoints) by extension 'python_setup_py'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extensions ['ignore', 'ignore_ament_install']
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'ignore'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'ignore_ament_install'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extensions ['colcon_pkg']
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'colcon_pkg'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extensions ['colcon_meta']
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'colcon_meta'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extensions ['ros']
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'ros'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extensions ['cmake', 'python']
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'cmake'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'python'
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extensions ['python_setup_py']
+[0.686s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned) by extension 'python_setup_py'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extensions ['ignore', 'ignore_ament_install']
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'ignore'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'ignore_ament_install'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extensions ['colcon_pkg']
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'colcon_pkg'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extensions ['colcon_meta']
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'colcon_meta'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extensions ['ros']
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'ros'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extensions ['cmake', 'python']
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'cmake'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'python'
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extensions ['python_setup_py']
+[0.687s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints) by extension 'python_setup_py'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extensions ['ignore', 'ignore_ament_install']
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'ignore'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'ignore_ament_install'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extensions ['colcon_pkg']
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'colcon_pkg'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extensions ['colcon_meta']
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'colcon_meta'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extensions ['ros']
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'ros'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extensions ['cmake', 'python']
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'cmake'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'python'
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extensions ['python_setup_py']
+[0.688s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_alljoints) by extension 'python_setup_py'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extensions ['ignore', 'ignore_ament_install']
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'ignore'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'ignore_ament_install'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extensions ['colcon_pkg']
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'colcon_pkg'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extensions ['colcon_meta']
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'colcon_meta'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extensions ['ros']
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'ros'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extensions ['cmake', 'python']
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'cmake'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'python'
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extensions ['python_setup_py']
+[0.689s] Level 1:colcon.colcon_core.package_identification:_identify(pid_study/untuned/all_joints/untuned_joint4) by extension 'python_setup_py'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extensions ['ignore', 'ignore_ament_install']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'ignore'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'ignore_ament_install'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extensions ['colcon_pkg']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'colcon_pkg'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extensions ['colcon_meta']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'colcon_meta'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extensions ['ros']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'ros'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extensions ['cmake', 'python']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'cmake'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'python'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extensions ['python_setup_py']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(scripts) by extension 'python_setup_py'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.690s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/build) by extensions ['ignore', 'ignore_ament_install']
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/build) by extension 'ignore'
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/build) ignored
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extensions ['ignore', 'ignore_ament_install']
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extension 'ignore'
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extension 'ignore_ament_install'
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extensions ['colcon_pkg']
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extension 'colcon_pkg'
+[0.691s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extensions ['colcon_meta']
+[0.692s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extension 'colcon_meta'
+[0.692s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extensions ['ros']
+[0.692s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_description) by extension 'ros'
+[0.693s] DEBUG:colcon.colcon_core.package_identification:Package 'src/feedbot_description' with type 'ros.ament_cmake' and name 'feedbot_description'
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extensions ['ignore', 'ignore_ament_install']
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extension 'ignore'
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extension 'ignore_ament_install'
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extensions ['colcon_pkg']
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extension 'colcon_pkg'
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extensions ['colcon_meta']
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extension 'colcon_meta'
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extensions ['ros']
+[0.693s] Level 1:colcon.colcon_core.package_identification:_identify(src/feedbot_fusion) by extension 'ros'
+[0.694s] DEBUG:colcon.colcon_core.package_identification:Package 'src/feedbot_fusion' with type 'ros.ament_python' and name 'feedbot_fusion'
+[0.694s] Level 1:colcon.colcon_core.package_identification:_identify(src/log) by extensions ['ignore', 'ignore_ament_install']
+[0.694s] Level 1:colcon.colcon_core.package_identification:_identify(src/log) by extension 'ignore'
+[0.694s] Level 1:colcon.colcon_core.package_identification:_identify(src/log) ignored
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extensions ['ignore', 'ignore_ament_install']
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extension 'ignore'
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extension 'ignore_ament_install'
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extensions ['colcon_pkg']
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extension 'colcon_pkg'
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extensions ['colcon_meta']
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extension 'colcon_meta'
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extensions ['ros']
+[0.695s] Level 1:colcon.colcon_core.package_identification:_identify(src/pid_logger) by extension 'ros'
+[0.696s] DEBUG:colcon.colcon_core.package_identification:Package 'src/pid_logger' with type 'ros.ament_python' and name 'pid_logger'
+[0.696s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.696s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.696s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.696s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.696s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.732s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.732s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.739s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 5 installed packages in /home/dell/ros2_feedbot_ws/install
+[0.739s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 1 installed packages in /home/dell/ros2_ws/install
+[0.742s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 385 installed packages in /opt/ros/humble
+[0.744s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.869s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'cmake_args' from command line to 'None'
+[0.869s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'cmake_target' from command line to 'None'
+[0.869s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'cmake_clean_cache' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'cmake_clean_first' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'cmake_force_configure' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'ament_cmake_args' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'catkin_cmake_args' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_description' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.870s] DEBUG:colcon.colcon_core.verb:Building package 'feedbot_description' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/dell/ros2_feedbot_ws/build/feedbot_description', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/dell/ros2_feedbot_ws/install/feedbot_description', 'merge_install': False, 'path': '/home/dell/ros2_feedbot_ws/src/feedbot_description', 'symlink_install': False, 'test_result_base': None}
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'cmake_args' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'cmake_target' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'cmake_clean_cache' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'cmake_clean_first' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'cmake_force_configure' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'ament_cmake_args' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'catkin_cmake_args' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_fusion' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.870s] DEBUG:colcon.colcon_core.verb:Building package 'feedbot_fusion' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/dell/ros2_feedbot_ws/build/feedbot_fusion', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/dell/ros2_feedbot_ws/install/feedbot_fusion', 'merge_install': False, 'path': '/home/dell/ros2_feedbot_ws/src/feedbot_fusion', 'symlink_install': False, 'test_result_base': None}
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'cmake_args' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'cmake_target' from command line to 'None'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'cmake_clean_cache' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'cmake_clean_first' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'cmake_force_configure' from command line to 'False'
+[0.870s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'ament_cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'catkin_cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_sensors' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.871s] DEBUG:colcon.colcon_core.verb:Building package 'feedbot_sensors' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/dell/ros2_feedbot_ws/build/feedbot_sensors', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/dell/ros2_feedbot_ws/install/feedbot_sensors', 'merge_install': False, 'path': '/home/dell/ros2_feedbot_ws/feedbot_sensors', 'symlink_install': False, 'test_result_base': None}
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'cmake_target' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'cmake_clean_cache' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'cmake_clean_first' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'cmake_force_configure' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'ament_cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'catkin_cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'pid_logger' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.871s] DEBUG:colcon.colcon_core.verb:Building package 'pid_logger' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/dell/ros2_feedbot_ws/build/pid_logger', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/dell/ros2_feedbot_ws/install/pid_logger', 'merge_install': False, 'path': '/home/dell/ros2_feedbot_ws/src/pid_logger', 'symlink_install': False, 'test_result_base': None}
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'cmake_target' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'cmake_clean_cache' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'cmake_clean_first' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'cmake_force_configure' from command line to 'False'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'ament_cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'catkin_cmake_args' from command line to 'None'
+[0.871s] Level 5:colcon.colcon_core.verb:set package 'feedbot_moveit_config' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.871s] DEBUG:colcon.colcon_core.verb:Building package 'feedbot_moveit_config' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/dell/ros2_feedbot_ws/build/feedbot_moveit_config', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config', 'merge_install': False, 'path': '/home/dell/ros2_feedbot_ws/feedbot_moveit_config', 'symlink_install': False, 'test_result_base': None}
+[0.872s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.872s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.873s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/dell/ros2_feedbot_ws/src/feedbot_description' with build type 'ament_cmake'
+[0.873s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/dell/ros2_feedbot_ws/src/feedbot_description'
+[0.878s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.879s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.879s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.882s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/dell/ros2_feedbot_ws/src/feedbot_fusion' with build type 'ament_python'
+[0.883s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_fusion', 'ament_prefix_path')
+[0.883s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/hook/ament_prefix_path.ps1'
+[0.883s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/hook/ament_prefix_path.dsv'
+[0.884s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/hook/ament_prefix_path.sh'
+[0.885s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.885s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.889s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/dell/ros2_feedbot_ws/feedbot_sensors' with build type 'ament_python'
+[0.889s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_sensors', 'ament_prefix_path')
+[0.889s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/hook/ament_prefix_path.ps1'
+[0.889s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/hook/ament_prefix_path.dsv'
+[0.890s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/hook/ament_prefix_path.sh'
+[0.890s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.890s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.893s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/dell/ros2_feedbot_ws/src/pid_logger' with build type 'ament_python'
+[0.893s] Level 1:colcon.colcon_core.shell:create_environment_hook('pid_logger', 'ament_prefix_path')
+[0.894s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/hook/ament_prefix_path.ps1'
+[0.894s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/hook/ament_prefix_path.dsv'
+[0.894s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/hook/ament_prefix_path.sh'
+[0.895s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.895s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.903s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/dell/ros2_feedbot_ws/build/feedbot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --build /home/dell/ros2_feedbot_ws/build/feedbot_description -- -j12 -l12
+[1.140s] WARNING:colcon.colcon_ros.task.ament_python.build:Package 'feedbot_fusion' doesn't explicitly install a marker in the package index (colcon-ros currently does it implicitly but that fallback will be removed in the future)
+[1.140s] WARNING:colcon.colcon_ros.task.ament_python.build:Package 'feedbot_fusion' doesn't explicitly install the 'package.xml' file (colcon-ros currently does it implicitly but that fallback will be removed in the future)
+[1.140s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/dell/ros2_feedbot_ws/src/feedbot_fusion'
+[1.141s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.141s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.374s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/dell/ros2_feedbot_ws/feedbot_sensors'
+[1.374s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.374s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.609s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/dell/ros2_feedbot_ws/src/pid_logger'
+[1.609s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.609s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.614s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/dell/ros2_feedbot_ws/build/feedbot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --build /home/dell/ros2_feedbot_ws/build/feedbot_description -- -j12 -l12
+[1.623s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/dell/ros2_feedbot_ws/build/feedbot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --install /home/dell/ros2_feedbot_ws/build/feedbot_description
+[1.635s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(feedbot_description)
+[1.638s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/dell/ros2_feedbot_ws/build/feedbot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --install /home/dell/ros2_feedbot_ws/build/feedbot_description
+[1.644s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description' for CMake module files
+[1.645s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description' for CMake config files
+[1.646s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_description', 'cmake_prefix_path')
+[1.647s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/hook/cmake_prefix_path.ps1'
+[1.647s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/hook/cmake_prefix_path.dsv'
+[1.647s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/hook/cmake_prefix_path.sh'
+[1.648s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/lib'
+[1.648s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/bin'
+[1.648s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/lib/pkgconfig/feedbot_description.pc'
+[1.648s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/lib/python3.10/site-packages'
+[1.648s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/bin'
+[1.649s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.ps1'
+[1.650s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.dsv'
+[1.650s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.sh'
+[1.651s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.bash'
+[1.651s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.zsh'
+[1.652s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/dell/ros2_feedbot_ws/install/feedbot_description/share/colcon-core/packages/feedbot_description)
+[1.653s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(feedbot_description)
+[1.653s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description' for CMake module files
+[1.653s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description' for CMake config files
+[1.653s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_description', 'cmake_prefix_path')
+[1.654s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/hook/cmake_prefix_path.ps1'
+[1.654s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/hook/cmake_prefix_path.dsv'
+[1.654s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/hook/cmake_prefix_path.sh'
+[1.655s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/lib'
+[1.655s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/bin'
+[1.655s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/lib/pkgconfig/feedbot_description.pc'
+[1.655s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/lib/python3.10/site-packages'
+[1.655s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_description/bin'
+[1.655s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.ps1'
+[1.656s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.dsv'
+[1.656s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.sh'
+[1.656s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.bash'
+[1.657s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.zsh'
+[1.657s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/dell/ros2_feedbot_ws/install/feedbot_description/share/colcon-core/packages/feedbot_description)
+[1.657s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/dell/ros2_feedbot_ws/feedbot_moveit_config' with build type 'ament_cmake'
+[1.657s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/dell/ros2_feedbot_ws/feedbot_moveit_config'
+[1.658s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.658s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.669s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/dell/ros2_feedbot_ws/build/feedbot_moveit_config': CMAKE_PREFIX_PATH=/home/dell/ros2_feedbot_ws/install/feedbot_description:/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config:/home/dell/ros2_ws/install/open_manipulator_description:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --build /home/dell/ros2_feedbot_ws/build/feedbot_moveit_config -- -j12 -l12
+[1.707s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/dell/ros2_feedbot_ws/build/feedbot_moveit_config' returned '0': CMAKE_PREFIX_PATH=/home/dell/ros2_feedbot_ws/install/feedbot_description:/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config:/home/dell/ros2_ws/install/open_manipulator_description:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --build /home/dell/ros2_feedbot_ws/build/feedbot_moveit_config -- -j12 -l12
+[1.709s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/dell/ros2_feedbot_ws/build/feedbot_moveit_config': CMAKE_PREFIX_PATH=/home/dell/ros2_feedbot_ws/install/feedbot_description:/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config:/home/dell/ros2_ws/install/open_manipulator_description:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --install /home/dell/ros2_feedbot_ws/build/feedbot_moveit_config
+[1.719s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(feedbot_moveit_config)
+[1.719s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config' for CMake module files
+[1.720s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/dell/ros2_feedbot_ws/build/feedbot_moveit_config' returned '0': CMAKE_PREFIX_PATH=/home/dell/ros2_feedbot_ws/install/feedbot_description:/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config:/home/dell/ros2_ws/install/open_manipulator_description:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --install /home/dell/ros2_feedbot_ws/build/feedbot_moveit_config
+[1.720s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config' for CMake config files
+[1.721s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_moveit_config', 'cmake_prefix_path')
+[1.721s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/hook/cmake_prefix_path.ps1'
+[1.722s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/hook/cmake_prefix_path.dsv'
+[1.722s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/hook/cmake_prefix_path.sh'
+[1.722s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/bin'
+[1.722s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/lib/pkgconfig/feedbot_moveit_config.pc'
+[1.723s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/lib/python3.10/site-packages'
+[1.723s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/bin'
+[1.724s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.ps1'
+[1.724s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.dsv'
+[1.725s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.sh'
+[1.725s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.bash'
+[1.725s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.zsh'
+[1.726s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/colcon-core/packages/feedbot_moveit_config)
+[1.726s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(feedbot_moveit_config)
+[1.727s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config' for CMake module files
+[1.727s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config' for CMake config files
+[1.727s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_moveit_config', 'cmake_prefix_path')
+[1.728s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/hook/cmake_prefix_path.ps1'
+[1.728s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/hook/cmake_prefix_path.dsv'
+[1.729s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/hook/cmake_prefix_path.sh'
+[1.729s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/bin'
+[1.729s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/lib/pkgconfig/feedbot_moveit_config.pc'
+[1.729s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/lib/python3.10/site-packages'
+[1.730s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/bin'
+[1.730s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.ps1'
+[1.730s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.dsv'
+[1.730s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.sh'
+[1.731s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.bash'
+[1.731s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/feedbot_moveit_config/package.zsh'
+[1.731s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/dell/ros2_feedbot_ws/install/feedbot_moveit_config/share/colcon-core/packages/feedbot_moveit_config)
+[1.994s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/dell/ros2_feedbot_ws/src/pid_logger': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/pid_logger/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/pid_logger build --build-base /home/dell/ros2_feedbot_ws/build/pid_logger/build install --record /home/dell/ros2_feedbot_ws/build/pid_logger/install.log --single-version-externally-managed install_data
+[1.997s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/dell/ros2_feedbot_ws/src/feedbot_fusion': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_fusion/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/feedbot_fusion build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log --single-version-externally-managed
+[1.998s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/dell/ros2_feedbot_ws/feedbot_sensors': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_sensors/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/feedbot_sensors build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_sensors/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_sensors/install.log --single-version-externally-managed install_data
+[2.270s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/pid_logger' for CMake module files
+[2.270s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/dell/ros2_feedbot_ws/src/pid_logger' returned '0': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/pid_logger/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/pid_logger build --build-base /home/dell/ros2_feedbot_ws/build/pid_logger/build install --record /home/dell/ros2_feedbot_ws/build/pid_logger/install.log --single-version-externally-managed install_data
+[2.271s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/pid_logger' for CMake config files
+[2.273s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/pid_logger/lib'
+[2.273s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/pid_logger/bin'
+[2.273s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/pid_logger/lib/pkgconfig/pid_logger.pc'
+[2.273s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/pid_logger/lib/python3.10/site-packages'
+[2.273s] Level 1:colcon.colcon_core.shell:create_environment_hook('pid_logger', 'pythonpath')
+[2.273s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/hook/pythonpath.ps1'
+[2.274s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/hook/pythonpath.dsv'
+[2.274s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/hook/pythonpath.sh'
+[2.275s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/pid_logger/bin'
+[2.275s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(pid_logger)
+[2.275s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/package.ps1'
+[2.276s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/package.dsv'
+[2.276s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/package.sh'
+[2.277s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/package.bash'
+[2.277s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/pid_logger/share/pid_logger/package.zsh'
+[2.277s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/dell/ros2_feedbot_ws/install/pid_logger/share/colcon-core/packages/pid_logger)
+[2.278s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_fusion' for CMake module files
+[2.279s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/dell/ros2_feedbot_ws/src/feedbot_fusion' returned '0': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_fusion/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/feedbot_fusion build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_fusion/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_fusion/install.log --single-version-externally-managed
+[2.280s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_fusion' for CMake config files
+[2.281s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib'
+[2.281s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/bin'
+[2.281s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/pkgconfig/feedbot_fusion.pc'
+[2.281s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/lib/python3.10/site-packages'
+[2.281s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_fusion', 'pythonpath')
+[2.281s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/hook/pythonpath.ps1'
+[2.282s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/hook/pythonpath.dsv'
+[2.282s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/hook/pythonpath.sh'
+[2.283s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/bin'
+[2.283s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(feedbot_fusion)
+[2.283s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/package.ps1'
+[2.283s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/package.dsv'
+[2.284s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/package.sh'
+[2.284s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/package.bash'
+[2.284s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/feedbot_fusion/package.zsh'
+[2.284s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/dell/ros2_feedbot_ws/install/feedbot_fusion/share/colcon-core/packages/feedbot_fusion)
+[2.285s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_sensors' for CMake module files
+[2.285s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/dell/ros2_feedbot_ws/feedbot_sensors' returned '0': PYTHONPATH=/home/dell/ros2_feedbot_ws/build/feedbot_sensors/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/feedbot_sensors build --build-base /home/dell/ros2_feedbot_ws/build/feedbot_sensors/build install --record /home/dell/ros2_feedbot_ws/build/feedbot_sensors/install.log --single-version-externally-managed install_data
+[2.286s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_sensors' for CMake config files
+[2.287s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib'
+[2.287s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/bin'
+[2.287s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/pkgconfig/feedbot_sensors.pc'
+[2.288s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/lib/python3.10/site-packages'
+[2.288s] Level 1:colcon.colcon_core.shell:create_environment_hook('feedbot_sensors', 'pythonpath')
+[2.288s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/hook/pythonpath.ps1'
+[2.289s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/hook/pythonpath.dsv'
+[2.289s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/hook/pythonpath.sh'
+[2.290s] Level 1:colcon.colcon_core.environment:checking '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/bin'
+[2.290s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(feedbot_sensors)
+[2.290s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/package.ps1'
+[2.291s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/package.dsv'
+[2.291s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/package.sh'
+[2.291s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/package.bash'
+[2.292s] INFO:colcon.colcon_core.shell:Creating package script '/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/feedbot_sensors/package.zsh'
+[2.292s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/dell/ros2_feedbot_ws/install/feedbot_sensors/share/colcon-core/packages/feedbot_sensors)
+[2.292s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.292s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.292s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[2.292s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.303s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.303s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.303s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.313s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.313s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/dell/ros2_feedbot_ws/install/local_setup.ps1'
+[2.314s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/dell/ros2_feedbot_ws/install/_local_setup_util_ps1.py'
+[2.315s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/dell/ros2_feedbot_ws/install/setup.ps1'
+[2.317s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/dell/ros2_feedbot_ws/install/local_setup.sh'
+[2.318s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/dell/ros2_feedbot_ws/install/_local_setup_util_sh.py'
+[2.318s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/dell/ros2_feedbot_ws/install/setup.sh'
+[2.319s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/dell/ros2_feedbot_ws/install/local_setup.bash'
+[2.320s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/dell/ros2_feedbot_ws/install/setup.bash'
+[2.321s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/dell/ros2_feedbot_ws/install/local_setup.zsh'
+[2.322s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/dell/ros2_feedbot_ws/install/setup.zsh'

@@ -1,0 +1,153 @@
+import os
+import re
+import xacro
+
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, TimerAction
+from launch.event_handlers import OnProcessExit
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
+
+from ament_index_python.packages import get_package_share_directory
+
+
+def generate_launch_description():
+
+    pkg_share = get_package_share_directory("feedbot_description")
+    xacro_file = os.path.join(pkg_share, "urdf", "my_robot.urdf.xacro")
+
+    # --------------------------------------------------
+    # Process Xacro
+    # --------------------------------------------------
+    doc = xacro.process_file(xacro_file)
+    robot_description_raw = doc.toxml()
+
+    # Remove XML comments (prevents ROS2 CLI truncation bug)
+    robot_description_raw = re.sub(
+        r'<!--.*?-->',
+        '',
+        robot_description_raw,
+        flags=re.DOTALL
+    )
+
+    robot_description = ParameterValue(
+        robot_description_raw,
+        value_type=str
+    )
+
+    # --------------------------------------------------
+    # Gazebo
+    # --------------------------------------------------
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("gazebo_ros"),
+                "launch",
+                "gazebo.launch.py"
+            )
+        )
+    )
+
+    # --------------------------------------------------
+    # Robot State Publisher
+    # --------------------------------------------------
+    robot_state_publisher = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        parameters=[{"robot_description": robot_description}],
+        output="screen",
+    )
+
+    # --------------------------------------------------
+    # Spawn Robot
+    # --------------------------------------------------
+    spawn_robot = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        arguments=[
+            "-entity", "feedbot",
+            "-topic", "robot_description",
+        ],
+        output="screen",
+    )
+
+    # --------------------------------------------------
+    # Spawn Controllers AFTER robot spawn
+    # --------------------------------------------------
+    spawn_controllers = RegisterEventHandler(
+        OnProcessExit(
+            target_action=spawn_robot,
+            on_exit=[
+                TimerAction(
+                    period=3.0,
+                    actions=[
+
+                        Node(
+                            package="controller_manager",
+                            executable="spawner",
+                            arguments=[
+                                "joint_state_broadcaster",
+                                "--controller-manager",
+                                "/controller_manager"
+                            ],
+                            output="screen",
+                        ),
+
+                        Node(
+                            package="controller_manager",
+                            executable="spawner",
+                            arguments=[
+                                "joint1_controller",
+                                "--controller-manager",
+                                "/controller_manager"
+                            ],
+                            output="screen",
+                        ),
+
+                        Node(
+                            package="controller_manager",
+                            executable="spawner",
+                            arguments=[
+                                "joint2_controller",
+                                "--controller-manager",
+                                "/controller_manager"
+                            ],
+                            output="screen",
+                        ),
+
+                        Node(
+                            package="controller_manager",
+                            executable="spawner",
+                            arguments=[
+                                "joint3_controller",
+                                "--controller-manager",
+                                "/controller_manager"
+                            ],
+                            output="screen",
+                        ),
+
+                        Node(
+                            package="controller_manager",
+                            executable="spawner",
+                            arguments=[
+                                "joint4_controller",
+                                "--controller-manager",
+                                "/controller_manager"
+                            ],
+                            output="screen",
+                        ),
+                    ],
+                )
+            ],
+        )
+    )
+
+    return LaunchDescription([
+        gazebo,
+        robot_state_publisher,
+        spawn_robot,
+        spawn_controllers,
+    ])
+

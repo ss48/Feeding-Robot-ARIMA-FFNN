@@ -1,0 +1,9 @@
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/uninstall.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/feedbot_description_uninstall.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/test.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/edit_cache.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/rebuild_cache.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/list_install_components.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/install.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/install/local.dir
+/home/dell/ros2_feedbot_ws/src/build/feedbot_description/CMakeFiles/install/strip.dir

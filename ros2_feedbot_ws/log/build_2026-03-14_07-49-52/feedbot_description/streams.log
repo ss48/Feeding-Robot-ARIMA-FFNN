@@ -1,0 +1,53 @@
+[0.076s] Invoking command in '/home/dell/ros2_feedbot_ws/build/feedbot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --build /home/dell/ros2_feedbot_ws/build/feedbot_description -- -j12 -l12
+[1.767s] Invoked command in '/home/dell/ros2_feedbot_ws/build/feedbot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --build /home/dell/ros2_feedbot_ws/build/feedbot_description -- -j12 -l12
+[1.787s] Invoking command in '/home/dell/ros2_feedbot_ws/build/feedbot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --install /home/dell/ros2_feedbot_ws/build/feedbot_description
+[1.804s] -- Install configuration: ""
+[1.804s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/launch
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/launch/gazebo.launch.py
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/launch/control_rviz.launch.py
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/launch/bringup.launch.py
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/launch/urdf_debug.launch.py
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/urdf
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/urdf/test.urdf
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/urdf/my_robot.urdf
+[1.805s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/urdf/my_robot.urdf.xacro
+[1.806s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/config
+[1.806s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/config/controllers_untuned.yaml
+[1.806s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/config/pid_controllers.yaml
+[1.806s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/config/controllers.yaml
+[1.806s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/config/ros2_control.yaml
+[1.806s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/config/controllers_tuned.yaml
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/config/gazebo_controllers.yaml
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/rviz
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/rviz/control.rviz
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/base.stl
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/plate.stl
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/table.stl
+[1.807s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/link3.stl
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/mouth_open.stl
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/apple.stl
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/feeder_head.stl
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/link2.stl
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/strawberry.stl
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/meshes/link1.stl
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/worlds
+[1.808s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/worlds/empty.world
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/lib/feedbot_description/step_test_all_joints.py
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/lib/feedbot_description/step_test_joint.py
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/ament_index/resource_index/package_run_dependencies/feedbot_description
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/ament_index/resource_index/parent_prefix_path/feedbot_description
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/environment/ament_prefix_path.sh
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/environment/ament_prefix_path.dsv
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/environment/path.sh
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/environment/path.dsv
+[1.809s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/local_setup.bash
+[1.810s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/local_setup.sh
+[1.810s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/local_setup.zsh
+[1.810s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/local_setup.dsv
+[1.811s] -- Installing: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.dsv
+[1.812s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/ament_index/resource_index/packages/feedbot_description
+[1.813s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/cmake/feedbot_descriptionConfig.cmake
+[1.813s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/cmake/feedbot_descriptionConfig-version.cmake
+[1.814s] -- Up-to-date: /home/dell/ros2_feedbot_ws/install/feedbot_description/share/feedbot_description/package.xml
+[1.817s] Invoked command in '/home/dell/ros2_feedbot_ws/build/feedbot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/dell/ros2_feedbot_ws/install/pid_logger:/home/dell/ros2_feedbot_ws/install/feedbot_sensors:/home/dell/ros2_feedbot_ws/install/feedbot_fusion:/opt/ros/humble /usr/bin/cmake --install /home/dell/ros2_feedbot_ws/build/feedbot_description
