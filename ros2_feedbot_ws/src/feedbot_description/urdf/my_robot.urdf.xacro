@@ -410,6 +410,24 @@
 
 </link> 
 
+<gazebo reference="base">
+  <material>Gazebo/DarkGrey</material>
+</gazebo>
+<gazebo reference="link1">
+  <material>Gazebo/Orange</material>
+</gazebo>
+<gazebo reference="link2">
+  <material>Gazebo/Orange</material>
+</gazebo>
+<gazebo reference="link3">
+  <material>Gazebo/Orange</material>
+</gazebo>
+<gazebo reference="feeder_head">
+  <material>Gazebo/Grey</material>
+</gazebo>
+<gazebo reference="table_link">
+  <material>Gazebo/Wood</material>
+</gazebo>
 <gazebo reference="plate_link">
   <material>Gazebo/White</material>
 </gazebo>

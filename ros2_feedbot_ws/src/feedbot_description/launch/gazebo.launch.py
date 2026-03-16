@@ -108,10 +108,22 @@ def generate_launch_description():
     # Controllers are auto-activated by the ign_ros2_control plugin
     # via controllers.yaml — no need to spawn them manually.
 
+    # --------------------------------------------------
+    # RViz
+    # --------------------------------------------------
+    rviz_config = os.path.join(pkg_share, "rviz", "feeding_system.rviz")
+    rviz = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=["-d", rviz_config],
+        output="screen",
+    )
+
     return LaunchDescription([
         ign_resource_path,
         gz_sim,
         robot_state_publisher,
         spawn_robot,
         gz_bridge,
+        rviz,
     ])
