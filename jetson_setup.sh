@@ -84,7 +84,8 @@ echo ""
 echo "[4/8] Installing Python dependencies..."
 sudo apt install -y python3-pip
 pip3 install --upgrade pip
-pip3 install numpy opencv-python trimesh
+pip3 install "numpy<2" trimesh
+# opencv is provided by ros-humble-cv-bridge and JetPack — do not install via pip
 
 # ---------------------------------------------------------------------------
 # 5. Clone the repository

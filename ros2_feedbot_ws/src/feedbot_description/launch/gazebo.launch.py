@@ -4,14 +4,13 @@ import xacro
 
 from launch import LaunchDescription
 from launch.actions import (
-    DeclareLaunchArgument,
+    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
     TimerAction,
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -44,6 +43,13 @@ def generate_launch_description():
     )
 
     # --------------------------------------------------
+    # Write URDF to a temp file for Gz Sim to read
+    # --------------------------------------------------
+    urdf_tmp = "/tmp/feedbot_description.urdf"
+    with open(urdf_tmp, "w") as f:
+        f.write(robot_description_raw)
+
+    # --------------------------------------------------
     # Gazebo (new Gz Sim via ros_gz_sim)
     # --------------------------------------------------
     gz_sim = IncludeLaunchDescription(
@@ -68,14 +74,14 @@ def generate_launch_description():
     )
 
     # --------------------------------------------------
-    # Spawn Robot
+    # Spawn Robot (pass URDF file directly to Gz Sim)
     # --------------------------------------------------
     spawn_robot = Node(
         package="ros_gz_sim",
         executable="create",
         arguments=[
             "-name", "feedbot",
-            "-topic", "robot_description",
+            "-file", urdf_tmp,
         ],
         output="screen",
     )
