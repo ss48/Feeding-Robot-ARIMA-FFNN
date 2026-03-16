@@ -118,9 +118,7 @@ def main():
         # Collision mesh (low res)
         col_mesh = merge_stls(indices, COLLISION_DIR)
         if col_mesh is not None:
-            # Simplify collision mesh
-            if len(col_mesh.faces) > 2000:
-                col_mesh = col_mesh.simplify_quadric_decimation(2000)
+            # Use collision meshes as-is (already lower resolution from conversion)
             col_path = os.path.join(COLLISION_DIR, f"{link_name}.stl")
             col_mesh.export(col_path)
             print(f"    Collision: {col_path} ({os.path.getsize(col_path)/1024:.0f} KB)")

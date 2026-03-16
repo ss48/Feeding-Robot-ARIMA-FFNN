@@ -6,11 +6,7 @@
     <material>Gazebo/DarkGrey</material>
   </gazebo>
 
-  <gazebo reference="turntable_link">
-    <material>Gazebo/Blue</material>
-  </gazebo>
-
-  <gazebo reference="shoulder_riser_link">
+  <gazebo reference="shoulder_link">
     <material>Gazebo/Grey</material>
   </gazebo>
 
