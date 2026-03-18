@@ -31,6 +31,8 @@ setup(
             'feeding_fsm = feedbot_fusion.feeding_fsm_node:main',
             'arima_ffnn = feedbot_fusion.arima_ffnn_node:main',
             'fuzzy_controller = feedbot_fusion.fuzzy_controller_node:main',
+            'mouth_animator = feedbot_fusion.mouth_animator_node:main',
+            'sonar_bridge = feedbot_fusion.sonar_bridge_node:main',
         ],
     },
 )

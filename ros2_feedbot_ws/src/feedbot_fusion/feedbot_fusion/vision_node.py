@@ -52,10 +52,13 @@ class VisionNode(Node):
         self.bridge = CvBridge()
         self._kernel = np.ones((5, 5), np.uint8)
 
-        # Subscribe to camera
+        # Subscribe to camera (Gazebo bridge topic)
+        self.declare_parameter('camera_topic', '/feeding_robot/camera/image_raw')
+        camera_topic = self.get_parameter('camera_topic').value
+
         self.image_sub = self.create_subscription(
             Image,
-            '/camera/camera/image_raw',
+            camera_topic,
             self.image_callback,
             10
         )

@@ -1,6 +1,7 @@
 """
 Launch file for Gazebo simulation of the Feeding Robot.
-Spawns the robot in Gazebo with ros2_control controllers.
+Spawns the robot in Gazebo with ros2_control controllers, bridges
+camera / ultrasonic / jaw topics, and launches the feeding system.
 
 Usage:
   ros2 launch feeding_robot gazebo.launch.py
@@ -11,7 +12,6 @@ import os
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
-    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
     TimerAction,
@@ -62,7 +62,6 @@ def generate_launch_description():
     )
 
     # ==================== GAZEBO ====================
-    # Launch Gazebo Fortress (Ignition)
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             os.path.join(
@@ -88,18 +87,26 @@ def generate_launch_description():
     )
 
     # ==================== ROS-GAZEBO BRIDGE ====================
-    # Bridge clock and sensor topics between Gazebo and ROS2
+    # Bridge clock, camera image, ultrasonic range, and jaw command
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
+            # Clock
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            # Camera image (Gazebo -> ROS)
+            '/feeding_robot/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+            # Camera info (Gazebo -> ROS)
+            '/feeding_robot/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            # Ultrasonic range (Gazebo -> ROS)
+            '/feeding_robot/ultrasonic/range@sensor_msgs/msg/Range[gz.msgs.LaserScan',
+            # Patient jaw command (ROS -> Gazebo)
+            '/patient_head/jaw_cmd@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         output='screen'
     )
 
     # ==================== CONTROLLERS ====================
-    # Spawn joint_state_broadcaster
     joint_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
@@ -110,7 +117,6 @@ def generate_launch_description():
         output='screen',
     )
 
-    # Spawn arm_controller (after joint_state_broadcaster is active)
     arm_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
