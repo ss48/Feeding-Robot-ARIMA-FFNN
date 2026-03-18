@@ -13,14 +13,21 @@ Once pushed, SSH into your Jetson Orin and run:
 ```bash
 # 1. Clone and set up (one-time)
 git clone git@github.com:ss48/Feeding-Robot-ARIMA-FFNN.git ~/feeding_robot_ws
-##or
+# or
 git clone https://github.com/ss48/Feeding-Robot-ARIMA-FFNN.git ~/feeding_robot_ws
 
 cd ~/feeding_robot_ws
 chmod +x jetson_setup.sh run_feeding.sh
+
+# 2. CRITICAL: Copy feeding_robot package into the colcon workspace
+#    The feeding_robot package lives at the repo root but colcon only
+#    scans ros2_feedbot_ws/src/ — so it must be copied there.
+cp -r feeding_robot ros2_feedbot_ws/src/feeding_robot
+
+# 3. Run setup
 ./jetson_setup.sh
 
-# 2. Run (after setup)
+# 4. Run (after setup)
 source ~/.bashrc
 
 # Real hardware mode (servos + camera + force sensor connected)
@@ -75,35 +82,86 @@ sudo apt install -y \
   ros-humble-controller-manager
 ```
 
-### Step-by-Step: Loading the Robot in Gazebo + RViz
+### CRITICAL: Package Layout Fix
+
+The `feeding_robot` package **must** be inside the colcon workspace `src/` directory.
+The repo ships it at the root, but **colcon only scans `ros2_feedbot_ws/src/`** for
+packages. If it's missing there, nothing will work — no URDF, no launch files, no
+robot in RViz.
 
 ```bash
-# ─── 1. Build both packages ───
+# Check if it exists in the workspace:
+ls ~/feeding_robot_ws/ros2_feedbot_ws/src/feeding_robot/package.xml
+
+# If that file does NOT exist, copy the package in:
+cp -r ~/feeding_robot_ws/feeding_robot ~/feeding_robot_ws/ros2_feedbot_ws/src/feeding_robot
+```
+
+### Step-by-Step: Building and Loading the Robot
+
+```bash
+# ─────────────────────────────────────────────────────
+# STEP 1: Ensure feeding_robot is in the workspace
+# ─────────────────────────────────────────────────────
 cd ~/feeding_robot_ws
+
+# Copy feeding_robot into workspace src/ if not already there
+if [ ! -f ros2_feedbot_ws/src/feeding_robot/package.xml ]; then
+  echo "Copying feeding_robot into workspace..."
+  cp -r feeding_robot ros2_feedbot_ws/src/feeding_robot
+fi
+
+# ─────────────────────────────────────────────────────
+# STEP 2: Clean build (do this after any structural changes)
+# ─────────────────────────────────────────────────────
+cd ~/feeding_robot_ws/ros2_feedbot_ws
 source /opt/ros/humble/setup.bash
-colcon build --symlink-install --packages-select feeding_robot feedbot_fusion
+
+# Remove stale build artifacts
+rm -rf build/ install/ log/
+
+# Build ALL packages (feeding_robot + feedbot_fusion + others)
+colcon build --symlink-install
 source install/setup.bash
 
-# ─── 2. Terminal 1: Launch Gazebo with robot, bridges, controllers, and RViz ───
+# ─────────────────────────────────────────────────────
+# STEP 3: Verify both packages are found
+# ─────────────────────────────────────────────────────
+ros2 pkg prefix feeding_robot
+# Should print: ~/feeding_robot_ws/ros2_feedbot_ws/install/feeding_robot
+# If it says "Package not found", go back to Step 1
+
+ros2 pkg prefix feedbot_fusion
+# Should print: ~/feeding_robot_ws/ros2_feedbot_ws/install/feedbot_fusion
+
+# ─────────────────────────────────────────────────────
+# STEP 4 — Terminal 1: Launch Gazebo + robot + RViz
+# ─────────────────────────────────────────────────────
 ros2 launch feeding_robot gazebo.launch.py
 
-# Wait for:
-#   - Gazebo window to open (table, plate, 6 fruits, patient head visible)
-#   - RViz to open (robot model should appear within ~5s)
-#   - Console shows: "Successfully loaded and activated controller arm_controller"
+# Wait for ALL of these before opening Terminal 2:
+#   [OK] Gazebo window opens (table, plate, 6 coloured fruits, patient head)
+#   [OK] RViz opens (robot model appears within ~5 seconds)
+#   [OK] Console prints: "Loaded joint_state_broadcaster"
+#   [OK] Console prints: "Loaded arm_controller"
 
-# ─── 3. Terminal 2: Launch the full feeding pipeline ───
-source /opt/ros/humble/setup.bash && source ~/feeding_robot_ws/install/setup.bash
+# ─────────────────────────────────────────────────────
+# STEP 5 — Terminal 2: Launch the feeding pipeline
+# ─────────────────────────────────────────────────────
+cd ~/feeding_robot_ws/ros2_feedbot_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
 ros2 launch feedbot_fusion feeding_system.launch.py
 
-# This starts:
-#   vision_node        — multi-fruit HSV detection from camera
+# This starts 8 nodes:
+#   vision_node        — multi-fruit HSV detection from Gazebo camera
 #   force_node         — spoon force sensing
 #   fusion_node        — EKF sensor fusion (camera + sonar Kalman filter)
-#   arima_ffnn         — hybrid predictor
-#   fuzzy_controller   — force/angle regulation
-#   feeding_fsm        — state machine (IDLE -> DETECT -> COLLECT -> FEED -> RETRACT)
-#   sonar_bridge       — converts ultrasonic scan to plate/mouth distance
+#   arima_ffnn         — hybrid ARIMA+FFNN predictor
+#   fuzzy_controller   — fuzzy force/angle regulation
+#   feeding_fsm        — state machine (IDLE→DETECT→COLLECT→FEED→RETRACT)
+#   sonar_bridge       — converts ultrasonic scan → plate/mouth distance
 #   mouth_animator     — cycles patient jaw open/close (4s period)
 ```
 
@@ -140,6 +198,7 @@ ros2 topic pub --once /arm_controller/joint_trajectory \
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
+| `Package 'feeding_robot' not found` | Package is at repo root, not in workspace `src/` | Run `cp -r ~/feeding_robot_ws/feeding_robot ~/feeding_robot_ws/ros2_feedbot_ws/src/feeding_robot` then rebuild |
 | No robot in RViz, no TF errors | `robot_state_publisher` not running or `robot_description` empty | Check `ros2 topic echo /robot_description --once` returns URDF XML |
 | Robot flickers or no TF | `use_sim_time: true` but `/clock` not bridged | Verify `ros2 topic hz /clock` shows ~1000 Hz |
 | Robot visible but joints frozen | `joint_state_broadcaster` not active | Run `ros2 control list_controllers` — should show `active` |

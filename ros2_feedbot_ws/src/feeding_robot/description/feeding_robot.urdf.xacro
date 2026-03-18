@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="feeding_robot">
+
+  <!-- ============================================================ -->
+  <!-- Adaptive Feeding Robot - Top Level URDF                       -->
+  <!-- 4-DOF Open Manipulator for Assistive Feeding                  -->
+  <!-- Anglia Ruskin University                                      -->
+  <!-- ============================================================ -->
+
+  <xacro:arg name="use_sim" default="true"/>
+  <xacro:arg name="use_meshes" default="false"/>
+
+  <!-- Material definitions -->
+  <xacro:include filename="$(find feeding_robot)/description/materials.xacro"/>
+
+  <!-- Inertia calculation macros -->
+  <xacro:include filename="$(find feeding_robot)/description/inertial_macros.xacro"/>
+
+  <!-- Core robot description: links, joints, kinematics -->
+  <xacro:include filename="$(find feeding_robot)/description/feeding_robot_core.xacro"/>
+
+  <!-- ros2_control hardware interfaces -->
+  <xacro:include filename="$(find feeding_robot)/description/feeding_robot_ros2_control.xacro"/>
+
+  <!-- Gazebo-specific plugins and materials (only for simulation) -->
+  <xacro:if value="$(arg use_sim)">
+    <xacro:include filename="$(find feeding_robot)/description/gazebo_plugins.xacro"/>
+  </xacro:if>
+
+</robot>

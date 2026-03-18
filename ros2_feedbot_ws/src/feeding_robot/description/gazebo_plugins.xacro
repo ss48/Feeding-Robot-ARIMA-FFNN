@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ============================================================ -->
+  <!-- Gazebo Fortress (gz sim) plugins and sensor definitions       -->
+  <!--                                                               -->
+  <!-- In Fortress, sensors are handled by the gz-sim-sensors-system -->
+  <!-- world plugin.  Sensor data is bridged to ROS 2 via           -->
+  <!-- ros_gz_bridge in the launch file.                             -->
+  <!-- ============================================================ -->
+
+  <!-- ==================== CAMERA SENSOR ==================== -->
+  <!-- Raspberry Pi Camera Module V2.1: 8MP, FOV 62.2 x 48.8 deg -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="pi_camera">
+      <always_on>true</always_on>
+      <update_rate>30.0</update_rate>
+      <visualize>true</visualize>
+      <topic>feeding_robot/camera/image_raw</topic>
+      <camera name="feeding_camera">
+        <horizontal_fov>1.0857</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>5.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <!-- ==================== ULTRASONIC SENSOR ==================== -->
+  <!-- HC-SR04: range 2cm - 400cm, beam angle ~15 deg -->
+  <gazebo reference="ultrasonic_link">
+    <sensor type="gpu_lidar" name="ultrasonic_sensor">
+      <always_on>true</always_on>
+      <update_rate>20.0</update_rate>
+      <visualize>true</visualize>
+      <topic>feeding_robot/ultrasonic/scan</topic>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.1309</min_angle>
+            <max_angle>0.1309</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.02</min>
+          <max>4.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+  <!-- ==================== GAZEBO ROS2_CONTROL PLUGIN ==================== -->
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find feeding_robot)/config/feeding_robot_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+</robot>

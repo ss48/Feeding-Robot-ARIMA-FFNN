@@ -1,0 +1,424 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ============================================================ -->
+  <!-- Adaptive Feeding Robot - 4 DOF Open Manipulator               -->
+  <!-- CAD: Auto Feeder SSE v222.step                                -->
+  <!-- Joints: Base Y, Lower Z, Upper Z, Feeder                     -->
+  <!-- Actuators: 4x Dynamixel XM430-W350R                          -->
+  <!--                                                               -->
+  <!-- CAD coordinate system: Z up, X horizontal (arm extends +X)   -->
+  <!-- Assembly bounds (mm): X[-75,343] Y[-55,56] Z[-25,425]        -->
+  <!-- ============================================================ -->
+
+  <!-- ==================== PARAMETERS ==================== -->
+
+  <!-- Joint positions in CAD coordinates (mm), converted to metres -->
+  <!-- These are derived from the bounding box analysis of grouped solids -->
+
+  <!-- Base Y joint: at top of base platform, Z=88mm -->
+  <xacro:property name="base_top_z" value="0.088"/>
+
+  <!-- Lower Z joint (shoulder): at Z=131mm, X=-16mm -->
+  <!-- This is where the shoulder motor stack meets the vertical arm -->
+  <xacro:property name="shoulder_joint_z" value="0.131"/>
+
+  <!-- Upper Z joint (elbow): at top of vertical arm, Z=331mm, X=-5mm -->
+  <!-- Transition from vertical to horizontal arm -->
+  <xacro:property name="elbow_joint_z" value="0.331"/>
+  <xacro:property name="lower_arm_length" value="${elbow_joint_z - shoulder_joint_z}"/>
+
+  <!-- Feeder joint (wrist): at X=194mm from CAD origin, Z=351mm -->
+  <!-- Where the horizontal arm meets the feeder end effector -->
+  <xacro:property name="upper_arm_length" value="0.199"/>
+
+  <!-- Feeder length to tip -->
+  <xacro:property name="feeder_length" value="0.148"/>
+
+  <!-- Motor specs: Dynamixel XM430-W350R -->
+  <xacro:property name="max_velocity" value="4.8172"/>
+  <xacro:property name="max_effort" value="4.1"/>
+
+  <!-- Mesh file paths -->
+  <xacro:property name="mesh_vis" value="package://feeding_robot/meshes/visual"/>
+  <xacro:property name="mesh_col" value="package://feeding_robot/meshes/collision"/>
+
+  <!-- Switch between mesh and primitive visuals -->
+  <xacro:arg name="use_meshes" default="false"/>
+  <xacro:property name="use_meshes" value="$(arg use_meshes)"/>
+
+  <!-- STL scale: CAD is in mm, URDF uses metres -->
+  <xacro:property name="stl_scale" value="0.001 0.001 0.001"/>
+
+  <!-- ==================== WORLD LINK ==================== -->
+  <link name="world"/>
+
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== BASE LINK ==================== -->
+  <!-- CAD solids 59-63: base platform, Z[-25, 88]mm -->
+  <link name="base_link">
+    <xacro:if value="${use_meshes}">
+      <visual>
+        <geometry>
+          <mesh filename="${mesh_vis}/base_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <!-- CAD origin is at world origin, no offset needed -->
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="${mesh_col}/base_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </collision>
+    </xacro:if>
+    <xacro:unless value="${use_meshes}">
+      <visual>
+        <geometry>
+          <cylinder radius="0.060" length="${base_top_z}"/>
+        </geometry>
+        <origin xyz="0 0 ${base_top_z/2}" rpy="0 0 0"/>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="0.060" length="${base_top_z}"/>
+        </geometry>
+        <origin xyz="0 0 ${base_top_z/2}" rpy="0 0 0"/>
+      </collision>
+    </xacro:unless>
+    <inertial>
+      <mass value="0.8"/>
+      <origin xyz="-0.034 0 0.032" rpy="0 0 0"/>
+      <inertia ixx="0.002" ixy="0.0" ixz="0.0"
+               iyy="0.002" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== BASE Y JOINT (Yaw) ==================== -->
+  <!-- At the top of the base platform, rotates around vertical Z axis -->
+  <joint name="base_y_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="shoulder_link"/>
+    <origin xyz="0 0 ${base_top_z}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-175.0 * pi / 180.0}" upper="${175.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.5" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== SHOULDER LINK ==================== -->
+  <!-- CAD solids 0-10,58: motor stack, Z[81, 132]mm -->
+  <!-- This link sits on top of the base and contains the shoulder motors -->
+  <link name="shoulder_link">
+    <xacro:if value="${use_meshes}">
+      <visual>
+        <geometry>
+          <mesh filename="${mesh_vis}/shoulder_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <!-- Offset: shift mesh so joint position (CAD X=-25,Y=0,Z=88) is at link origin -->
+        <origin xyz="0.025 0 -0.088" rpy="0 0 0"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="${mesh_col}/shoulder_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <origin xyz="0.025 0 -0.088" rpy="0 0 0"/>
+      </collision>
+    </xacro:if>
+    <xacro:unless value="${use_meshes}">
+      <visual>
+        <geometry>
+          <box size="0.105 0.105 0.051"/>
+        </geometry>
+        <origin xyz="0 0 ${(shoulder_joint_z - base_top_z)/2}" rpy="0 0 0"/>
+        <material name="light_grey"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="0.105 0.105 0.051"/>
+        </geometry>
+        <origin xyz="0 0 ${(shoulder_joint_z - base_top_z)/2}" rpy="0 0 0"/>
+      </collision>
+    </xacro:unless>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 ${(shoulder_joint_z - base_top_z)/2}" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+               iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== LOWER Z JOINT (Shoulder Pitch) ==================== -->
+  <!-- At the top of the shoulder motor stack, Z=131mm -->
+  <joint name="lower_z_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="lower_arm_link"/>
+    <origin xyz="0 0 ${shoulder_joint_z - base_top_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-90.0 * pi / 180.0}" upper="${90.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.5" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== LOWER ARM LINK ==================== -->
+  <!-- CAD solids 11-21,23-26: vertical arm segment, Z[127, 331]mm -->
+  <!-- Goes upward 200mm from shoulder to elbow -->
+  <link name="lower_arm_link">
+    <xacro:if value="${use_meshes}">
+      <visual>
+        <geometry>
+          <mesh filename="${mesh_vis}/lower_arm_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <!-- Offset: shift mesh so joint position (CAD X=-16,Y=0,Z=131) is at link origin -->
+        <origin xyz="0.016 0 -0.131" rpy="0 0 0"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="${mesh_col}/lower_arm_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <origin xyz="0.016 0 -0.131" rpy="0 0 0"/>
+      </collision>
+    </xacro:if>
+    <xacro:unless value="${use_meshes}">
+      <visual>
+        <geometry>
+          <cylinder radius="0.020" length="${lower_arm_length}"/>
+        </geometry>
+        <origin xyz="0 0 ${lower_arm_length/2}" rpy="0 0 0"/>
+        <material name="red"/>
+      </visual>
+      <visual>
+        <geometry>
+          <box size="0.029 0.034 0.047"/>
+        </geometry>
+        <origin xyz="0 0 0.023" rpy="0 0 0"/>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="0.029 0.045 ${lower_arm_length}"/>
+        </geometry>
+        <origin xyz="0 0 ${lower_arm_length/2}" rpy="0 0 0"/>
+      </collision>
+    </xacro:unless>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 ${lower_arm_length/2}" rpy="0 0 0"/>
+      <inertia ixx="0.003" ixy="0.0" ixz="0.0"
+               iyy="0.003" iyz="0.0" izz="0.0003"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== UPPER Z JOINT (Elbow Pitch) ==================== -->
+  <!-- At the top of the vertical arm, Z=331mm, transition to horizontal -->
+  <joint name="upper_z_joint" type="revolute">
+    <parent link="lower_arm_link"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="0 0 ${lower_arm_length}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-120.0 * pi / 180.0}" upper="${75.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.3" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== UPPER ARM LINK ==================== -->
+  <!-- CAD solids 22,27-52: horizontal arm, X[-28, 198]mm Z[331, 386]mm -->
+  <!-- Extends horizontally ~200mm from elbow to wrist -->
+  <link name="upper_arm_link">
+    <xacro:if value="${use_meshes}">
+      <visual>
+        <geometry>
+          <mesh filename="${mesh_vis}/upper_arm_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <!-- Offset: shift mesh so elbow joint (CAD X=-5,Y=0,Z=331) is at link origin -->
+        <origin xyz="0.005 0 -0.331" rpy="0 0 0"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="${mesh_col}/upper_arm_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <origin xyz="0.005 0 -0.331" rpy="0 0 0"/>
+      </collision>
+    </xacro:if>
+    <xacro:unless value="${use_meshes}">
+      <visual>
+        <geometry>
+          <cylinder radius="0.018" length="${upper_arm_length}"/>
+        </geometry>
+        <origin xyz="${upper_arm_length/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <material name="blue"/>
+      </visual>
+      <visual>
+        <geometry>
+          <box size="0.029 0.034 0.047"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${upper_arm_length} 0.045 0.055"/>
+        </geometry>
+        <origin xyz="${upper_arm_length/2} 0 0" rpy="0 0 0"/>
+      </collision>
+    </xacro:unless>
+    <inertial>
+      <mass value="0.6"/>
+      <origin xyz="${upper_arm_length/2} 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0005" ixy="0.0" ixz="0.0"
+               iyy="0.004" iyz="0.0" izz="0.004"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== FEEDER JOINT (Wrist Pitch) ==================== -->
+  <!-- Where horizontal arm meets feeder, CAD X=194mm -->
+  <joint name="feeder_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="feeder_link"/>
+    <origin xyz="${upper_arm_length} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-90.0 * pi / 180.0}" upper="${115.0 * pi / 180.0}"
+           velocity="${max_velocity}" effort="${max_effort}"/>
+    <dynamics damping="0.2" friction="0.05"/>
+  </joint>
+
+  <!-- ==================== FEEDER LINK (End Effector) ==================== -->
+  <!-- CAD solids 53-57,64-66: feeder mechanism, X[194, 342]mm -->
+  <link name="feeder_link">
+    <xacro:if value="${use_meshes}">
+      <visual>
+        <geometry>
+          <mesh filename="${mesh_vis}/feeder_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <!-- Offset: shift mesh so wrist joint (CAD X=194,Y=0,Z=351) is at link origin -->
+        <origin xyz="-0.194 0 -0.351" rpy="0 0 0"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="${mesh_col}/feeder_link.stl" scale="${stl_scale}"/>
+        </geometry>
+        <origin xyz="-0.194 0 -0.351" rpy="0 0 0"/>
+      </collision>
+    </xacro:if>
+    <xacro:unless value="${use_meshes}">
+      <visual>
+        <geometry>
+          <cylinder radius="0.015" length="${feeder_length}"/>
+        </geometry>
+        <origin xyz="${feeder_length/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <material name="orange"/>
+      </visual>
+      <visual>
+        <geometry>
+          <box size="0.029 0.034 0.047"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="black"/>
+      </visual>
+      <visual>
+        <geometry>
+          <box size="0.04 0.03 0.005"/>
+        </geometry>
+        <origin xyz="${feeder_length + 0.02} 0 0" rpy="0 0 0"/>
+        <material name="light_grey"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${feeder_length + 0.04} 0.103 0.121"/>
+        </geometry>
+        <origin xyz="${feeder_length/2} 0 0" rpy="0 0 0"/>
+      </collision>
+    </xacro:unless>
+    <inertial>
+      <mass value="0.35"/>
+      <origin xyz="${feeder_length/2} 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0005" ixy="0.0" ixz="0.0"
+               iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <!-- ==================== END EFFECTOR FRAME ==================== -->
+  <link name="spoon_tip_frame"/>
+
+  <joint name="feeder_to_spoon_tip" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="spoon_tip_frame"/>
+    <origin xyz="${feeder_length + 0.02} 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== CAMERA (Raspberry Pi Camera V2.1) ==================== -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.025 0.024 0.009"/>
+      </geometry>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.025 0.024 0.009"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.003"/>
+      <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+               iyy="0.000001" iyz="0.0" izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.03 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_optical_frame"/>
+
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_frame"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <!-- ==================== ULTRASONIC SENSOR (HC-SR04) ==================== -->
+  <link name="ultrasonic_link">
+    <visual>
+      <geometry>
+        <box size="0.045 0.020 0.015"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.045 0.020 0.015"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.010"/>
+      <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+               iyy="0.000001" iyz="0.0" izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <joint name="ultrasonic_joint" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="ultrasonic_link"/>
+    <origin xyz="0.03 0 -0.04" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== LOAD CELL (HX711) ==================== -->
+  <link name="load_cell_frame"/>
+
+  <joint name="load_cell_joint" type="fixed">
+    <parent link="feeder_link"/>
+    <child link="load_cell_frame"/>
+    <origin xyz="${feeder_length} 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
