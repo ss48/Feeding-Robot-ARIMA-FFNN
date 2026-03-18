@@ -150,3 +150,5 @@ sudo apt install -y ros-humble-ign-ros2-control
 sudo apt install -y ros-humble-gz-ros2-control
 
 dpkg -L ros-humble-gz-ros2-control | grep "\.so"
+
+python ros2_feedbot_ws/scripts/perception_demo.py

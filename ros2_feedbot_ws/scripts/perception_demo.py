@@ -19,10 +19,22 @@ NOTE — for production mouth-corner detection consider MediaPipe Face Mesh
 """
 
 import math
+import os
+import sys
 import time
 
 import cv2
 import numpy as np
+
+
+# ───────────────────────────────────────────────────────────────────────
+# Display availability check
+# ───────────────────────────────────────────────────────────────────────
+def _has_display():
+    """Return True if a GUI display is available for cv2.imshow."""
+    if sys.platform == 'win32':
+        return True
+    return bool(os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY'))
 
 # ───────────────────────────────────────────────────────────────────────
 # Fruit definitions
@@ -384,8 +396,26 @@ def main():
     dt = 1.0 / 30.0
     prev_time = time.monotonic()
 
-    print("Perception Demo started.")
-    print("  q = quit | o = toggle outlier storm | s = toggle sonar failure")
+    # Detect headless mode
+    headless = not _has_display()
+    video_writer = None
+    video_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              'perception_demo_output.avi')
+    MAX_HEADLESS_FRAMES = 300  # ~10 s at 30 fps
+
+    if headless:
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        video_writer = cv2.VideoWriter(video_path, fourcc, 30.0, (W, H))
+        print("Headless mode — no display detected.")
+        print(f"  Rendering {MAX_HEADLESS_FRAMES} frames to: {video_path}")
+        print("  Metrics will be printed to console every 30 frames.")
+    else:
+        print("Perception Demo started.")
+        print("  q = quit | o = toggle outlier storm | s = toggle sonar failure")
+
+    labels = ["Food X", "Food Y", "Plate Dist", "Mouth Dist",
+              "Mouth L", "Mouth R"]
+    frame_count = 0
 
     while True:
         now = time.monotonic()
@@ -543,8 +573,6 @@ def main():
         cv2.putText(right_panel, "--- RMSE ---", (10, my),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 200), 1,
                     cv2.LINE_AA)
-        labels = ["Food X", "Food Y", "Plate Dist", "Mouth Dist",
-                  "Mouth L", "Mouth R"]
         for i, lbl in enumerate(labels):
             rmse = metrics.rmse(i)
             conf = metrics.confidence_from_P(kf.P, i)
@@ -572,18 +600,61 @@ def main():
         # ==============================================================
         # Show and handle keys
         # ==============================================================
-        cv2.imshow("Feeding Robot — Perception Demo", canvas)
-        key = cv2.waitKey(30) & 0xFF
-        if key == ord('q'):
-            break
-        elif key == ord('o'):
-            outlier_mode = not outlier_mode
-            print(f"Outlier storm: {'ON' if outlier_mode else 'OFF'}")
-        elif key == ord('s'):
-            sonar_ok = not sonar_ok
-            print(f"Sonar: {'ENABLED' if sonar_ok else 'DISABLED'}")
+        frame_count += 1
 
-    cv2.destroyAllWindows()
+        if headless:
+            video_writer.write(canvas)
+
+            # Print metrics periodically
+            if frame_count % 30 == 0:
+                print(f"\n[Frame {frame_count}]  t={t:.1f}s  "
+                      f"mouth={('OPEN' if openness_val > 0.5 else 'CLOSED')}")
+                for i, lbl in enumerate(labels):
+                    rmse = metrics.rmse(i)
+                    conf = metrics.confidence_from_P(kf.P, i)
+                    print(f"  {lbl:12s}  RMSE={rmse:6.2f}  conf={conf:.0%}")
+                print(f"  Fused plate dist: {kf.x[2]:.1f} cm "
+                      f"(true: {TRUE_PLATE_DIST:.0f})")
+                print(f"  Fused mouth dist: {kf.x[3]:.1f} cm "
+                      f"(true: {TRUE_MOUTH_DIST:.0f})")
+
+            # Enable outlier storm for frames 150-210 to show resilience
+            if frame_count == 150:
+                outlier_mode = True
+                print("\n>>> Outlier storm ON (frame 150)")
+            elif frame_count == 210:
+                outlier_mode = False
+                print(">>> Outlier storm OFF (frame 210)")
+
+            if frame_count >= MAX_HEADLESS_FRAMES:
+                break
+        else:
+            cv2.imshow("Feeding Robot - Perception Demo", canvas)
+            key = cv2.waitKey(30) & 0xFF
+            if key == ord('q'):
+                break
+            elif key == ord('o'):
+                outlier_mode = not outlier_mode
+                print(f"Outlier storm: {'ON' if outlier_mode else 'OFF'}")
+            elif key == ord('s'):
+                sonar_ok = not sonar_ok
+                print(f"Sonar: {'ENABLED' if sonar_ok else 'DISABLED'}")
+
+    if video_writer is not None:
+        video_writer.release()
+        print(f"\nVideo saved to: {video_path}")
+
+    if not headless:
+        cv2.destroyAllWindows()
+
+    # Print final summary
+    print("\n=== Final Metrics ===")
+    for i, lbl in enumerate(labels):
+        rmse = metrics.rmse(i)
+        conf = metrics.confidence_from_P(kf.P, i)
+        print(f"  {lbl:12s}  RMSE={rmse:6.2f}  conf={conf:.0%}")
+    print(f"  Fused plate dist: {kf.x[2]:.1f} cm (true: {TRUE_PLATE_DIST:.0f})")
+    print(f"  Fused mouth dist: {kf.x[3]:.1f} cm (true: {TRUE_MOUTH_DIST:.0f})")
     print("Demo finished.")
 
 
