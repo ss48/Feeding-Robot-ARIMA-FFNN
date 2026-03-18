@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(find 'c:\\\\Users\\\\shabn\\\\OneDrive - Anglia Ruskin University\\\\FeederProject\\\\Feeding_Robot_New' -type f -name *)",
-      "Bash(grep -E \"\\\\.\\(py|cpp|h|java|cs|sh|bat|launch|urdf|yaml|json|xml|config\\)$\")"
+      "Bash(grep -E \"\\\\.\\(py|cpp|h|java|cs|sh|bat|launch|urdf|yaml|json|xml|config\\)$\")",
+      "Read(//c/Users/shabn/OneDrive/ -/ Anglia/ Ruskin/ University/FeederProject/Feeding_Robot_New/ros2_feedbot_ws/pid_study/**)",
+      "Read(//c/Users/shabn/OneDrive/ -/ Anglia/ Ruskin/ University/FeederProject/Feeding_Robot_New/ros2_feedbot_ws/old_scripts/**)",
+      "Read(//c/Users/shabn/OneDrive/ -/ Anglia/ Ruskin/ University/FeederProject/Feeding_Robot_New/ros2_feedbot_ws/src/feedbot_fusion/feedbot_fusion/**)",
+      "Read(//c/Users/shabn/OneDrive/ -/ Anglia/ Ruskin/ University/FeederProject/Feeding_Robot_New/ros2_feedbot_ws/**)"
     ]
   }
 }

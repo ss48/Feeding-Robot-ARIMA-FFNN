@@ -1,23 +1,29 @@
 """
 Sensor Fusion Node — EKF-based multi-sensor fusion
 
-Fuses vision, force, joint state, and ARIMA-FFNN prediction data using an
-Extended Kalman Filter with confidence weighting, outlier rejection, and
-sensor health monitoring.
+Fuses vision, force, joint state, sonar, and ARIMA-FFNN prediction data
+using an Extended Kalman Filter with confidence weighting, outlier
+rejection, and sensor health monitoring.
 
 State vector  x = [food_error_x, plate_distance, mouth_distance, force]
 Measurement sources:
-  - Vision  (food_center, food_visible)  → food_error_x, plate_distance
-  - Force   (spoon_force)                → force
-  - Joints  (joint_states)               → mouth_distance
-  - ARIMA   (predicted_state)            → used as process model assist
+  - Vision  (food_center, food_visible)        → food_error_x, plate_distance
+  - Force   (spoon_force)                      → force
+  - Joints  (joint_states)                     → mouth_distance
+  - Sonar   (sonar_plate/mouth_distance)       → plate_distance, mouth_distance
+  - ARIMA   (predicted_state)                  → used as process model assist
+
+The sonar provides a second independent measurement of plate_distance and
+mouth_distance which the EKF fuses with the camera-derived estimates via
+a second update step, improving accuracy through sensor redundancy.
 
 Publishes:
-  /food_error_x    (Float64) — visual servoing error
-  /plate_distance  (Float64) — EKF-fused distance to plate (cm)
-  /mouth_distance  (Float64) — EKF-fused distance to mouth (cm)
+  /food_error_x      (Float64) — visual servoing error
+  /plate_distance    (Float64) — EKF-fused distance to plate (cm)
+  /mouth_distance    (Float64) — EKF-fused distance to mouth (cm)
   /fusion_confidence (Float64) — overall fusion confidence [0-1]
-  /sensor_health     (Float64MultiArray) — per-sensor health [vision, force, joints, arima]
+  /sensor_health     (Float64MultiArray) — per-sensor health
+                       [vision, force, joints, arima, sonar]
 """
 
 import math
@@ -53,6 +59,7 @@ VISION_TIMEOUT = 1.0
 FORCE_TIMEOUT = 1.0
 JOINT_TIMEOUT = 1.0
 ARIMA_TIMEOUT = 2.0
+SONAR_TIMEOUT = 1.0
 
 # Mahalanobis distance gate for outlier rejection
 OUTLIER_GATE = 5.0   # chi-squared 95% with 1 DOF ≈ 3.84; use 5 for margin
@@ -169,11 +176,11 @@ class EKF:
 class SensorHealthMonitor:
     """Tracks freshness and consistency of each sensor stream."""
 
-    def __init__(self, n_sensors=4):
+    def __init__(self, n_sensors=5):
         self.n = n_sensors
         self.last_update = [0.0] * n_sensors
         self.timeouts = [VISION_TIMEOUT, FORCE_TIMEOUT,
-                         JOINT_TIMEOUT, ARIMA_TIMEOUT]
+                         JOINT_TIMEOUT, ARIMA_TIMEOUT, SONAR_TIMEOUT]
         self.consistency_buf = [[] for _ in range(n_sensors)]
         self.buf_size = 20
 
@@ -228,7 +235,7 @@ class FusionNode(Node):
 
         # ----- Core components -----
         self.ekf = EKF()
-        self.health_mon = SensorHealthMonitor(n_sensors=4)
+        self.health_mon = SensorHealthMonitor(n_sensors=5)
 
         # ----- Smoothed outputs (EMA) -----
         self.ema_food_error = 0.0
@@ -242,6 +249,8 @@ class FusionNode(Node):
         self.joint_positions = {}
         self.predicted_state = [0.0] * 4
         self.prediction_error = 0.0
+        self.sonar_plate_dist = None
+        self.sonar_mouth_dist = None
 
         self._last_fuse_time = time.monotonic()
 
@@ -259,6 +268,12 @@ class FusionNode(Node):
         self.create_subscription(
             Float64, '/prediction_error', self._cb_pred_err, 10)
 
+        # Sonar distance sensors
+        self.create_subscription(
+            Float64, '/sonar_plate_distance', self._cb_sonar_plate, 10)
+        self.create_subscription(
+            Float64, '/sonar_mouth_distance', self._cb_sonar_mouth, 10)
+
         # ----- Publishers (same API as before + new diagnostics) -----
         self.error_pub = self.create_publisher(Float64, '/food_error_x', 10)
         self.plate_dist_pub = self.create_publisher(Float64, '/plate_distance', 10)
@@ -272,7 +287,7 @@ class FusionNode(Node):
 
         self.get_logger().info(
             "Fusion node started (EKF + confidence weighting + "
-            "outlier rejection + sensor health)")
+            "outlier rejection + sensor health + sonar fusion)")
 
     # ----------------------------------------------------------------
     # Callbacks — store raw data and touch health monitor
@@ -308,6 +323,14 @@ class FusionNode(Node):
     def _cb_pred_err(self, msg):
         self.prediction_error = msg.data
 
+    def _cb_sonar_plate(self, msg):
+        self.sonar_plate_dist = msg.data
+        self.health_mon.touch(4, msg.data, time.monotonic())
+
+    def _cb_sonar_mouth(self, msg):
+        self.sonar_mouth_dist = msg.data
+        self.health_mon.touch(4, msg.data, time.monotonic())
+
     # ----------------------------------------------------------------
     # Main fusion loop
     # ----------------------------------------------------------------
@@ -318,7 +341,7 @@ class FusionNode(Node):
 
         # ---- 1. Sensor health ----
         health = self.health_mon.health(now)
-        # health indices: 0=vision, 1=force, 2=joints, 3=arima
+        # health indices: 0=vision, 1=force, 2=joints, 3=arima, 4=sonar
 
         # ---- 2. Build raw measurement vector ----
         z = np.zeros(MEAS_DIM)
@@ -358,8 +381,28 @@ class FusionNode(Node):
             arima_hint = (self.predicted_state[1], self.predicted_state[2])
         self.ekf.predict(dt, arima_hint=arima_hint)
 
-        # ---- 4. EKF update (with outlier gating) ----
+        # ---- 4. EKF update — camera / force / joints (with outlier gating) ----
         self.ekf.update(z, confidence, mask)
+
+        # ---- 4b. EKF update — sonar (second independent update) ----
+        # Sonar provides a redundant measurement of plate_distance (idx 1)
+        # and mouth_distance (idx 2), fused with the camera estimate.
+        z_sonar = np.zeros(MEAS_DIM)
+        conf_sonar = np.zeros(MEAS_DIM)
+        mask_sonar = np.zeros(MEAS_DIM, dtype=bool)
+
+        if self.sonar_plate_dist is not None and health[4] > 0.1:
+            z_sonar[1] = self.sonar_plate_dist
+            conf_sonar[1] = health[4]
+            mask_sonar[1] = True
+
+        if self.sonar_mouth_dist is not None and health[4] > 0.1:
+            z_sonar[2] = self.sonar_mouth_dist
+            conf_sonar[2] = health[4]
+            mask_sonar[2] = True
+
+        if np.any(mask_sonar):
+            self.ekf.update(z_sonar, conf_sonar, mask_sonar)
 
         # ---- 5. Temporal smoothing (EMA) ----
         self.ema_food_error = _ema(self.ema_food_error,
@@ -379,7 +422,7 @@ class FusionNode(Node):
         overall = float(np.mean(active_health))
         self.confidence_pub.publish(Float64(data=overall))
 
-        # Sensor health array [vision, force, joints, arima]
+        # Sensor health array [vision, force, joints, arima, sonar]
         health_msg = Float64MultiArray()
         health_msg.data = health.tolist()
         self.health_pub.publish(health_msg)
