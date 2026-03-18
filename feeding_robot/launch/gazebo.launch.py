@@ -87,20 +87,20 @@ def generate_launch_description():
     )
 
     # ==================== ROS-GAZEBO BRIDGE ====================
-    # Bridge clock, camera image, ultrasonic range, and jaw command
+    # Bridge clock and sensor topics between Gazebo Fortress and ROS 2.
+    # Fortress publishes sensor data on gz transport; ros_gz_bridge
+    # converts them to ROS messages.
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            # Clock
+            # Clock (required for use_sim_time)
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            # Camera image (Gazebo -> ROS)
+            # Camera image (Gz -> ROS)
             '/feeding_robot/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
-            # Camera info (Gazebo -> ROS)
-            '/feeding_robot/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
-            # Ultrasonic range (Gazebo -> ROS)
-            '/feeding_robot/ultrasonic/range@sensor_msgs/msg/Range[gz.msgs.LaserScan',
-            # Patient jaw command (ROS -> Gazebo)
+            # Ultrasonic lidar scan (Gz -> ROS)
+            '/feeding_robot/ultrasonic/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            # Patient jaw position command (ROS -> Gz)
             '/patient_head/jaw_cmd@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         output='screen'
