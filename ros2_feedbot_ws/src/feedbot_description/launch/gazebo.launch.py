@@ -5,8 +5,11 @@ import xacro
 from launch import LaunchDescription
 from launch.actions import (
     IncludeLaunchDescription,
+    RegisterEventHandler,
     SetEnvironmentVariable,
+    TimerAction,
 )
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch_ros.actions import Node
@@ -119,8 +122,79 @@ def generate_launch_description():
         output="screen",
     )
 
-    # Controllers are auto-activated by the ign_ros2_control plugin
-    # via controllers.yaml — no need to spawn them manually.
+    # --------------------------------------------------
+    # Controllers — spawn joint_state_broadcaster so TF
+    # frames are published for all revolute joints, then
+    # spawn each PID joint controller after it exits.
+    # --------------------------------------------------
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager", "/controller_manager",
+        ],
+        output="screen",
+    )
+
+    joint1_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint1_controller",
+            "--controller-manager", "/controller_manager",
+        ],
+        output="screen",
+    )
+
+    joint2_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint2_controller",
+            "--controller-manager", "/controller_manager",
+        ],
+        output="screen",
+    )
+
+    joint3_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint3_controller",
+            "--controller-manager", "/controller_manager",
+        ],
+        output="screen",
+    )
+
+    joint4_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint4_controller",
+            "--controller-manager", "/controller_manager",
+        ],
+        output="screen",
+    )
+
+    # Delay spawning until Gazebo + controller_manager are ready
+    delayed_joint_state_broadcaster = TimerAction(
+        period=3.0,
+        actions=[joint_state_broadcaster_spawner],
+    )
+
+    # Spawn joint controllers after joint_state_broadcaster is up
+    delayed_joint_controllers = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[
+                joint1_controller_spawner,
+                joint2_controller_spawner,
+                joint3_controller_spawner,
+                joint4_controller_spawner,
+            ],
+        )
+    )
 
     # --------------------------------------------------
     # RViz
@@ -141,5 +215,7 @@ def generate_launch_description():
         spawn_robot,
         clock_bridge,
         gz_bridge,
+        delayed_joint_state_broadcaster,
+        delayed_joint_controllers,
         rviz,
     ])
