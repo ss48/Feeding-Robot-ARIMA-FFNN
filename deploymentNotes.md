@@ -194,6 +194,65 @@ ros2 topic pub --once /arm_controller/joint_trajectory \
     points: [{positions: [0.5, -0.3, 0.4, 0.0], time_from_start: {sec: 2}}]}"
 ```
 
+### Commanding the Arm (feedbot_description / PID Controllers)
+
+When using `feedbot_description gazebo.launch.py` (i.e. `./run_feeding.sh sim`), the arm
+uses individual PID effort controllers per joint. The reference topic expects
+`control_msgs/msg/MultiDOFCommand`:
+
+```bash
+# Check controllers are active
+ros2 control list_controllers
+
+# Move individual joints (feedbot_description PID controllers)
+ros2 topic pub /joint1_controller/reference control_msgs/msg/MultiDOFCommand \
+  "{dof_names: ['joint1'], values: [1.0]}" --once
+
+ros2 topic pub /joint2_controller/reference control_msgs/msg/MultiDOFCommand \
+  "{dof_names: ['joint2'], values: [0.5]}" --once
+
+ros2 topic pub /joint3_controller/reference control_msgs/msg/MultiDOFCommand \
+  "{dof_names: ['joint3'], values: [-0.5]}" --once
+
+ros2 topic pub /joint4_controller/reference control_msgs/msg/MultiDOFCommand \
+  "{dof_names: ['joint4'], values: [0.3]}" --once
+```
+
+**Joint limits (feedbot_description URDF):**
+
+| Joint | Axis | Min (rad) | Max (rad) | Function |
+|-------|------|-----------|-----------|----------|
+| joint1 | Z | -3.05 | 3.05 | Base rotation |
+| joint2 | Y | -1.57 | 1.57 | Shoulder up/down |
+| joint3 | Y | -2.09 | 1.31 | Elbow up/down |
+| joint4 | Y | -1.57 | 2.01 | Feeder head tilt |
+
+### Monitoring Sensor Topics
+
+```bash
+# Camera image (view in rqt or RViz)
+ros2 topic hz /feeding_robot/camera/image_raw
+
+# Ultrasonic sonar scan
+ros2 topic echo /feeding_robot/ultrasonic/scan --once
+
+# Force/torque on spoon joint
+ros2 topic echo /spoon/wrench --once
+
+# Processed sensor outputs (from feeding_system nodes)
+ros2 topic echo /spoon_force --once           # scalar force magnitude
+ros2 topic echo /sonar_plate_distance --once   # distance to plate (cm)
+ros2 topic echo /sonar_mouth_distance --once   # distance to mouth (cm)
+ros2 topic echo /food_visible --once           # fruit detected?
+ros2 topic echo /food_center --once            # fruit center + area
+ros2 topic echo /food_type --once              # detected fruit name
+ros2 topic echo /fusion_confidence --once      # EKF confidence [0-1]
+ros2 topic echo /sensor_health --once          # per-sensor health scores
+
+# Joint states
+ros2 topic echo /joint_states --once
+```
+
 ### Troubleshooting: Robot Not Visible in RViz
 
 | Symptom | Cause | Fix |
@@ -242,6 +301,7 @@ The `feeding_table.sdf` world contains:
 |--------|------|-------------|-----------|
 | Raspberry Pi Camera V2.1 | camera (640x480, 30Hz) | `feeding_robot/camera/image_raw` | `/feeding_robot/camera/image_raw` |
 | HC-SR04 Ultrasonic | gpu_lidar (5 samples, 20Hz) | `feeding_robot/ultrasonic/scan` | `/feeding_robot/ultrasonic/scan` |
+| Spoon Force/Torque | force_torque (50Hz, on joint4) | `spoon/wrench` | `/spoon/wrench` |
 
 ---
 

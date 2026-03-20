@@ -30,9 +30,10 @@ Visualization Manager:
       Name: TF
       Show Arrows: true
       Show Axes: true
-      Show Names: false
+      Show Names: true
       Value: true
 
+    # ---- CAMERA FEED ----
     - Class: rviz_default_plugins/Image
       Name: Camera Feed
       Topic:
@@ -40,26 +41,30 @@ Visualization Manager:
         Reliability Policy: Best Effort
       Value: true
 
+    # ---- ULTRASONIC SONAR ----
     - Class: rviz_default_plugins/LaserScan
       Name: Ultrasonic Scan
       Topic:
         Value: /feeding_robot/ultrasonic/scan
         Reliability Policy: Best Effort
       Color: 0; 255; 255
-      Size (m): 0.01
+      Size (m): 0.015
+      Size (Pixels): 5
       Style: Spheres
+      Decay Time: 0.5
       Value: true
 
+    # ---- FORCE/TORQUE ON SPOON ----
     - Class: rviz_default_plugins/Wrench
       Name: Spoon Force
       Topic:
         Value: /spoon/wrench
         Reliability Policy: Reliable
       Accept NaN Values: true
-      Force Arrow Scale: 0.5
-      Force Color: 204; 51; 51
-      Torque Arrow Scale: 0.2
-      Torque Color: 204; 204; 51
+      Force Arrow Scale: 0.3
+      Force Color: 255; 50; 50
+      Torque Arrow Scale: 0.1
+      Torque Color: 255; 255; 50
       Value: true
 
   Global Options:

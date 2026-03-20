@@ -73,7 +73,12 @@ def generate_launch_description():
                 "gz_sim.launch.py"
             )
         ),
-        launch_arguments={"gz_args": "-r empty.sdf"}.items(),
+        launch_arguments={
+            "gz_args": [
+                "-r ",
+                os.path.join(pkg_share, "worlds", "empty.world"),
+            ],
+        }.items(),
     )
 
     # --------------------------------------------------
@@ -178,7 +183,7 @@ def generate_launch_description():
 
     # Delay spawning until Gazebo + controller_manager are ready
     delayed_joint_state_broadcaster = TimerAction(
-        period=3.0,
+        period=8.0,
         actions=[joint_state_broadcaster_spawner],
     )
 
