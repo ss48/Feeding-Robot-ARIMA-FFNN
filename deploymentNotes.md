@@ -465,7 +465,7 @@ Force   → [force_node]       → /spoon_force
 | `fuzzy_controller_node.py` | Sec 2.5.1 | Fuzzy force/angle control per food type |
 | `feeding_fsm_node.py` | Fig 1, Sec 2.2 | FSM with LOCATE_FOOD state + IK-based forking from fused 3D position |
 | `fusion_node.py` | Sec 2.1 | 6-state EKF: camera bearing + ultrasonic range → 3D food localisation |
-| `vision_node.py` | — | Multi-fruit HSV detection + pinhole bearing estimation + monocular depth |
+| `vision_node.py` | — | ML food detection (jetson-inference detectNet) with HSV fallback + 3D bearing |
 | `sonar_bridge_node.py` | — | Converts ultrasonic LaserScan to distance (cm) |
 | `mouth_animator_node.py` | — | Animates patient jaw in Gazebo, publishes mouth state |
 | `feeding_system.launch.py` | — | Launches all 8 pipeline nodes |
@@ -705,6 +705,69 @@ ros2 param set /mouth_animator_node open_threshold 0.4
 - Internet connection for initial setup
 - SSH key configured for GitHub access (`ssh-keygen` then add to GitHub)
 - For real hardware: Dynamixel servos powered, camera at `/dev/video0`, HX711 force sensor via Arduino
+
+## ML Food Detection (jetson-inference)
+
+The vision node uses **NVIDIA jetson-inference** for ML-based object detection on
+Jetson hardware, with HSV colour segmentation as fallback on dev PCs / Gazebo.
+
+### Installing jetson-inference
+
+```bash
+# On Jetson Orin (one-time setup)
+sudo apt-get install git cmake libpython3-dev python3-numpy
+git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
+cd jetson-inference
+mkdir build && cd build
+cmake ../
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+```
+
+### Detection Method
+
+The vision node auto-detects whether jetson-inference is available:
+
+| Environment | Detection Method | Notes |
+|-------------|-----------------|-------|
+| Jetson Orin (real hardware) | **ML** (SSD-Mobilenet-v2 via detectNet) | Detects COCO food classes at ~30 FPS |
+| Dev PC / Gazebo simulation | **HSV** colour segmentation (fallback) | Works with Gazebo's solid-colour objects |
+
+**Force a specific method via ROS parameter:**
+
+```bash
+# Force ML detection (will warn if jetson-inference not installed)
+ros2 run feedbot_fusion vision_node --ros-args -p detection_method:=ml
+
+# Force HSV fallback
+ros2 run feedbot_fusion vision_node --ros-args -p detection_method:=hsv
+
+# Auto-detect (default)
+ros2 run feedbot_fusion vision_node --ros-args -p detection_method:=auto
+```
+
+### COCO Food Classes Detected
+
+The SSD-Mobilenet-v2 model detects these food items from the COCO dataset:
+
+| Class ID | Name | Class ID | Name |
+|----------|------|----------|------|
+| 52 | banana | 53 | apple |
+| 54 | sandwich | 55 | orange |
+| 56 | broccoli | 57 | carrot |
+| 58 | hot_dog | 59 | pizza |
+| 60 | donut | 61 | cake |
+
+### Tuning ML Confidence
+
+```bash
+# Adjust confidence threshold (default: 0.35)
+ros2 run feedbot_fusion vision_node --ros-args -p ml_confidence:=0.25
+
+# Use a different model
+ros2 run feedbot_fusion vision_node --ros-args -p ml_model:=ssd-inception-v2
+```
 
 ## Standalone Perception Demo (No ROS Required)
 

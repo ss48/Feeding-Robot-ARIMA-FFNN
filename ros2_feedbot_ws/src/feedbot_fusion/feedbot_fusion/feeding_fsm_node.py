@@ -52,8 +52,8 @@ L3_LENGTH = 0.164   # link3 length
 
 # Predefined joint poses (radians) for non-IK phases
 POSES = {
-    'home':         [0.0,   0.0,   0.0,   0.0],
-    'plate_above':  [0.0,  -0.3,   0.4,   0.0],
+    'home':         [0.0,   0.5,  -0.8,  -0.5],   # arm tilted forward, camera faces plate
+    'plate_above':  [0.0,   0.3,  -0.4,  -0.3],
     'pre_feed':     [1.2,   0.0,  -0.2,   0.5],
     'feed':         [1.2,   0.3,  -0.4,   0.8],
     'retract':      [0.6,   0.0,   0.0,   0.2],

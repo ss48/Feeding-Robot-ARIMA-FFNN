@@ -20,7 +20,7 @@
 #   ARIMA-FFNN (arima_ffnn) ---prediction---> |                  | --> fusion_confidence
 #
 # Food Localisation Flow:
-#   1. Camera identifies food via HSV colour segmentation (vision_node)
+#   1. Camera identifies food via ML (jetson-inference detectNet) or HSV fallback
 #   2. Pinhole camera model computes bearing angles + monocular depth
 #   3. Ultrasonic sensor measures range to food on plate
 #   4. EKF fuses camera bearing + ultrasonic range into 3D food position
@@ -78,7 +78,7 @@ case "$MODE" in
 
         echo ""
         echo "Step 2: Launching feeding system nodes..."
-        echo "  - vision_node:       Camera food detection + bearing estimation"
+        echo "  - vision_node:       ML food detection (jetson-inference) or HSV fallback"
         echo "  - force_node:        Force sensor filtering"
         echo "  - sonar_bridge:      Ultrasonic range conversion"
         echo "  - fusion_node:       EKF Kalman Filter (camera+ultrasonic+force+joints)"
