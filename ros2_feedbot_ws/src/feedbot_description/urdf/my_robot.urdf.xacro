@@ -697,26 +697,92 @@
 
 <link name="camera_optical_link"/>
 
+<!-- ==================== CAMERA SENSOR ==================== -->
 <gazebo reference="camera_link">
   <sensor type="camera" name="camera_sensor">
     <always_on>true</always_on>
     <update_rate>30</update_rate>
-
-    <camera>
-      <horizontal_fov>1.3962634</horizontal_fov>
-
+    <visualize>true</visualize>
+    <topic>feeding_robot/camera/image_raw</topic>
+    <camera name="feeding_camera">
+      <horizontal_fov>1.0857</horizontal_fov>
       <image>
         <width>640</width>
         <height>480</height>
         <format>R8G8B8</format>
       </image>
-
       <clip>
-        <near>0.01</near>
-        <far>10</far>
+        <near>0.02</near>
+        <far>5.0</far>
       </clip>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.007</stddev>
+      </noise>
     </camera>
+  </sensor>
+</gazebo>
 
+<!-- ==================== ULTRASONIC SENSOR ==================== -->
+<!-- HC-SR04: range 2cm - 400cm, beam angle ~15 deg -->
+<joint name="ultrasonic_joint" type="fixed">
+  <parent link="feeder_head"/>
+  <child link="ultrasonic_link"/>
+  <origin xyz="0.02 0 -0.015" rpy="0 0 0"/>
+</joint>
+
+<link name="ultrasonic_link">
+  <visual>
+    <geometry>
+      <box size="0.01 0.005 0.004"/>
+    </geometry>
+    <material name="blue">
+      <color rgba="0.2 0.2 0.8 1"/>
+    </material>
+  </visual>
+  <inertial>
+    <mass value="0.01"/>
+    <inertia ixx="0.00001" iyy="0.00001" izz="0.00001" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<gazebo reference="ultrasonic_link">
+  <sensor type="gpu_lidar" name="ultrasonic_sensor">
+    <always_on>true</always_on>
+    <update_rate>20.0</update_rate>
+    <visualize>true</visualize>
+    <topic>feeding_robot/ultrasonic/scan</topic>
+    <lidar>
+      <scan>
+        <horizontal>
+          <samples>5</samples>
+          <resolution>1</resolution>
+          <min_angle>-0.1309</min_angle>
+          <max_angle>0.1309</max_angle>
+        </horizontal>
+      </scan>
+      <range>
+        <min>0.02</min>
+        <max>4.0</max>
+        <resolution>0.01</resolution>
+      </range>
+    </lidar>
+  </sensor>
+</gazebo>
+
+<!-- ==================== FORCE/TORQUE SENSOR ==================== -->
+<!-- Contact/force sensor on the feeder head (spoon) joint -->
+<gazebo reference="joint4">
+  <sensor type="force_torque" name="spoon_force_sensor">
+    <always_on>true</always_on>
+    <update_rate>50.0</update_rate>
+    <visualize>true</visualize>
+    <topic>spoon/wrench</topic>
+    <force_torque>
+      <frame>child</frame>
+      <measure_direction>child_to_parent</measure_direction>
+    </force_torque>
   </sensor>
 </gazebo>
 

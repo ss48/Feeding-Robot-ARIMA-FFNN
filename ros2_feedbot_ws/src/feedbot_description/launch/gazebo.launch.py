@@ -103,22 +103,21 @@ def generate_launch_description():
     )
 
     # --------------------------------------------------
-    # Bridge clock from Ignition to ROS 2 (required for use_sim_time)
-    # --------------------------------------------------
-    clock_bridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
-        output="screen",
-    )
-
-    # --------------------------------------------------
-    # Bridge camera topic from Ignition to ROS 2
+    # Bridge sensor topics from Ignition to ROS 2
     # --------------------------------------------------
     gz_bridge = Node(
-        package="ros_gz_image",
-        executable="image_bridge",
-        arguments=["/camera/camera_sensor/image_raw"],
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=[
+            # Clock (required for use_sim_time)
+            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+            # Camera image (Gz -> ROS)
+            "/feeding_robot/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
+            # Ultrasonic lidar scan (Gz -> ROS)
+            "/feeding_robot/ultrasonic/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            # Force/torque sensor on spoon joint (Gz -> ROS)
+            "/spoon/wrench@geometry_msgs/msg/WrenchStamped[gz.msgs.Wrench",
+        ],
         output="screen",
     )
 
@@ -213,7 +212,6 @@ def generate_launch_description():
         gz_sim,
         robot_state_publisher,
         spawn_robot,
-        clock_bridge,
         gz_bridge,
         delayed_joint_state_broadcaster,
         delayed_joint_controllers,
