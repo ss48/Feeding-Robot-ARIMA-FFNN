@@ -729,13 +729,13 @@
 <joint name="ultrasonic_joint" type="fixed">
   <parent link="feeder_head"/>
   <child link="ultrasonic_link"/>
-  <origin xyz="0.02 0 -0.015" rpy="0 0 0"/>
+  <origin xyz="0.02 0 0.02" rpy="0 0 0"/>
 </joint>
 
 <link name="ultrasonic_link">
   <visual>
     <geometry>
-      <box size="0.01 0.005 0.004"/>
+      <box size="0.01 0.02 0.008"/>
     </geometry>
     <material name="blue">
       <color rgba="0.2 0.2 0.8 1"/>

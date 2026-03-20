@@ -58,6 +58,27 @@ source ~/.bashrc
 | `fsm` | `./run_feeding.sh fsm` | Feeding FSM alone (testing) |
 | `nodes` | `./run_feeding.sh nodes` | Each node as a background process, logs in `/tmp/feedbot_logs/` |
 
+### Spacebar Start Control
+
+In `sim` and `real` modes, the system launches all nodes and then **waits for the
+user to press SPACE** before starting each feeding cycle. The FSM begins in the
+`WAITING` state and only transitions to `IDLE` when it receives a `/feeding_start`
+signal (triggered by pressing the spacebar in the terminal).
+
+```
+  Press SPACE → WAITING → IDLE → DETECT_FOOD → LOCATE_FOOD → COLLECT_FOOD →
+  DETECT_PATIENT → PRE_FEED → FEED → RETRACT → WAITING (press SPACE again)
+```
+
+- **SPACE** — start a feeding cycle
+- **Q** — quit and shut down all nodes
+
+You can also trigger the start programmatically:
+
+```bash
+ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once
+```
+
 ---
 
 ## Running Gazebo Fortress Simulation (Dev PC)
@@ -160,7 +181,7 @@ ros2 launch feedbot_fusion feeding_system.launch.py
 #   fusion_node        — EKF sensor fusion (camera + sonar Kalman filter)
 #   arima_ffnn         — hybrid ARIMA+FFNN predictor
 #   fuzzy_controller   — fuzzy force/angle regulation
-#   feeding_fsm        — state machine (IDLE→DETECT→COLLECT→FEED→RETRACT)
+#   feeding_fsm        — state machine (SPACE→WAITING→IDLE→DETECT→LOCATE→COLLECT→FEED→RETRACT) + IK forking
 #   sonar_bridge       — converts ultrasonic scan → plate/mouth distance
 #   mouth_animator     — cycles patient jaw open/close (4s period)
 ```
@@ -246,11 +267,101 @@ ros2 topic echo /sonar_mouth_distance --once   # distance to mouth (cm)
 ros2 topic echo /food_visible --once           # fruit detected?
 ros2 topic echo /food_center --once            # fruit center + area
 ros2 topic echo /food_type --once              # detected fruit name
-ros2 topic echo /fusion_confidence --once      # EKF confidence [0-1]
-ros2 topic echo /sensor_health --once          # per-sensor health scores
+ros2 topic echo /food_bearing --once           # camera bearing (h,v rad) + mono depth (m)
 
 # Joint states
 ros2 topic echo /joint_states --once
+
+# 6-state EKF fusion pipeline (verify data flows end-to-end)
+ros2 topic echo /food_position_3d --once    # fused 3D food position (metres)
+ros2 topic echo /plate_distance --once      # EKF-fused plate distance (cm)
+ros2 topic echo /mouth_distance --once      # EKF-fused mouth distance (cm)
+ros2 topic echo /food_error_x --once        # visual servoing error
+ros2 topic echo /fusion_confidence --once   # overall confidence [0-1]
+ros2 topic echo /sensor_health --once       # [vision, force, joints, arima, sonar, bearing]
+
+# Fuzzy controller outputs (driven by EKF fusion)
+ros2 topic echo /target_force --once        # desired force (N)
+ros2 topic echo /target_angle --once        # desired angle (deg)
+ros2 topic echo /feeding_safe --once        # safety signal to FSM
+
+# FSM state (uses all of the above)
+ros2 topic echo /feeding_state --once       # current state: IDLE, DETECT_FOOD, etc.
+```
+
+### Sensor Fusion Pipeline (6-State EKF + Kalman Filter)
+
+The system uses a **6-state Extended Kalman Filter** (`fusion_node`) that fuses camera
+bearing angles with ultrasonic range for precise 3D food localisation:
+
+```
+Raw Sensors              Processing Nodes            6-State EKF Fusion        Downstream
+─────────────           ──────────────────          ────────────────────       ──────────
+Camera (Gz) ──────────→ vision_node ──────→ food_visible ──┐
+                                            food_center ───┤
+                                            food_bearing ──┤  (bearing_h, bearing_v, mono_depth)
+                                                           │
+                                                           ├──→ fusion_node ──→ food_position_3d ──→ FSM (IK pickup)
+Ultrasonic (Gz) ──────→ sonar_bridge ────→ sonar_plate  ───┤    (6-state EKF)   plate_distance ──→ fuzzy_controller
+                                           sonar_mouth  ───┤                    mouth_distance      target_force
+                                                           │                    food_error_x        target_angle
+Force/Torque (Gz) ────→ force_node ──────→ spoon_force ────┤                    fusion_confidence   feeding_safe
+                                                           │                    sensor_health
+Joint States ─────────────────────────────────────────────→┤
+                                                           │
+ARIMA-FFNN ←── joint_states + spoon_force + food_center   ─┘
+           └──→ predicted_state, prediction_error ─────────┘
+```
+
+**EKF state vector (6D):** `[food_x, food_y, food_z, plate_distance, mouth_distance, force]`
+
+- `food_x` — lateral offset of food from camera centre (metres)
+- `food_y` — vertical offset of food from camera centre (metres)
+- `food_z` — depth/distance to food along camera axis (metres)
+- `plate_distance` — fused distance to plate surface (cm)
+- `mouth_distance` — fused distance to patient mouth (cm)
+- `force` — contact force on spoon (N)
+
+**Camera + Ultrasonic 3D Food Localisation:**
+
+1. Camera detects food via HSV colour segmentation (vision_node)
+2. Pinhole camera model (h_fov=1.047 rad, 640x480) computes bearing angles to food
+3. Monocular depth estimated from known fruit diameters vs apparent pixel size
+4. Ultrasonic sensor measures range to food on plate (more reliable depth)
+5. EKF fuses camera bearing (direction) + ultrasonic range (depth) into stable 3D position
+6. FSM uses analytical inverse kinematics on the fused 3D position to compute precise fork joint angles
+
+**3-pass EKF update cycle (per 10 Hz tick):**
+
+1. **Update 1:** Camera bearing + force + joint kinematics (food_x, food_y, food_z, plate_dist, mouth_dist, force)
+2. **Update 2:** Ultrasonic range as independent depth measurement (food_z, plate_dist, mouth_dist) — higher confidence than monocular depth
+3. **Update 3:** Refine food_x/y using the now-fused depth from updates 1+2
+
+**Fusion features:**
+- Confidence-weighted measurement noise (less confident sensors are down-weighted)
+- Mahalanobis outlier gating (rejects bad readings)
+- Sensor health monitoring with freshness + consistency tracking for 6 sensors (vision, force, joints, arima, sonar, bearing)
+- ARIMA-FFNN predicted joints used as process model hint
+- Triple update: camera/force/joints → sonar depth → refined bearing projection
+- Temporal smoothing via exponential moving average
+
+**Monitor the 3D food localisation:**
+
+```bash
+# Fused 3D food position (metres, camera frame)
+ros2 topic echo /food_position_3d
+
+# Camera bearing angles + monocular depth
+ros2 topic echo /food_bearing
+
+# Ultrasonic raw range (cm)
+ros2 topic echo /sonar_plate_distance
+
+# Overall fusion confidence [0-1]
+ros2 topic echo /fusion_confidence
+
+# Per-sensor health [vision, force, joints, arima, sonar, bearing]
+ros2 topic echo /sensor_health
 ```
 
 ### Troubleshooting: Robot Not Visible in RViz
@@ -309,13 +420,17 @@ The `feeding_table.sdf` world contains:
 
 ```
 Camera  → [vision_node]      → /food_visible, /food_center, /food_type, /detected_fruits
+                                /food_bearing (bearing_h, bearing_v, mono_depth)
                                     ↓
 Sonar   → [sonar_bridge]     → /sonar_plate_distance, /sonar_mouth_distance
                                     ↓
 Force   → [force_node]       → /spoon_force
                                     ↓
-           [fusion_node]      → /food_error_x, /plate_distance, /mouth_distance
-           (EKF: camera + sonar Kalman filter fusion)
+           [fusion_node]      → /food_position_3d (fused 3D food position, metres)
+           (6-state EKF:        /food_error_x, /plate_distance, /mouth_distance
+            camera bearing       /fusion_confidence, /sensor_health
+            + ultrasonic range
+            Kalman filter)
                                     ↓
            [arima_ffnn]       → /predicted_state, /prediction_error
                                     ↓
@@ -324,6 +439,9 @@ Force   → [force_node]       → /spoon_force
            [fuzzy_ctrl]       → /target_force, /target_angle, /feeding_safe
                                     ↓
            [feeding_fsm]      → /arm_controller/joint_trajectory, /feeding_state
+           (IK from fused 3D     WAITING → (SPACE) → IDLE → DETECT_FOOD → LOCATE_FOOD →
+            food position)        COLLECT_FOOD → DETECT_PATIENT → PRE_FEED → FEED →
+                                  RETRACT → WAITING (press SPACE for next cycle)
 ```
 
 ### Joint Names (URDF)
@@ -345,9 +463,9 @@ Force   → [force_node]       → /spoon_force
 |------|---------------|---------|
 | `arima_ffnn_node.py` | Alg 1, Eq 1-4, Sec 2.3-2.4 | Hybrid ARIMA+FFNN predictor |
 | `fuzzy_controller_node.py` | Sec 2.5.1 | Fuzzy force/angle control per food type |
-| `feeding_fsm_node.py` | Fig 1, Sec 2.2 | Full feeding sequence state machine |
-| `fusion_node.py` | Sec 2.1 | EKF multi-sensor fusion (camera + sonar + force + ARIMA) |
-| `vision_node.py` | — | Multi-fruit HSV colour detection (6 fruit types) |
+| `feeding_fsm_node.py` | Fig 1, Sec 2.2 | FSM with LOCATE_FOOD state + IK-based forking from fused 3D position |
+| `fusion_node.py` | Sec 2.1 | 6-state EKF: camera bearing + ultrasonic range → 3D food localisation |
+| `vision_node.py` | — | Multi-fruit HSV detection + pinhole bearing estimation + monocular depth |
 | `sonar_bridge_node.py` | — | Converts ultrasonic LaserScan to distance (cm) |
 | `mouth_animator_node.py` | — | Animates patient jaw in Gazebo, publishes mouth state |
 | `feeding_system.launch.py` | — | Launches all 8 pipeline nodes |
@@ -361,15 +479,25 @@ Force   → [force_node]       → /spoon_force
 3. **FFNN refinement** (Eq. 3): `SimpleFFNN` class — 2-hidden-layer network (tanh activation) trained online via backprop on residual windows
 4. **Combined prediction** (Eq. 4): `Y_{t+1} = T[-1] + S[-1] + ARIMA(R) + FFNN(R)`
 
-## Sensor Fusion (Kalman Filter)
+## Sensor Fusion (6-State Kalman Filter with Camera + Ultrasonic 3D Localisation)
 
-The `fusion_node.py` implements a 4-state Extended Kalman Filter:
+The `fusion_node.py` implements a **6-state Extended Kalman Filter** for 3D food localisation:
 
-- **State:** `[food_error_x, plate_distance, mouth_distance, force]`
-- **Camera** provides `food_error_x` and `plate_distance` (via area-to-distance conversion)
-- **Sonar** provides a second independent measurement of `plate_distance` and `mouth_distance`
-- The EKF fuses camera + sonar via two sequential update steps with Mahalanobis outlier gating
-- **Sensor health monitoring** tracks freshness and consistency of all 5 sensors (vision, force, joints, ARIMA, sonar)
+- **State (6D):** `[food_x, food_y, food_z, plate_distance, mouth_distance, force]`
+- **Camera bearing** (from `vision_node /food_bearing`) provides direction to food via pinhole camera model
+- **Monocular depth** estimated from known fruit diameters (apple=8cm, strawberry=3.5cm, etc.)
+- **Ultrasonic range** provides reliable depth measurement — fused with monocular estimate
+- **Camera + Ultrasonic fusion:** bearing (direction) + range (depth) → precise 3D food position
+- **Triple EKF update:** camera/force/joints → ultrasonic depth → refined bearing projection
+- **3D food position** published on `/food_position_3d` for IK-based forking
+- **Sensor health monitoring** tracks freshness and consistency of 6 sensors (vision, force, joints, ARIMA, sonar, bearing)
+
+**FSM food localisation flow:**
+
+1. Camera detects food → DETECT_FOOD state
+2. **LOCATE_FOOD** state: EKF fuses camera bearing + ultrasonic range until 3D position stabilises (within 2cm over 5 frames)
+3. Analytical **inverse kinematics** converts fused (food_x, food_y, food_z) → joint angles [j1, j2, j3, j4]
+4. COLLECT_FOOD state: arm moves to IK-computed pickup pose (falls back to predefined pose if IK fails)
 
 ---
 
@@ -501,40 +629,50 @@ cv2.waitKey(0)
 
 ### 4. Calibrate EKF Noise Parameters (fusion_node.py)
 
-The Kalman filter performance depends on correct noise covariances.
+The 6-state Kalman filter performance depends on correct noise covariances.
 
 ```python
 # Process noise Q — how much state changes per timestep
 # Increase if the arm moves fast; decrease for smoother estimates
-self.Q = np.diag([0.01, 1.0, 0.5, 0.05])
-#                  ^err  ^plate ^mouth ^force
+self.Q = np.diag([0.001, 0.001, 0.005, 1.0, 0.5, 0.05])
+#                  ^fx    ^fy    ^fz    ^plate ^mouth ^force
+#                  food position (m)    distances (cm)  (N)
 
 # Measurement noise R_base — how noisy each sensor is
 # Lower = trust sensor more; Higher = trust prediction more
-self.R_base = np.diag([0.05, 25.0, 10.0, 0.1])
-#                       ^err  ^plate ^mouth ^force
+self.R_base = np.diag([0.01, 0.01, 0.05, 25.0, 10.0, 0.1])
+#                       ^fx   ^fy   ^fz   ^plate ^mouth ^force
 ```
 
 **How to tune:**
 
 ```bash
-# 1. Monitor fusion outputs vs raw measurements
-ros2 topic echo /plate_distance    # fused estimate
-ros2 topic echo /food_center       # raw camera (z=area)
-ros2 topic echo /sonar_plate_distance  # raw sonar
+# 1. Monitor 3D food position fusion
+ros2 topic echo /food_position_3d      # fused 3D position (metres)
+ros2 topic echo /food_bearing          # raw camera bearing + mono depth
+ros2 topic echo /sonar_plate_distance  # raw ultrasonic range (cm)
 
-# 2. If fused estimate is too sluggish (slow to track changes):
+# 2. Monitor distance fusion
+ros2 topic echo /plate_distance    # fused estimate (cm)
+ros2 topic echo /food_center       # raw camera (z=area)
+
+# 3. If fused estimate is too sluggish (slow to track changes):
 #    → Increase Q values (trust process model less)
 #    → Decrease R_base values (trust measurements more)
 
-# 3. If fused estimate is too jittery (tracks noise):
+# 4. If fused estimate is too jittery (tracks noise):
 #    → Decrease Q values
 #    → Increase R_base values
 
-# 4. Monitor sensor health scores
+# 5. Monitor sensor health scores
 ros2 topic echo /sensor_health
-# Array: [vision, force, joints, arima, sonar] — each 0.0 to 1.0
+# Array: [vision, force, joints, arima, sonar, bearing] — each 0.0 to 1.0
 # If a sensor health is consistently low, check its connection/timeout
+
+# 6. If IK-computed pickup pose is inaccurate:
+#    → Check /food_position_3d stability (should settle within 2cm)
+#    → Tune food_z noise: lower R_base[2] to trust ultrasonic more
+#    → Tune food_x/y noise: lower R_base[0:2] to trust camera bearing more
 ```
 
 ### 5. Calibrate Mouth Animator Timing

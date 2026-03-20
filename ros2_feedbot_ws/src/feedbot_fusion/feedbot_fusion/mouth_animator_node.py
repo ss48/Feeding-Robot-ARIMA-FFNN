@@ -32,7 +32,8 @@ class MouthAnimatorNode(Node):
 
         # Publishers for ROS feeding system
         self.mouth_open_pub = self.create_publisher(Bool, '/mouth_open', 10)
-        self.mouth_ready_pub = self.create_publisher(Bool, '/mouth_ready_prediction', 10)
+        # Note: /mouth_ready_prediction is published by arima_ffnn_node.
+        # This node publishes the ground-truth jaw state on /mouth_open only.
 
         # 20 Hz update
         self.timer = self.create_timer(0.05, self.tick)
@@ -61,7 +62,6 @@ class MouthAnimatorNode(Node):
         open_msg = Bool()
         open_msg.data = is_open
         self.mouth_open_pub.publish(open_msg)
-        self.mouth_ready_pub.publish(open_msg)
 
 
 def main(args=None):

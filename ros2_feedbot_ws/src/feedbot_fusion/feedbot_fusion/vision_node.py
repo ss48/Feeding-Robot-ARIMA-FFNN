@@ -1,3 +1,22 @@
+"""
+Vision Node — Multi-fruit detection with 3D position estimation
+
+Detects food on the plate using HSV colour segmentation, then estimates
+the food's 3D bearing angles using a pinhole camera model.  The ultrasonic
+sensor (via the fusion node) provides the depth to complete the 3D position.
+
+Camera intrinsics are derived from the URDF:
+  horizontal_fov = 1.047 rad (60 deg), image 640x480
+
+Publishes:
+  /food_visible       (Bool)               — detection flag
+  /food_center        (Point)              — cx, cy, area
+  /food_type          (String)             — primary fruit name
+  /detected_fruits    (Float64MultiArray)  — flat [cx, cy, area, type_id, ...]
+  /food_bearing       (Point)              — bearing_h (rad), bearing_v (rad),
+                                             estimated_depth (m) from apparent size
+"""
+
 import rclpy
 from rclpy.node import Node
 
@@ -9,6 +28,7 @@ from cv_bridge import CvBridge
 
 import cv2
 import numpy as np
+import math
 
 
 # ───────────────────────────────────────────────────────────────────────
@@ -42,6 +62,31 @@ FRUIT_IDS = {name: idx for idx, name in enumerate(FRUIT_HSV_RANGES)}
 
 MIN_CONTOUR_AREA = 40
 
+# ───────────────────────────────────────────────────────────────────────
+# Camera intrinsics (from URDF: horizontal_fov=1.047 rad, 640x480)
+# ───────────────────────────────────────────────────────────────────────
+IMAGE_WIDTH = 640
+IMAGE_HEIGHT = 480
+H_FOV = 1.047  # radians (60 degrees)
+V_FOV = H_FOV * (IMAGE_HEIGHT / IMAGE_WIDTH)  # ~0.785 rad (45 deg)
+
+# Focal length in pixels (pinhole model)
+FX = (IMAGE_WIDTH / 2.0) / math.tan(H_FOV / 2.0)
+FY = (IMAGE_HEIGHT / 2.0) / math.tan(V_FOV / 2.0)
+CX = IMAGE_WIDTH / 2.0
+CY = IMAGE_HEIGHT / 2.0
+
+# Known approximate food diameters (metres) for monocular depth estimation
+FRUIT_DIAMETERS = {
+    'apple':      0.08,
+    'strawberry': 0.035,
+    'banana':     0.04,   # width
+    'grape':      0.02,
+    'orange':     0.075,
+    'kiwi':       0.06,
+}
+DEFAULT_FRUIT_DIAMETER = 0.06
+
 
 class VisionNode(Node):
 
@@ -72,7 +117,11 @@ class VisionNode(Node):
         self.fruits_pub = self.create_publisher(
             Float64MultiArray, '/detected_fruits', 10)
 
-        self.get_logger().info('Vision node started (multi-fruit detection)')
+        # Camera bearing + monocular depth estimate for fusion with ultrasonic
+        self.bearing_pub = self.create_publisher(Point, '/food_bearing', 10)
+
+        self.get_logger().info(
+            'Vision node started (multi-fruit detection + 3D bearing estimation)')
 
     # ----------------------------------------------------------------
     # Detection helper
@@ -108,6 +157,31 @@ class VisionNode(Node):
         return (cx, cy, area, x, y, w, h)
 
     # ----------------------------------------------------------------
+    # 3D bearing estimation from pinhole camera model
+    # ----------------------------------------------------------------
+    def _estimate_bearing_and_depth(self, cx, cy, bbox_w, fruit_name):
+        """Compute bearing angles and monocular depth estimate.
+
+        Returns (bearing_h, bearing_v, estimated_depth_m).
+        bearing_h: horizontal angle from camera optical axis (rad, +right)
+        bearing_v: vertical angle from camera optical axis (rad, +down)
+        estimated_depth_m: depth from apparent size (metres)
+        """
+        # Bearing angles via pinhole model
+        bearing_h = math.atan2(cx - CX, FX)
+        bearing_v = math.atan2(cy - CY, FY)
+
+        # Monocular depth from known fruit diameter
+        known_diameter = FRUIT_DIAMETERS.get(fruit_name, DEFAULT_FRUIT_DIAMETER)
+        if bbox_w > 5:
+            # depth = (real_size * focal_length) / pixel_size
+            estimated_depth = (known_diameter * FX) / bbox_w
+        else:
+            estimated_depth = 1.0  # fallback far distance
+
+        return bearing_h, bearing_v, estimated_depth
+
+    # ----------------------------------------------------------------
     # Main callback
     # ----------------------------------------------------------------
     def image_callback(self, msg):
@@ -127,7 +201,8 @@ class VisionNode(Node):
             color = FRUIT_COLORS.get(name, (255, 255, 255))
             cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
             cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
-            cv2.putText(frame, f"{name} ({area:.0f})",
+            bh, bv, depth = self._estimate_bearing_and_depth(cx, cy, w, name)
+            cv2.putText(frame, f"{name} d={depth:.2f}m",
                         (x, y - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
                         color, 1, cv2.LINE_AA)
 
@@ -145,10 +220,11 @@ class VisionNode(Node):
         visible_msg = Bool()
         center_msg = Point()
         type_msg = String()
+        bearing_msg = Point()
 
         if detections:
             primary_name = max(detections, key=lambda n: detections[n][2])
-            cx, cy, area = detections[primary_name][:3]
+            cx, cy, area, x, y, w, h = detections[primary_name]
 
             visible_msg.data = True
             center_msg.x = float(cx)
@@ -156,13 +232,23 @@ class VisionNode(Node):
             center_msg.z = float(area)
             type_msg.data = primary_name
 
+            # 3D bearing + monocular depth
+            bh, bv, depth = self._estimate_bearing_and_depth(
+                cx, cy, w, primary_name)
+            bearing_msg.x = bh       # horizontal bearing (rad)
+            bearing_msg.y = bv       # vertical bearing (rad)
+            bearing_msg.z = depth    # monocular depth estimate (m)
+
             self.visible_pub.publish(visible_msg)
             self.center_pub.publish(center_msg)
             self.type_pub.publish(type_msg)
+            self.bearing_pub.publish(bearing_msg)
 
             self.get_logger().info(
                 f"Detected {len(detections)} fruit(s), "
-                f"primary={primary_name} x={cx} y={cy} area={area:.0f}"
+                f"primary={primary_name} x={cx} y={cy} area={area:.0f} "
+                f"bearing=({math.degrees(bh):.1f}°, {math.degrees(bv):.1f}°) "
+                f"depth={depth:.3f}m"
             )
         else:
             visible_msg.data = False
