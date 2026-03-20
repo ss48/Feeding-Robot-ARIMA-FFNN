@@ -59,5 +59,445 @@
       </link>
     </model>
 
+    <!-- ==================== FEEDING TABLE ==================== -->
+    <model name="feeding_table">
+      <static>true</static>
+      <pose>0.35 0 0 0 0 0</pose>
+
+      <!-- Table top -->
+      <link name="table_top">
+        <pose>0 0 0.74 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.8 0.6 0.03</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.8 0.6 0.03</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.4 0.2 1</ambient>
+            <diffuse>0.6 0.4 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Table legs -->
+      <link name="leg1">
+        <pose>-0.35 -0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="leg2">
+        <pose>0.35 -0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="leg3">
+        <pose>-0.35 0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="leg4">
+        <pose>0.35 0.25 0.37 0 0 0</pose>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.025</radius><length>0.74</length></cylinder></geometry>
+          <material><ambient>0.4 0.3 0.15 1</ambient><diffuse>0.4 0.3 0.15 1</diffuse></material>
+        </visual>
+      </link>
+
+      <joint name="leg1_joint" type="fixed"><parent>table_top</parent><child>leg1</child></joint>
+      <joint name="leg2_joint" type="fixed"><parent>table_top</parent><child>leg2</child></joint>
+      <joint name="leg3_joint" type="fixed"><parent>table_top</parent><child>leg3</child></joint>
+      <joint name="leg4_joint" type="fixed"><parent>table_top</parent><child>leg4</child></joint>
+    </model>
+
+    <!-- ==================== PLATE ==================== -->
+    <model name="plate">
+      <static>true</static>
+      <pose>0.35 0 0.77 0 0 0</pose>
+      <link name="plate_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.12</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.12</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== FRUITS ON PLATE ==================== -->
+
+    <!-- Apple (RED) -->
+    <model name="apple">
+      <static>true</static>
+      <pose>0.38 0.04 0.81 0 0 0</pose>
+      <link name="apple_link">
+        <collision name="collision">
+          <geometry><sphere><radius>0.030</radius></sphere></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><sphere><radius>0.030</radius></sphere></geometry>
+          <material>
+            <ambient>0.8 0.1 0.05 1</ambient>
+            <diffuse>0.9 0.1 0.05 1</diffuse>
+            <specular>0.3 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Strawberry (DARK RED) -->
+    <model name="strawberry">
+      <static>true</static>
+      <pose>0.32 -0.04 0.80 0 0 0</pose>
+      <link name="strawberry_link">
+        <collision name="collision">
+          <geometry><sphere><radius>0.015</radius></sphere></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><sphere><radius>0.015</radius></sphere></geometry>
+          <material>
+            <ambient>0.7 0.05 0.1 1</ambient>
+            <diffuse>0.8 0.05 0.1 1</diffuse>
+            <specular>0.3 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Banana (YELLOW) -->
+    <model name="banana">
+      <static>true</static>
+      <pose>0.34 0.06 0.80 0 0.3 0.5</pose>
+      <link name="banana_link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.015</radius>
+              <length>0.10</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.015</radius>
+              <length>0.10</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.95 0.9 0.15 1</ambient>
+            <diffuse>1.0 0.92 0.2 1</diffuse>
+            <specular>0.2 0.2 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Grape cluster (PURPLE) -->
+    <model name="grape">
+      <static>true</static>
+      <pose>0.37 -0.05 0.80 0 0 0</pose>
+      <link name="grape_link">
+        <collision name="collision">
+          <geometry><sphere><radius>0.018</radius></sphere></geometry>
+        </collision>
+        <visual name="grape1">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry><sphere><radius>0.010</radius></sphere></geometry>
+          <material>
+            <ambient>0.4 0.1 0.5 1</ambient>
+            <diffuse>0.5 0.1 0.6 1</diffuse>
+          </material>
+        </visual>
+        <visual name="grape2">
+          <pose>0.012 0.008 0.005 0 0 0</pose>
+          <geometry><sphere><radius>0.010</radius></sphere></geometry>
+          <material>
+            <ambient>0.4 0.1 0.5 1</ambient>
+            <diffuse>0.5 0.1 0.6 1</diffuse>
+          </material>
+        </visual>
+        <visual name="grape3">
+          <pose>-0.005 0.012 0.003 0 0 0</pose>
+          <geometry><sphere><radius>0.010</radius></sphere></geometry>
+          <material>
+            <ambient>0.35 0.08 0.45 1</ambient>
+            <diffuse>0.45 0.08 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Orange (ORANGE) -->
+    <model name="orange_fruit">
+      <static>true</static>
+      <pose>0.30 0.03 0.81 0 0 0</pose>
+      <link name="orange_link">
+        <collision name="collision">
+          <geometry><sphere><radius>0.032</radius></sphere></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><sphere><radius>0.032</radius></sphere></geometry>
+          <material>
+            <ambient>0.95 0.5 0.05 1</ambient>
+            <diffuse>1.0 0.55 0.05 1</diffuse>
+            <specular>0.3 0.2 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Kiwi (GREEN) -->
+    <model name="kiwi">
+      <static>true</static>
+      <pose>0.40 -0.02 0.80 0 0 0</pose>
+      <link name="kiwi_link">
+        <collision name="collision">
+          <geometry><sphere><radius>0.022</radius></sphere></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><sphere><radius>0.022</radius></sphere></geometry>
+          <material>
+            <ambient>0.3 0.5 0.15 1</ambient>
+            <diffuse>0.35 0.55 0.15 1</diffuse>
+            <specular>0.1 0.15 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== PATIENT HEAD WITH ANIMATED JAW ==================== -->
+    <model name="patient_head">
+      <pose>0.55 0.0 0.85 0 0 3.14159</pose>
+
+      <!-- Skull (static upper head) -->
+      <link name="head_link">
+        <inertial>
+          <mass>2.0</mass>
+          <inertia>
+            <ixx>0.005</ixx><iyy>0.005</iyy><izz>0.003</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="head_collision">
+          <geometry>
+            <ellipsoid>
+              <radii>0.09 0.08 0.10</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="head_visual">
+          <geometry>
+            <ellipsoid>
+              <radii>0.09 0.08 0.10</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.85 0.72 0.58 1</ambient>
+            <diffuse>0.9 0.75 0.6 1</diffuse>
+          </material>
+        </visual>
+        <!-- Left eye -->
+        <visual name="left_eye">
+          <pose>-0.06 -0.03 0.03 0 0 0</pose>
+          <geometry><sphere><radius>0.012</radius></sphere></geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+        <visual name="left_pupil">
+          <pose>-0.07 -0.03 0.03 0 0 0</pose>
+          <geometry><sphere><radius>0.006</radius></sphere></geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.15 0.15 0.15 1</diffuse>
+          </material>
+        </visual>
+        <!-- Right eye -->
+        <visual name="right_eye">
+          <pose>-0.06 0.03 0.03 0 0 0</pose>
+          <geometry><sphere><radius>0.012</radius></sphere></geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+        <visual name="right_pupil">
+          <pose>-0.07 0.03 0.03 0 0 0</pose>
+          <geometry><sphere><radius>0.006</radius></sphere></geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.15 0.15 0.15 1</diffuse>
+          </material>
+        </visual>
+        <!-- Nose -->
+        <visual name="nose">
+          <pose>-0.085 0 0.0 0 0 0</pose>
+          <geometry>
+            <box><size>0.015 0.018 0.025</size></box>
+          </geometry>
+          <material>
+            <ambient>0.80 0.65 0.52 1</ambient>
+            <diffuse>0.85 0.68 0.55 1</diffuse>
+          </material>
+        </visual>
+        <!-- Upper lip -->
+        <visual name="upper_lip">
+          <pose>-0.085 0 -0.035 0 0 0</pose>
+          <geometry>
+            <box><size>0.015 0.04 0.008</size></box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.35 0.3 1</ambient>
+            <diffuse>0.85 0.4 0.35 1</diffuse>
+          </material>
+        </visual>
+        <!-- Mouth corner markers (green for detection) -->
+        <visual name="mouth_corner_left">
+          <pose>-0.085 -0.022 -0.035 0 0 0</pose>
+          <geometry><sphere><radius>0.004</radius></sphere></geometry>
+          <material>
+            <ambient>0.0 0.8 0.0 1</ambient>
+            <diffuse>0.0 0.9 0.0 1</diffuse>
+          </material>
+        </visual>
+        <visual name="mouth_corner_right">
+          <pose>-0.085 0.022 -0.035 0 0 0</pose>
+          <geometry><sphere><radius>0.004</radius></sphere></geometry>
+          <material>
+            <ambient>0.0 0.8 0.0 1</ambient>
+            <diffuse>0.0 0.9 0.0 1</diffuse>
+          </material>
+        </visual>
+        <!-- Neck -->
+        <visual name="neck">
+          <pose>0 0 -0.14 0 0 0</pose>
+          <geometry>
+            <cylinder><radius>0.035</radius><length>0.08</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.80 0.65 0.52 1</ambient>
+            <diffuse>0.85 0.68 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!-- Lower jaw (animated) -->
+      <link name="jaw_link">
+        <inertial>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.0001</ixx><iyy>0.0002</iyy><izz>0.0001</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <visual name="jaw_visual">
+          <pose>-0.02 0 -0.012 0 0 0</pose>
+          <geometry>
+            <box><size>0.04 0.045 0.025</size></box>
+          </geometry>
+          <material>
+            <ambient>0.82 0.68 0.55 1</ambient>
+            <diffuse>0.87 0.72 0.58 1</diffuse>
+          </material>
+        </visual>
+        <visual name="lower_lip">
+          <pose>-0.04 0 -0.003 0 0 0</pose>
+          <geometry>
+            <box><size>0.015 0.04 0.008</size></box>
+          </geometry>
+          <material>
+            <ambient>0.75 0.3 0.25 1</ambient>
+            <diffuse>0.8 0.35 0.3 1</diffuse>
+          </material>
+        </visual>
+        <collision name="jaw_collision">
+          <pose>-0.02 0 -0.012 0 0 0</pose>
+          <geometry>
+            <box><size>0.04 0.045 0.025</size></box>
+          </geometry>
+        </collision>
+      </link>
+
+      <!-- Jaw joint -->
+      <joint name="jaw_joint" type="revolute">
+        <parent>head_link</parent>
+        <child>jaw_link</child>
+        <pose>0 0 0 0 0 0</pose>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.5</lower>
+            <upper>0.0</upper>
+          </limit>
+          <dynamics>
+            <damping>0.1</damping>
+            <friction>0.05</friction>
+          </dynamics>
+        </axis>
+        <pose relative_to="head_link">-0.06 0 -0.04 0 0 0</pose>
+      </joint>
+
+      <!-- Jaw position controller -->
+      <plugin filename="gz-sim-joint-position-controller-system"
+              name="gz::sim::systems::JointPositionController">
+        <joint_name>jaw_joint</joint_name>
+        <topic>/patient_head/jaw_cmd</topic>
+        <p_gain>5.0</p_gain>
+        <i_gain>0.1</i_gain>
+        <d_gain>0.5</d_gain>
+      </plugin>
+
+      <!-- Fix head to world -->
+      <joint name="head_to_world" type="fixed">
+        <parent>world</parent>
+        <child>head_link</child>
+      </joint>
+
+    </model>
+
   </world>
 </sdf>
