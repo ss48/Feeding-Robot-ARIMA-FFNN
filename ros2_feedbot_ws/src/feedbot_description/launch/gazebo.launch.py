@@ -212,11 +212,17 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Delay spawn to ensure Gazebo is fully loaded
+    delayed_spawn_robot = TimerAction(
+        period=5.0,
+        actions=[spawn_robot],
+    )
+
     return LaunchDescription([
         ign_resource_path,
         gz_sim,
         robot_state_publisher,
-        spawn_robot,
+        delayed_spawn_robot,
         gz_bridge,
         delayed_joint_state_broadcaster,
         delayed_joint_controllers,
