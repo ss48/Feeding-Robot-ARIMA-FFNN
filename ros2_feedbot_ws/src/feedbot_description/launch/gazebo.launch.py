@@ -79,7 +79,10 @@ def generate_launch_description():
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        parameters=[{"robot_description": robot_description_rviz}],
+        parameters=[{
+            "robot_description": robot_description_rviz,
+            "use_sim_time": True,
+        }],
         output="screen",
     )
 
@@ -93,6 +96,16 @@ def generate_launch_description():
             "-name", "feedbot",
             "-file", urdf_tmp,
         ],
+        output="screen",
+    )
+
+    # --------------------------------------------------
+    # Bridge clock from Ignition to ROS 2 (required for use_sim_time)
+    # --------------------------------------------------
+    clock_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
         output="screen",
     )
 
@@ -117,6 +130,7 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         arguments=["-d", rviz_config],
+        parameters=[{"use_sim_time": True}],
         output="screen",
     )
 
@@ -125,6 +139,7 @@ def generate_launch_description():
         gz_sim,
         robot_state_publisher,
         spawn_robot,
+        clock_bridge,
         gz_bridge,
         rviz,
     ])
