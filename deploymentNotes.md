@@ -705,49 +705,120 @@ ros2 param set /mouth_animator_node open_threshold 0.4
 - Internet connection for initial setup
 - SSH key configured for GitHub access (`ssh-keygen` then add to GitHub)
 - For real hardware: Dynamixel servos powered, camera at `/dev/video0`, HX711 force sensor via Arduino
+- CUDA 12.6 toolkit: `sudo apt-get install cuda-nvcc-12-6 cuda-cudart-dev-12-6`
 
 ## ML Food Detection (jetson-inference)
 
-The vision node uses **NVIDIA jetson-inference** for ML-based object detection on
-Jetson hardware, with HSV colour segmentation as fallback on dev PCs / Gazebo.
+The vision node uses **NVIDIA jetson-inference** (`detectNet`) for ML-based object
+detection on Jetson hardware, with HSV colour segmentation as fallback for Gazebo.
 
-### Installing jetson-inference
+**Current status:** The launch file defaults to `detection_method: hsv` because
+TensorRT 10.3 on JetPack 6.x dropped support for legacy UFF/Caffe model formats.
+Change to `'auto'` or `'ml'` in `feeding_system.launch.py` once an ONNX model is configured.
+
+### Installing jetson-inference (Jetson Orin / JetPack 6.x)
 
 ```bash
-# On Jetson Orin (one-time setup)
-sudo apt-get install git cmake libpython3-dev python3-numpy
+# 1. Install CUDA compiler (if not already present)
+sudo apt-get install cuda-nvcc-12-6 cuda-cudart-dev-12-6
+
+# Verify nvcc is available
+which nvcc   # should show /usr/local/cuda-12.6/bin/nvcc
+
+# 2. Clone and build jetson-inference (install system-wide, NOT in the ROS workspace)
+cd ~
 git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
 cd jetson-inference
 mkdir build && cd build
-cmake ../
+
+# Set CUDA path explicitly
+export CUDA_HOME=/usr/local/cuda-12.6
+export PATH=$CUDA_HOME/bin:$PATH
+cmake -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12.6 ../
+
+# If cmake fails on SM arch, force Orin's compute capability:
+# cmake -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12.6 -DCUDA_NVCC_FLAGS="-gencode arch=compute_87,code=sm_87" ../
+
 make -j$(nproc)
+
+# 3. If build fails on npymath (NumPy 2.0+ removed it), create a stub:
+sudo ar rcs /usr/lib/aarch64-linux-gnu/libnpymath.a
+make -j$(nproc)   # retry
+
 sudo make install
 sudo ldconfig
+
+# 4. Install Python bindings manually
+#    (the build system doesn't always install them to the right path)
+SITE=/usr/local/lib/python3.10/dist-packages
+
+sudo cp ~/jetson-inference/build/aarch64/lib/python/3.10/jetson_utils_python.so $SITE/jetson_utils_python.so
+sudo cp ~/jetson-inference/build/aarch64/lib/python/3.10/jetson_inference_python.so $SITE/jetson_inference_python.so
+
+# Copy the Python wrapper packages
+sudo cp -r ~/jetson-inference/python/python/jetson_inference $SITE/
+sudo cp -r ~/jetson-inference/python/python/jetson $SITE/
+sudo cp -r ~/jetson-inference/python/python/Jetson $SITE/
+sudo cp -r ~/jetson-inference/utils/python/python/jetson_utils $SITE/ 2>/dev/null
+sudo cp -r ~/jetson-inference/utils/python/python/jetson $SITE/ 2>/dev/null
+
+# 5. Verify
+python3 -c "import jetson_inference; print('OK')"
+python3 -c "import jetson_utils; print('OK')"
 ```
 
-### Detection Method
+### Known Issue: TensorRT 10.3 + Legacy Models
 
-The vision node auto-detects whether jetson-inference is available:
+JetPack 6.x ships TensorRT 10.3 which **does not support** legacy UFF/Caffe model
+formats (`.uff`, `.caffemodel`). The default SSD-Mobilenet-v2 model in jetson-inference
+uses `.uff` format and will fail with:
 
-| Environment | Detection Method | Notes |
-|-------------|-----------------|-------|
-| Jetson Orin (real hardware) | **ML** (SSD-Mobilenet-v2 via detectNet) | Detects COCO food classes at ~30 FPS |
-| Dev PC / Gazebo simulation | **HSV** colour segmentation (fallback) | Works with Gazebo's solid-colour objects |
+```
+[TRT] TensorRT 10.3 does not support legacy caffe models
+[TRT] detectNet -- failed to initialize.
+```
 
-**Force a specific method via ROS parameter:**
+**Workarounds (in order of preference):**
+
+1. **Use HSV detection** (current default) — works out of the box for Gazebo and
+   real food with tuned colour ranges
+
+2. **Download an ONNX model** — The vision node will auto-detect ONNX models at
+   `~/jetson-inference/data/networks/ssd_mobilenet_v2.onnx`
+
+3. **Install OpenSSL 1.1** for TAO converter — some TAO/etlt models need this:
+   ```bash
+   # The tao-converter needs libcrypto.so.1.1
+   sudo apt install libssl1.1
+   # If not available, download from Ubuntu 20.04 repos
+   ```
+
+4. **Use PyTorch + torchvision** — alternative ML approach (requires separate setup)
+
+### Detection Method Configuration
+
+The vision node parameter `detection_method` controls which detector is used:
+
+| Value | Behaviour |
+|-------|-----------|
+| `hsv` | Always use HSV colour segmentation (default in launch file) |
+| `auto` | Use ML if jetson-inference loads successfully, else HSV fallback |
+| `ml` | Force ML detection (warns and falls back to HSV if unavailable) |
+
+**Change in launch file** (`feeding_system.launch.py`):
+
+```python
+# Currently set to 'hsv' — change to 'auto' when ML model works
+parameters=[{'detection_method': 'hsv'}],
+```
+
+**Or override at runtime:**
 
 ```bash
-# Force ML detection (will warn if jetson-inference not installed)
-ros2 run feedbot_fusion vision_node --ros-args -p detection_method:=ml
-
-# Force HSV fallback
-ros2 run feedbot_fusion vision_node --ros-args -p detection_method:=hsv
-
-# Auto-detect (default)
 ros2 run feedbot_fusion vision_node --ros-args -p detection_method:=auto
 ```
 
-### COCO Food Classes Detected
+### COCO Food Classes Detected (ML mode)
 
 The SSD-Mobilenet-v2 model detects these food items from the COCO dataset:
 
@@ -759,15 +830,21 @@ The SSD-Mobilenet-v2 model detects these food items from the COCO dataset:
 | 58 | hot_dog | 59 | pizza |
 | 60 | donut | 61 | cake |
 
-### Tuning ML Confidence
+### Tuning Detection
 
 ```bash
-# Adjust confidence threshold (default: 0.35)
+# Adjust ML confidence threshold (default: 0.35)
 ros2 run feedbot_fusion vision_node --ros-args -p ml_confidence:=0.25
 
-# Use a different model
-ros2 run feedbot_fusion vision_node --ros-args -p ml_model:=ssd-inception-v2
+# Change camera topic (e.g. for real hardware)
+ros2 run feedbot_fusion vision_node --ros-args -p camera_topic:=/camera/image_raw
 ```
+
+### Robot Home Pose
+
+The robot starts in the **WAITING** state with the arm tilted forward so the camera
+faces the plate. Home pose: `[0.0, 0.5, -0.8, -0.5]` (joint2 forward, joint3 elbow
+down, joint4 tilted to look at plate). Press SPACE to start the feeding cycle.
 
 ## Standalone Perception Demo (No ROS Required)
 

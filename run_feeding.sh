@@ -67,14 +67,20 @@ case "$MODE" in
         echo "Sensor Fusion: Camera + Ultrasonic + Force + Joints"
         echo "  EKF Kalman Filter fuses all sensors for 3D food localisation"
         echo ""
+        # Log directory for node output
+        LOG_DIR="/tmp/feedbot_logs"
+        mkdir -p "$LOG_DIR"
+
         echo "Step 1: Launching Gazebo with robot..."
-        ros2 launch feedbot_description gazebo.launch.py &
+        ros2 launch feedbot_description gazebo.launch.py \
+            > "$LOG_DIR/gazebo.log" 2>&1 &
         GAZEBO_PID=$!
         echo "  Gazebo PID: $GAZEBO_PID"
+        echo "  Log: $LOG_DIR/gazebo.log"
 
         # Wait for Gazebo and controllers to initialise
-        echo "  Waiting 10s for Gazebo to start..."
-        sleep 10
+        echo "  Waiting 12s for Gazebo to start..."
+        sleep 12
 
         echo ""
         echo "Step 2: Launching feeding system nodes..."
@@ -87,32 +93,45 @@ case "$MODE" in
         echo "  - feeding_fsm:       State machine + IK food pickup"
         echo "  - mouth_animator:    Patient jaw animation (sim only)"
         echo ""
-        ros2 launch feedbot_fusion feeding_system.launch.py &
+        ros2 launch feedbot_fusion feeding_system.launch.py \
+            > "$LOG_DIR/feeding_system.log" 2>&1 &
         FEEDING_PID=$!
+        echo "  Feeding system PID: $FEEDING_PID"
+        echo "  Log: $LOG_DIR/feeding_system.log"
 
         sleep 3
         echo ""
         echo "============================================"
-        echo "  System ready. Press SPACE to start feeding."
+        echo "  System ready!"
+        echo "  Press SPACE to start feeding cycle."
         echo "  Press Q to quit."
+        echo "  Logs: $LOG_DIR/"
         echo "============================================"
         echo ""
 
-        # Listen for spacebar presses and publish /feeding_start
+        # Cleanup handler
+        cleanup() {
+            echo ""
+            echo "Shutting down..."
+            kill $FEEDING_PID 2>/dev/null || true
+            kill $GAZEBO_PID 2>/dev/null || true
+            exit 0
+        }
+        trap cleanup INT TERM
+
+        # Listen for spacebar — read from /dev/tty to avoid interference
+        # from backgrounded process output
         while true; do
-            read -rsn1 key
-            if [ "$key" = " " ]; then
-                echo "[SPACE] Starting feeding cycle..."
-                ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once &
-            elif [ "$key" = "q" ] || [ "$key" = "Q" ]; then
-                echo "[QUIT] Shutting down..."
-                break
+            if read -rsn1 key < /dev/tty 2>/dev/null; then
+                if [ "$key" = " " ]; then
+                    echo "[SPACE] Starting feeding cycle..."
+                    ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once \
+                        > /dev/null 2>&1 &
+                elif [ "$key" = "q" ] || [ "$key" = "Q" ]; then
+                    cleanup
+                fi
             fi
         done
-
-        # Cleanup
-        kill $FEEDING_PID 2>/dev/null || true
-        kill $GAZEBO_PID 2>/dev/null || true
         ;;
 
     real)
@@ -133,29 +152,41 @@ case "$MODE" in
         echo ""
         read -p "Press Enter to continue..."
 
-        ros2 launch feedbot_fusion feeding_system.launch.py &
+        LOG_DIR="/tmp/feedbot_logs"
+        mkdir -p "$LOG_DIR"
+
+        ros2 launch feedbot_fusion feeding_system.launch.py \
+            > "$LOG_DIR/feeding_system.log" 2>&1 &
         FEEDING_PID=$!
+
+        cleanup() {
+            echo ""
+            echo "Shutting down..."
+            kill $FEEDING_PID 2>/dev/null || true
+            exit 0
+        }
+        trap cleanup INT TERM
 
         sleep 3
         echo ""
         echo "============================================"
-        echo "  System ready. Press SPACE to start feeding."
+        echo "  System ready! Press SPACE to start feeding."
         echo "  Press Q to quit."
+        echo "  Log: $LOG_DIR/feeding_system.log"
         echo "============================================"
         echo ""
 
         while true; do
-            read -rsn1 key
-            if [ "$key" = " " ]; then
-                echo "[SPACE] Starting feeding cycle..."
-                ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once &
-            elif [ "$key" = "q" ] || [ "$key" = "Q" ]; then
-                echo "[QUIT] Shutting down..."
-                break
+            if read -rsn1 key < /dev/tty 2>/dev/null; then
+                if [ "$key" = " " ]; then
+                    echo "[SPACE] Starting feeding cycle..."
+                    ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once \
+                        > /dev/null 2>&1 &
+                elif [ "$key" = "q" ] || [ "$key" = "Q" ]; then
+                    cleanup
+                fi
             fi
         done
-
-        kill $FEEDING_PID 2>/dev/null || true
         ;;
 
     predict)
