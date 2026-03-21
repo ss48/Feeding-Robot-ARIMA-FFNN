@@ -26,6 +26,9 @@ def generate_launch_description():
             executable='vision_node',
             name='vision_node',
             output='screen',
+            parameters=[{
+                'detection_method': 'hsv',  # 'auto', 'ml', or 'hsv'
+            }],
         ),
         Node(
             package='feedbot_fusion',
