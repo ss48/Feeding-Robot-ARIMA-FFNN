@@ -168,13 +168,36 @@ class VisionNode(Node):
         self._net = None
         if self._use_ml:
             try:
-                self._net = jetson_inference.detectNet(
-                    ml_model, threshold=self._ml_confidence)
-                self.get_logger().info(
-                    f'ML detection initialized: {ml_model} '
-                    f'(confidence threshold: {self._ml_confidence})')
+                # Try ONNX model first (required for TensorRT 10+)
+                import os
+                onnx_path = os.path.expanduser(
+                    '~/jetson-inference/data/networks/ssd_mobilenet_v2.onnx')
+                labels_path = os.path.expanduser(
+                    '~/jetson-inference/data/networks/ssd_coco_labels.txt')
+
+                if os.path.exists(onnx_path):
+                    self._net = jetson_inference.detectNet(
+                        argv=[
+                            '--model=' + onnx_path,
+                            '--labels=' + labels_path,
+                            '--input-blob=input_0',
+                            '--output-cvg=scores',
+                            '--output-bbox=boxes',
+                            '--threshold=' + str(self._ml_confidence),
+                        ])
+                    self.get_logger().info(
+                        f'ML detection initialized: ONNX model '
+                        f'(confidence threshold: {self._ml_confidence})')
+                else:
+                    # Fallback to built-in model name
+                    self._net = jetson_inference.detectNet(
+                        ml_model, threshold=self._ml_confidence)
+                    self.get_logger().info(
+                        f'ML detection initialized: {ml_model} '
+                        f'(confidence threshold: {self._ml_confidence})')
             except Exception as e:
-                self.get_logger().error(f'Failed to load ML model: {e}')
+                self.get_logger().error(
+                    f'Failed to load ML model: {e} — falling back to HSV')
                 self._use_ml = False
 
         # Subscriber
