@@ -426,10 +426,22 @@
   <material>Gazebo/Grey</material>
 </gazebo>
 <gazebo reference="table_link">
-  <material>Gazebo/Wood</material>
+  <visual>
+    <material>
+      <ambient>0.6 0.4 0.2 1</ambient>
+      <diffuse>0.6 0.4 0.2 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+    </material>
+  </visual>
 </gazebo>
 <gazebo reference="plate_link">
-  <material>Gazebo/White</material>
+  <visual>
+    <material>
+      <ambient>0.95 0.95 0.95 1</ambient>
+      <diffuse>0.95 0.95 0.95 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+    </material>
+  </visual>
 </gazebo>
 
 <joint name="plate_to_table" type="fixed"> 
@@ -563,17 +575,93 @@
 
   
 
-<joint name="strawberry_to_plate" type="fixed"> 
+<joint name="strawberry_to_plate" type="fixed">
 
-  <parent link="plate_link"/> 
+  <parent link="plate_link"/>
 
-  <child link="strawberry_link"/> 
+  <child link="strawberry_link"/>
 
-  <origin xyz="-0.03 0.02 0.0010"/> 
+  <origin xyz="-0.03 0.02 0.0010"/>
 
-</joint> 
+</joint>
 
-  
+<!-- BANANA -->
+<link name="banana_link">
+  <visual>
+    <geometry>
+      <cylinder radius="0.012" length="0.07"/>
+    </geometry>
+    <origin xyz="0 0 0" rpy="0 1.2 0"/>
+    <material name="banana_yellow">
+      <color rgba="1.0 0.9 0.1 1.0"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <cylinder radius="0.012" length="0.07"/>
+    </geometry>
+    <origin xyz="0 0 0" rpy="0 1.2 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.015"/>
+    <inertia ixx="0.00001" ixy="0" ixz="0"
+             iyy="0.00001" iyz="0" izz="0.00001"/>
+  </inertial>
+</link>
+
+<gazebo reference="banana_link">
+  <visual>
+    <material>
+      <ambient>1.0 0.9 0.1 1</ambient>
+      <diffuse>1.0 0.9 0.1 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+    </material>
+  </visual>
+</gazebo>
+
+<joint name="banana_to_plate" type="fixed">
+  <parent link="plate_link"/>
+  <child link="banana_link"/>
+  <origin xyz="0.02 -0.03 0.012"/>
+</joint>
+
+<!-- ORANGE -->
+<link name="orange_link">
+  <visual>
+    <geometry>
+      <sphere radius="0.018"/>
+    </geometry>
+    <material name="orange_color">
+      <color rgba="1.0 0.55 0.0 1.0"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <sphere radius="0.018"/>
+    </geometry>
+  </collision>
+  <inertial>
+    <mass value="0.02"/>
+    <inertia ixx="0.00001" ixy="0" ixz="0"
+             iyy="0.00001" iyz="0" izz="0.00001"/>
+  </inertial>
+</link>
+
+<gazebo reference="orange_link">
+  <visual>
+    <material>
+      <ambient>1.0 0.55 0.0 1</ambient>
+      <diffuse>1.0 0.55 0.0 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+    </material>
+  </visual>
+</gazebo>
+
+<joint name="orange_to_plate" type="fixed">
+  <parent link="plate_link"/>
+  <child link="orange_link"/>
+  <origin xyz="-0.02 -0.02 0.018"/>
+</joint>
 
 <!-- MOUTH OPEN MODEL (only one copy!) --> 
 
