@@ -892,45 +892,38 @@
   
 <ros2_control name="FeedbotSystem" type="system">
   <hardware>
-    <plugin>ign_ros2_control/IgnitionSystem</plugin>
+    <plugin>gz_ros2_control/GazeboSimSystem</plugin>
   </hardware>
 
-<joint name="joint1">
-  <command_interface name="effort"/>
-  <state_interface name="position"/>
-  <state_interface name="velocity"/>
-  <state_interface name="effort"/>
-</joint>
+  <joint name="joint1">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
 
+  <joint name="joint2">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
 
-<joint name="joint2">
-  <command_interface name="effort"/>
-  <state_interface name="position"/>
-  <state_interface name="velocity"/>
-  <state_interface name="effort"/>
-</joint>
+  <joint name="joint3">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
 
-
-<joint name="joint3">
-  <command_interface name="effort"/>
-  <state_interface name="position"/>
-  <state_interface name="velocity"/>
-  <state_interface name="effort"/>
-</joint>
-
-
-<joint name="joint4">
-  <command_interface name="effort"/>
-  <state_interface name="position"/>
-  <state_interface name="velocity"/>
-  <state_interface name="effort"/>
-</joint>
+  <joint name="joint4">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
 
 </ros2_control>
 
 <gazebo>
-  <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin"
-          filename="libign_ros2_control-system.so">
+  <plugin filename="gz_ros2_control-system"
+          name="gz_ros2_control::GazeboSimROS2ControlPlugin">
     <parameters>$(find feedbot_description)/config/controllers.yaml</parameters>
   </plugin>
 </gazebo>

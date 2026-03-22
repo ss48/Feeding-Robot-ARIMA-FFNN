@@ -127,9 +127,7 @@ def generate_launch_description():
     )
 
     # --------------------------------------------------
-    # Controllers — spawn joint_state_broadcaster so TF
-    # frames are published for all revolute joints, then
-    # spawn each PID joint controller after it exits.
+    # Controllers — spawn joint_state_broadcaster then arm_controller
     # --------------------------------------------------
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -141,41 +139,11 @@ def generate_launch_description():
         output="screen",
     )
 
-    joint1_controller_spawner = Node(
+    arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "joint1_controller",
-            "--controller-manager", "/controller_manager",
-        ],
-        output="screen",
-    )
-
-    joint2_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "joint2_controller",
-            "--controller-manager", "/controller_manager",
-        ],
-        output="screen",
-    )
-
-    joint3_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "joint3_controller",
-            "--controller-manager", "/controller_manager",
-        ],
-        output="screen",
-    )
-
-    joint4_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "joint4_controller",
+            "arm_controller",
             "--controller-manager", "/controller_manager",
         ],
         output="screen",
@@ -187,16 +155,11 @@ def generate_launch_description():
         actions=[joint_state_broadcaster_spawner],
     )
 
-    # Spawn joint controllers after joint_state_broadcaster is up
-    delayed_joint_controllers = RegisterEventHandler(
+    # Spawn arm_controller after joint_state_broadcaster is up
+    delayed_arm_controller = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
-            on_exit=[
-                joint1_controller_spawner,
-                joint2_controller_spawner,
-                joint3_controller_spawner,
-                joint4_controller_spawner,
-            ],
+            on_exit=[arm_controller_spawner],
         )
     )
 
@@ -225,6 +188,6 @@ def generate_launch_description():
         delayed_spawn_robot,
         gz_bridge,
         delayed_joint_state_broadcaster,
-        delayed_joint_controllers,
+        delayed_arm_controller,
         rviz,
     ])
