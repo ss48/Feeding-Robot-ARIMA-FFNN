@@ -450,14 +450,16 @@
 
   
 
-<link name="apple_link">  
+<link name="apple_link">
 
 <visual>
   <geometry>
     <mesh filename="package://feedbot_description/meshes/apple.stl"
           scale="0.01 0.01 0.01"/>
   </geometry>
-
+  <material name="apple_red">
+    <color rgba="0.9 0.1 0.05 1.0"/>
+  </material>
 </visual>
 
   <collision> 
@@ -487,7 +489,13 @@
   </link> 
 
 <gazebo reference="apple_link">
-  <material>Gazebo/Red</material>
+  <visual>
+    <material>
+      <ambient>0.9 0.1 0.05 1</ambient>
+      <diffuse>0.9 0.1 0.05 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+    </material>
+  </visual>
 </gazebo>
 
 
@@ -501,15 +509,16 @@
 
 </joint> 
 
-<link name="strawberry_link">  
+<link name="strawberry_link">
 
 <visual>
   <geometry>
     <mesh filename="package://feedbot_description/meshes/strawberry.stl"
           scale="0.01 0.01 0.01"/>
   </geometry>
-
-
+  <material name="strawberry_red">
+    <color rgba="0.8 0.05 0.1 1.0"/>
+  </material>
 </visual>
   
 
@@ -543,7 +552,13 @@
   
   
 <gazebo reference="strawberry_link">
-  <material>Gazebo/Red</material>
+  <visual>
+    <material>
+      <ambient>0.8 0.05 0.1 1</ambient>
+      <diffuse>0.8 0.05 0.1 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+    </material>
+  </visual>
 </gazebo>
 
   
