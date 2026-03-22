@@ -25,6 +25,7 @@ from std_msgs.msg import Float64, Bool, String, Float64MultiArray
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Point
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from control_msgs.msg import MultiDOFCommand
 from builtin_interfaces.msg import Duration
 
 import math
@@ -162,16 +163,37 @@ class FeedingFSMNode(Node):
             Float64, '/target_angle', self.target_angle_cb, 10)
 
         # ---- publishers ----
+        # PID controller references (feedbot_description uses per-joint PID)
+        self.joint_pubs = {}
+        for jname in JOINT_NAMES:
+            topic = f'/{jname}_controller/reference'
+            self.joint_pubs[jname] = self.create_publisher(
+                MultiDOFCommand, topic, 10)
+
+        # Also keep trajectory publisher for arm_controller compatibility
         self.traj_pub = self.create_publisher(
             JointTrajectory, '/arm_controller/joint_trajectory', 10)
         self.state_pub = self.create_publisher(String, '/feeding_state', 10)
         self.food_type_pub = self.create_publisher(String, '/food_type', 10)
 
+        # Smoothing: current commanded positions for gradual motion
+        self._cmd_positions = {name: 0.0 for name in JOINT_NAMES}
+        self._cmd_step = 0.02  # rad per tick (~0.2 rad/sec at 10Hz)
+
         # 10 Hz FSM tick
         self.timer = self.create_timer(0.1, self.tick)
 
+        # Move arm to home pose on startup so camera faces the plate
+        self._startup_timer = self.create_timer(3.0, self._startup_home)
+
         self.get_logger().info(
             'Feeding FSM started (EKF 3D food localisation + IK forking)')
+
+    def _startup_home(self):
+        """Send home pose once after controllers are ready."""
+        self._startup_timer.cancel()
+        self.get_logger().info('Moving arm to home pose (camera facing plate)')
+        self._command_pose(POSES['home'])
 
     # ---- callbacks: raw sensors ----
     def joint_cb(self, msg):
@@ -253,6 +275,15 @@ class FeedingFSMNode(Node):
 
     def _command_pose(self, pose, duration_sec=TRAJECTORY_DURATION_SEC):
         self.target_pose = pose
+        # Publish to individual PID controllers (feedbot_description)
+        for i, jname in enumerate(JOINT_NAMES):
+            msg = MultiDOFCommand()
+            msg.dof_names = [jname]
+            msg.values = [float(pose[i])]
+            msg.values_dot = []
+            if jname in self.joint_pubs:
+                self.joint_pubs[jname].publish(msg)
+        # Also publish JointTrajectory for arm_controller compatibility
         traj = JointTrajectory()
         traj.joint_names = JOINT_NAMES
         point = JointTrajectoryPoint()
