@@ -53,13 +53,14 @@ L3_LENGTH = 0.164   # link3 length
 
 # Predefined joint poses (radians) for non-IK phases
 # feedbot_description URDF: joint2/3/4 rotate around Y axis
-#   positive Y rotation = tilts backward/up (away from plate)
-#   negative Y rotation = tilts forward/down (toward plate)
+# At joints=0: arm extends UP vertically then OUT horizontally
+# Camera is on the feeder_head, facing along the feeder direction
+# joint4 = -1.5 (~90° down) tilts the camera to look at the plate below
 POSES = {
-    'home':         [0.0,  -0.5,  -0.8,  -0.5],   # arm tilted forward, camera faces plate
-    'plate_above':  [0.0,  -0.3,  -0.4,  -0.3],
-    'pre_feed':     [1.2,  -0.2,  -0.2,   0.3],
-    'feed':         [1.2,  -0.3,  -0.4,   0.5],
+    'home':         [0.0,   0.0,   0.0,  -1.5],   # arm default, camera tilted down at plate
+    'plate_above':  [0.0,   0.0,  -0.3,  -1.2],   # slight elbow bend, camera down
+    'pre_feed':     [1.2,   0.0,   0.0,   0.0],   # rotate to patient, camera forward
+    'feed':         [1.2,   0.0,  -0.3,   0.3],   # extend toward mouth
     'retract':      [0.6,   0.0,   0.0,   0.0],
 }
 
