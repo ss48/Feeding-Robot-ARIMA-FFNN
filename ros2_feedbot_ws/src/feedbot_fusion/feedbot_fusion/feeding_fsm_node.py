@@ -24,8 +24,6 @@ from rclpy.node import Node
 from std_msgs.msg import Float64, Bool, String, Float64MultiArray
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Point
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from builtin_interfaces.msg import Duration
 
 import math
 
@@ -166,8 +164,9 @@ class FeedingFSMNode(Node):
             Float64, '/target_angle', self.target_angle_cb, 10)
 
         # ---- publishers ----
-        self.traj_pub = self.create_publisher(
-            JointTrajectory, '/arm_controller/joint_trajectory', 10)
+        # ForwardCommandController accepts Float64MultiArray on /arm_controller/commands
+        self.cmd_pub = self.create_publisher(
+            Float64MultiArray, '/arm_controller/commands', 10)
         self.state_pub = self.create_publisher(String, '/feeding_state', 10)
         self.food_type_pub = self.create_publisher(String, '/food_type', 10)
 
@@ -257,14 +256,9 @@ class FeedingFSMNode(Node):
 
     def _command_pose(self, pose, duration_sec=TRAJECTORY_DURATION_SEC):
         self.target_pose = pose
-        traj = JointTrajectory()
-        traj.joint_names = JOINT_NAMES
-        point = JointTrajectoryPoint()
-        point.positions = [float(p) for p in pose]
-        point.velocities = [0.0] * len(JOINT_NAMES)
-        point.time_from_start = Duration(sec=duration_sec, nanosec=0)
-        traj.points = [point]
-        self.traj_pub.publish(traj)
+        msg = Float64MultiArray()
+        msg.data = [float(p) for p in pose]
+        self.cmd_pub.publish(msg)
 
     def _classify_food(self):
         area = self.food_center[2]

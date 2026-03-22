@@ -6,7 +6,7 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     arm_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+      type: forward_command_controller/ForwardCommandController
 
 arm_controller:
   ros__parameters:
@@ -15,13 +15,4 @@ arm_controller:
       - joint2
       - joint3
       - joint4
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-    action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
-    constraints:
-      stopped_velocity_tolerance: 0.05
-      goal_time: 0.0
+    interface_name: position
