@@ -854,3 +854,300 @@ python ros2_feedbot_ws/scripts/perception_demo.py
 
 - **With display** (Windows/desktop Linux): Opens a live OpenCV window with interactive keys (`q` quit, `o` outlier storm, `s` sonar failure)
 - **Headless** (SSH/Jetson without `$DISPLAY`): Saves a 300-frame video to `perception_demo_output.avi`, prints metrics to console every 30 frames, auto-enables outlier storm at frames 150-210 to demonstrate Kalman filter resilience
+
+---
+
+## Verifying Computer Vision + Gazebo + RViz Integration
+
+This section covers how to verify that jetson-inference (or HSV fallback), Gazebo simulation, and RViz are all working together end-to-end.
+
+### Step-by-Step Launch Sequence
+
+You need **3 terminals** (all sourced). Alternatively, use `./run_feeding.sh sim` which handles terminals 1 and 2 automatically.
+
+```bash
+# ─────────────────────────────────────────────────────
+# Terminal 1: Launch Gazebo + Robot + Controllers + RViz
+# ─────────────────────────────────────────────────────
+cd ~/feeding_robot_ws/ros2_feedbot_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+ros2 launch feeding_robot gazebo.launch.py
+
+# Wait until you see:
+#   [OK] Gazebo window opens (table, plate, fruits, patient head)
+#   [OK] RViz opens (robot model visible)
+#   [OK] "Loaded joint_state_broadcaster" in console
+#   [OK] "Loaded arm_controller" in console
+# This takes ~12 seconds.
+
+# ─────────────────────────────────────────────────────
+# Terminal 2: Launch Feeding System (all 8 nodes)
+# ─────────────────────────────────────────────────────
+cd ~/feeding_robot_ws/ros2_feedbot_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+ros2 launch feedbot_fusion feeding_system.launch.py
+
+# This starts: vision_node, force_node, sonar_bridge, fusion_node,
+#              arima_ffnn, fuzzy_controller, feeding_fsm, mouth_animator
+
+# ─────────────────────────────────────────────────────
+# Terminal 3: Monitoring & Triggering
+# ─────────────────────────────────────────────────────
+cd ~/feeding_robot_ws/ros2_feedbot_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+# Trigger a feeding cycle:
+ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once
+# Or press SPACE in Terminal 2 if using run_feeding.sh
+```
+
+### Verifying Each Subsystem
+
+#### 1. Gazebo Simulation
+
+```bash
+# Check Gazebo clock is publishing (should be ~1000 Hz)
+ros2 topic hz /clock
+
+# Check camera bridge is active (should be ~30 Hz)
+ros2 topic hz /feeding_robot/camera/image_raw
+
+# Check ultrasonic bridge is active (should be ~20 Hz)
+ros2 topic hz /feeding_robot/ultrasonic/scan
+
+# Check force/torque sensor
+ros2 topic echo /spoon/wrench --once
+
+# Check all expected topics exist
+ros2 topic list | grep feeding_robot
+# Expected:
+#   /feeding_robot/camera/image_raw
+#   /feeding_robot/ultrasonic/scan
+```
+
+#### 2. Computer Vision (jetson-inference / HSV Fallback)
+
+```bash
+# Is food being detected?
+ros2 topic echo /food_visible
+# Should show: data: true (when camera sees food on the plate)
+
+# What food type is detected?
+ros2 topic echo /food_type
+# Should show: data: "apple" (or banana, orange, etc.)
+
+# Food centre coordinates + pixel area
+ros2 topic echo /food_center
+# x = pixel x, y = pixel y, z = area in pixels
+
+# Camera bearing angles + monocular depth estimate
+ros2 topic echo /food_bearing
+# x = bearing_h (rad), y = bearing_v (rad), z = estimated_depth (m)
+
+# Multi-fruit detection array
+ros2 topic echo /detected_fruits
+
+# Check detection method being used (on dev PC it will be HSV)
+# On Jetson Orin with jetson-inference installed, it uses ML (detectNet SSD-Mobilenet-v2)
+# On dev PC or when jetson-inference is unavailable, it falls back to HSV colour segmentation
+```
+
+**If `/food_visible` always shows `false`:**
+
+- Verify camera is publishing: `ros2 topic hz /feeding_robot/camera/image_raw`
+- Check the arm's home pose points the camera at the plate (the robot starts in home pose `[0.0, 0.5, -0.8, -0.5]` with camera facing the plate)
+- If using HSV fallback, the Gazebo fruit colours must match the HSV ranges — see the Calibration section above
+- Save a frame and inspect HSV values:
+  ```bash
+  ros2 run image_view image_saver --ros-args -r image:=/feeding_robot/camera/image_raw
+  ```
+
+#### 3. Sensor Fusion (EKF)
+
+```bash
+# Fused 3D food position (the main output — metres, camera frame)
+ros2 topic echo /food_position_3d
+
+# Per-sensor health scores [vision, force, joints, arima, sonar, bearing]
+# Each value 0.0 to 1.0 — low values indicate sensor issues
+ros2 topic echo /sensor_health
+
+# Overall fusion confidence [0-1]
+ros2 topic echo /fusion_confidence
+
+# EKF-fused plate and mouth distances (cm)
+ros2 topic echo /plate_distance
+ros2 topic echo /mouth_distance
+
+# Visual servoing error
+ros2 topic echo /food_error_x
+```
+
+#### 4. RViz Visualisation
+
+```bash
+# If RViz didn't launch automatically, start it manually:
+rviz2 -d ~/feeding_robot_ws/ros2_feedbot_ws/src/feeding_robot/config/rviz_config.rviz
+```
+
+**In RViz, verify:**
+
+- **Fixed Frame** is set to `world` (not `map` or `base_link`)
+- **RobotModel** display shows the 4-DOF arm with all links
+- **TF** display shows the transform tree: `world → base_link → ... → feeder_link`
+- Add an **Image** display (topic: `/feeding_robot/camera/image_raw`) to see live camera feed
+- Add a **LaserScan** display (topic: `/feeding_robot/ultrasonic/scan`) to see ultrasonic rays
+
+#### 5. Controllers & Arm Motion
+
+```bash
+# Check controllers are loaded and active
+ros2 control list_controllers
+# Expected:
+#   joint_state_broadcaster [active]
+#   arm_controller          [active]
+
+# Verify joint states are broadcasting
+ros2 topic echo /joint_states --once
+
+# Check TF tree
+ros2 topic echo /tf --once
+
+# Check robot description is loaded
+ros2 topic echo /robot_description --once | head -5
+```
+
+#### 6. FSM State Machine
+
+```bash
+# Monitor current FSM state
+ros2 topic echo /feeding_state
+# States cycle: WAITING → IDLE → DETECT_FOOD → LOCATE_FOOD → COLLECT_FOOD →
+#               DETECT_PATIENT → PRE_FEED → FEED → RETRACT → WAITING
+
+# Trigger a feeding cycle
+ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once
+
+# Watch the arm move in both Gazebo and RViz simultaneously
+# The FSM uses IK from the fused 3D food position to compute joint angles
+```
+
+#### 7. Fuzzy Controller
+
+```bash
+# Check fuzzy controller outputs (driven by EKF fusion)
+ros2 topic echo /target_force    # desired force (N) based on food type
+ros2 topic echo /target_angle    # desired angle (deg) based on food type
+ros2 topic echo /feeding_safe    # safety signal sent to FSM
+```
+
+### Quick Diagnostic Checklist
+
+| # | Check | Command | Expected Result |
+|---|-------|---------|-----------------|
+| 1 | All nodes running | `ros2 node list` | 8+ nodes: `vision_node`, `fusion_node`, `feeding_fsm`, `arima_ffnn`, `fuzzy_controller`, `force_node`, `sonar_bridge`, `mouth_animator` |
+| 2 | Camera publishing | `ros2 topic hz /feeding_robot/camera/image_raw` | ~30 Hz |
+| 3 | Ultrasonic publishing | `ros2 topic hz /feeding_robot/ultrasonic/scan` | ~20 Hz |
+| 4 | Food detected | `ros2 topic echo /food_visible` | `data: true` |
+| 5 | Food type identified | `ros2 topic echo /food_type` | `data: "apple"` (or other fruit) |
+| 6 | Bearing computed | `ros2 topic echo /food_bearing` | Non-zero x, y, z values |
+| 7 | Sonar range | `ros2 topic echo /sonar_plate_distance` | Distance in cm (e.g. 5-30) |
+| 8 | 3D position fused | `ros2 topic echo /food_position_3d` | x, y, z in metres |
+| 9 | Fusion confidence | `ros2 topic echo /fusion_confidence` | Value between 0.0-1.0 (higher is better) |
+| 10 | Sensor health | `ros2 topic echo /sensor_health` | 6 values, each 0.0-1.0 |
+| 11 | Controllers active | `ros2 control list_controllers` | `joint_state_broadcaster` + `arm_controller` both `[active]` |
+| 12 | FSM responding | `ros2 topic echo /feeding_state` | State name (e.g. `WAITING`, `IDLE`) |
+| 13 | Arm moves | Trigger with SPACE or `/feeding_start` | Robot arm moves in both Gazebo and RViz |
+| 14 | RViz shows robot | Visual check | Robot model visible, TF frames shown |
+
+### Integration Test: Full Feeding Cycle
+
+To confirm everything is working end-to-end:
+
+1. **Launch Gazebo** (Terminal 1): `ros2 launch feeding_robot gazebo.launch.py`
+2. **Wait 12s**, confirm Gazebo window shows table with fruits and RViz shows robot
+3. **Launch feeding system** (Terminal 2): `ros2 launch feedbot_fusion feeding_system.launch.py`
+4. **Monitor** (Terminal 3): `ros2 topic echo /feeding_state`
+5. **Trigger** (Terminal 3): `ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once`
+6. **Observe the full state cycle:**
+   - `WAITING` → `IDLE` — system initialises
+   - `IDLE` → `DETECT_FOOD` — vision_node detects food via HSV/ML
+   - `DETECT_FOOD` → `LOCATE_FOOD` — EKF fuses camera + ultrasonic for 3D position
+   - `LOCATE_FOOD` → `COLLECT_FOOD` — IK computes joint angles, arm moves to food
+   - `COLLECT_FOOD` → `DETECT_PATIENT` — arm picks up food
+   - `DETECT_PATIENT` → `PRE_FEED` → `FEED` — arm moves to patient mouth
+   - `FEED` → `RETRACT` → `WAITING` — arm retracts, cycle complete
+7. **Verify in Gazebo:** arm physically moves to plate, picks up food, moves to patient
+8. **Verify in RViz:** robot model mirrors Gazebo arm motion in real-time
+9. **Press SPACE again** to run another cycle
+
+### Common Integration Issues
+
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| Food never detected | Camera not bridged or HSV ranges wrong | Check `ros2 topic hz /feeding_robot/camera/image_raw`, calibrate HSV ranges |
+| FSM stuck on `DETECT_FOOD` | `/food_visible` never becomes `true` | Verify vision_node is running, check home pose points camera at plate |
+| FSM stuck on `LOCATE_FOOD` | 3D position not stabilising | Check `/fusion_confidence`, ensure both camera and sonar are publishing |
+| Arm doesn't move | Controllers not active | Run `ros2 control list_controllers`, check for Gazebo plugin errors |
+| RViz and Gazebo out of sync | `use_sim_time` mismatch | Ensure all nodes use `use_sim_time: true`, check `/clock` topic is bridged |
+| `jetson_inference` import fails | Not installed or Python path wrong | Use HSV fallback (`detection_method: hsv`) or install per instructions above |
+| Sonar reads 0 or NaN | Ultrasonic not bridged or no objects in range | Check `ros2 topic echo /feeding_robot/ultrasonic/scan`, verify plate is within 2-400cm |
+| Low fusion confidence | One or more sensors unhealthy | Check `/sensor_health` — identify which sensor has low score and investigate |
+| IK pickup misses food | 3D position inaccurate | Tune EKF noise parameters (see Calibration section), check `AREA_TO_DISTANCE_K` |
+
+### Monitoring All Topics at Once
+
+```bash
+# List all active topics with their types
+ros2 topic list -t
+
+# Monitor multiple topics simultaneously (use separate terminal per topic)
+# Or use rqt for a GUI-based overview:
+rqt
+
+# In rqt:
+#   Plugins → Topics → Topic Monitor (see all topic rates)
+#   Plugins → Visualisation → Image View (see camera feed)
+#   Plugins → Robot Tools → Joint Trajectory Controller (move joints interactively)
+```
+
+### Using `run_feeding.sh` for Quick Integration Test
+
+The simplest way to test everything together:
+
+```bash
+cd ~/feeding_robot_ws
+./run_feeding.sh sim
+# Wait for "System ready!" message
+# Press SPACE to start a feeding cycle
+# Press Q to quit
+# Logs saved to /tmp/feedbot_logs/
+```
+
+Check logs if something fails:
+
+```bash
+cat /tmp/feedbot_logs/gazebo.log           # Gazebo + controller errors
+cat /tmp/feedbot_logs/feeding_system.log   # All 8 feeding node outputs
+```
+
+The deployment notes have been updated. I added a comprehensive new section at the end of deploymentNotes.md covering:
+
+Step-by-step launch sequence — 3-terminal setup for Gazebo, feeding system, and monitoring
+Subsystem verification — commands to check each component individually:
+Gazebo simulation (clock, camera, ultrasonic, force bridges)
+Computer vision (food detection, bearing, HSV vs ML mode)
+Sensor fusion (EKF 3D position, confidence, health scores)
+RViz visualisation (displays to add, fixed frame setting)
+Controllers & arm motion
+FSM state machine
+Fuzzy controller outputs
+14-point diagnostic checklist table with commands and expected results
+Full feeding cycle integration test — step-by-step walkthrough of triggering and observing the complete state cycle
+Common integration issues table with symptoms, causes, and fixes
+Monitoring tips using rqt and run_feeding.sh sim for quick testing
