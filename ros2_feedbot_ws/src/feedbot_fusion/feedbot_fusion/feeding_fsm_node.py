@@ -52,12 +52,15 @@ L2_LENGTH = 0.181   # link2 length
 L3_LENGTH = 0.164   # link3 length
 
 # Predefined joint poses (radians) for non-IK phases
+# feedbot_description URDF: joint2/3/4 rotate around Y axis
+#   positive Y rotation = tilts backward/up (away from plate)
+#   negative Y rotation = tilts forward/down (toward plate)
 POSES = {
-    'home':         [0.0,   0.5,  -0.8,  -0.5],   # arm tilted forward, camera faces plate
-    'plate_above':  [0.0,   0.3,  -0.4,  -0.3],
-    'pre_feed':     [1.2,   0.0,  -0.2,   0.5],
-    'feed':         [1.2,   0.3,  -0.4,   0.8],
-    'retract':      [0.6,   0.0,   0.0,   0.2],
+    'home':         [0.0,  -0.5,  -0.8,  -0.5],   # arm tilted forward, camera faces plate
+    'plate_above':  [0.0,  -0.3,  -0.4,  -0.3],
+    'pre_feed':     [1.2,  -0.2,  -0.2,   0.3],
+    'feed':         [1.2,  -0.3,  -0.4,   0.5],
+    'retract':      [0.6,   0.0,   0.0,   0.0],
 }
 
 # Joint limits (from URDF)
