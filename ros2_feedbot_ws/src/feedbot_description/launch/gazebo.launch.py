@@ -16,6 +16,7 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 from ament_index_python.packages import get_package_share_directory
+from moveit_configs_utils import MoveItConfigsBuilder
 
 
 def generate_launch_description():
@@ -164,14 +165,47 @@ def generate_launch_description():
     )
 
     # --------------------------------------------------
-    # RViz
+    # MoveIt2 move_group
     # --------------------------------------------------
-    rviz_config = os.path.join(pkg_share, "rviz", "feeding_system.rviz")
+    moveit_config = (
+        MoveItConfigsBuilder("feedbot", package_name="feedbot_moveit_config")
+        .robot_description(file_path=xacro_file)
+        .to_moveit_configs()
+    )
+
+    move_group_node = Node(
+        package="moveit_ros_move_group",
+        executable="move_group",
+        output="screen",
+        parameters=[
+            moveit_config.to_dict(),
+            {"use_sim_time": True},
+        ],
+    )
+
+    # Launch move_group after arm_controller is ready
+    delayed_move_group = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=arm_controller_spawner,
+            on_exit=[move_group_node],
+        )
+    )
+
+    # --------------------------------------------------
+    # RViz with MoveIt MotionPlanning plugin
+    # --------------------------------------------------
+    moveit_rviz_config = os.path.join(
+        get_package_share_directory("feedbot_moveit_config"),
+        "config", "moveit.rviz"
+    )
     rviz = Node(
         package="rviz2",
         executable="rviz2",
-        arguments=["-d", rviz_config],
-        parameters=[{"use_sim_time": True}],
+        arguments=["-d", moveit_rviz_config],
+        parameters=[
+            moveit_config.to_dict(),
+            {"use_sim_time": True},
+        ],
         output="screen",
     )
 
@@ -189,5 +223,6 @@ def generate_launch_description():
         gz_bridge,
         delayed_joint_state_broadcaster,
         delayed_arm_controller,
+        delayed_move_group,
         rviz,
     ])
