@@ -2,6 +2,9 @@
 ros2_feedbot_ws/build/
 ros2_feedbot_ws/install/
 ros2_feedbot_ws/log/
+build/
+install/
+log/
 
 # Python
 __pycache__/
