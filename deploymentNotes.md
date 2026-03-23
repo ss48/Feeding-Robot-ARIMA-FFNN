@@ -65,7 +65,7 @@ user to press SPACE** before starting each feeding cycle. The FSM begins in the
 `WAITING` state and only transitions to `IDLE` when it receives a `/feeding_start`
 signal (triggered by pressing the spacebar in the terminal).
 
-```
+
   Press SPACE → WAITING → IDLE → DETECT_FOOD → LOCATE_FOOD → COLLECT_FOOD →
   DETECT_PATIENT → PRE_FEED → FEED → RETRACT → WAITING (press SPACE again)
 ```
@@ -1069,7 +1069,8 @@ ros2 topic echo /feeding_safe    # safety signal sent to FSM
 
 To confirm everything is working end-to-end:
 
-1. **Launch Gazebo** (Terminal 1): `ros2 launch feeding_robot gazebo.launch.py`
+1. **Launch Gazebo** (Terminal 1): `Terminal 1: Robot + Gazebo + RViz (the arm + face you want)
+ros2 launch feedbot_description gazebo.launch.py
 2. **Wait 12s**, confirm Gazebo window shows table with fruits and RViz shows robot
 3. **Launch feeding system** (Terminal 2): `ros2 launch feedbot_fusion feeding_system.launch.py`
 4. **Monitor** (Terminal 3): `ros2 topic echo /feeding_state`
