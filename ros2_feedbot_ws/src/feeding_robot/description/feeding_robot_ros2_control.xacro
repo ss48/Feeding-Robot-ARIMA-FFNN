@@ -9,16 +9,15 @@
         <plugin>gz_ros2_control/GazeboSimSystem</plugin>
       </xacro:if>
       <xacro:unless value="$(arg use_sim)">
-        <!-- For real hardware: use Dynamixel hardware interface -->
-        <!-- <plugin>dynamixel_hardware/DynamixelHardware</plugin> -->
-        <!-- <param name="usb_port">/dev/ttyUSB0</param> -->
-        <!-- <param name="baud_rate">1000000</param> -->
-        <plugin>mock_components/GenericSystem</plugin>
+        <plugin>dynamixel_hardware/DynamixelHardware</plugin>
+        <param name="usb_port">/dev/ttyACM0</param>
+        <param name="baud_rate">57600</param>
       </xacro:unless>
     </hardware>
 
-    <!-- Base Y Joint - Yaw rotation -->
+    <!-- Base Y Joint - Yaw rotation (Dynamixel ID 11) -->
     <joint name="base_y_joint">
+      <param name="id">11</param>
       <command_interface name="position">
         <param name="min">${-175.0 * pi / 180.0}</param>
         <param name="max">${175.0 * pi / 180.0}</param>
@@ -27,8 +26,9 @@
       <state_interface name="velocity"/>
     </joint>
 
-    <!-- Lower Z Joint - Shoulder pitch -->
+    <!-- Lower Z Joint - Shoulder pitch (Dynamixel ID 12) -->
     <joint name="lower_z_joint">
+      <param name="id">12</param>
       <command_interface name="position">
         <param name="min">${-90.0 * pi / 180.0}</param>
         <param name="max">${90.0 * pi / 180.0}</param>
@@ -37,8 +37,9 @@
       <state_interface name="velocity"/>
     </joint>
 
-    <!-- Upper Z Joint - Elbow pitch -->
+    <!-- Upper Z Joint - Elbow pitch (Dynamixel ID 13) -->
     <joint name="upper_z_joint">
+      <param name="id">13</param>
       <command_interface name="position">
         <param name="min">${-120.0 * pi / 180.0}</param>
         <param name="max">${75.0 * pi / 180.0}</param>
@@ -47,8 +48,9 @@
       <state_interface name="velocity"/>
     </joint>
 
-    <!-- Feeder Joint - Wrist pitch -->
+    <!-- Feeder Joint - Wrist pitch (Dynamixel ID 14) -->
     <joint name="feeder_joint">
+      <param name="id">14</param>
       <command_interface name="position">
         <param name="min">${-90.0 * pi / 180.0}</param>
         <param name="max">${115.0 * pi / 180.0}</param>
