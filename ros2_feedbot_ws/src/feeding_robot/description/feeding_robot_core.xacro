@@ -358,11 +358,14 @@
       <geometry>
         <mesh filename="${mesh_vis}/camera.stl" scale="${stl_scale}"/>
       </geometry>
+      <!-- CAD origin offset minus camera_joint offset (0.03, 0, 0.05) -->
+      <origin xyz="${-0.194 - 0.03} 0 ${-0.351 - 0.05}" rpy="0 0 0"/>
     </visual>
     <collision>
       <geometry>
         <mesh filename="${mesh_vis}/camera.stl" scale="${stl_scale}"/>
       </geometry>
+      <origin xyz="${-0.194 - 0.03} 0 ${-0.351 - 0.05}" rpy="0 0 0"/>
     </collision>
     <inertial>
       <mass value="0.003"/>
@@ -391,11 +394,14 @@
       <geometry>
         <mesh filename="${mesh_vis}/sonar.stl" scale="${stl_scale}"/>
       </geometry>
+      <!-- CAD origin offset minus ultrasonic_joint offset (0.03, 0, -0.04) -->
+      <origin xyz="${-0.194 - 0.03} 0 ${-0.351 + 0.04}" rpy="0 0 0"/>
     </visual>
     <collision>
       <geometry>
         <mesh filename="${mesh_vis}/sonar.stl" scale="${stl_scale}"/>
       </geometry>
+      <origin xyz="${-0.194 - 0.03} 0 ${-0.351 + 0.04}" rpy="0 0 0"/>
     </collision>
     <inertial>
       <mass value="0.010"/>
@@ -416,11 +422,14 @@
       <geometry>
         <mesh filename="${mesh_vis}/forceSensor.stl" scale="${stl_scale}"/>
       </geometry>
+      <!-- CAD origin offset minus load_cell_joint offset (feeder_length, 0, 0) -->
+      <origin xyz="${-0.194 - feeder_length} 0 -0.351" rpy="0 0 0"/>
     </visual>
     <collision>
       <geometry>
         <mesh filename="${mesh_vis}/forceSensor.stl" scale="${stl_scale}"/>
       </geometry>
+      <origin xyz="${-0.194 - feeder_length} 0 -0.351" rpy="0 0 0"/>
     </collision>
     <inertial>
       <mass value="0.010"/>
