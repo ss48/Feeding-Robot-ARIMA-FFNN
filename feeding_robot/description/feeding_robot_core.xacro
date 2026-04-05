@@ -294,7 +294,7 @@
     <xacro:if value="${use_meshes}">
       <visual>
         <geometry>
-          <mesh filename="${mesh_vis}/feeder_link.stl" scale="${stl_scale}"/>
+          <mesh filename="${mesh_vis}/frontface.stl" scale="${stl_scale}"/>
         </geometry>
         <!-- Offset: shift mesh so wrist joint (CAD X=194,Y=0,Z=351) is at link origin -->
         <origin xyz="-0.194 0 -0.351" rpy="0 0 0"/>
@@ -356,13 +356,12 @@
   <link name="camera_link">
     <visual>
       <geometry>
-        <box size="0.025 0.024 0.009"/>
+        <mesh filename="${mesh_vis}/camera.stl" scale="${stl_scale}"/>
       </geometry>
-      <material name="green"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.025 0.024 0.009"/>
+        <mesh filename="${mesh_vis}/camera.stl" scale="${stl_scale}"/>
       </geometry>
     </collision>
     <inertial>
@@ -390,13 +389,12 @@
   <link name="ultrasonic_link">
     <visual>
       <geometry>
-        <box size="0.045 0.020 0.015"/>
+        <mesh filename="${mesh_vis}/sonar.stl" scale="${stl_scale}"/>
       </geometry>
-      <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.045 0.020 0.015"/>
+        <mesh filename="${mesh_vis}/sonar.stl" scale="${stl_scale}"/>
       </geometry>
     </collision>
     <inertial>
@@ -413,7 +411,23 @@
   </joint>
 
   <!-- ==================== LOAD CELL (HX711) ==================== -->
-  <link name="load_cell_frame"/>
+  <link name="load_cell_frame">
+    <visual>
+      <geometry>
+        <mesh filename="${mesh_vis}/forceSensor.stl" scale="${stl_scale}"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="${mesh_vis}/forceSensor.stl" scale="${stl_scale}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.010"/>
+      <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+               iyy="0.000001" iyz="0.0" izz="0.000001"/>
+    </inertial>
+  </link>
 
   <joint name="load_cell_joint" type="fixed">
     <parent link="feeder_link"/>
