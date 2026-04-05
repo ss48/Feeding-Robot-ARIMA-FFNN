@@ -59,6 +59,9 @@ class TeensyBridgeNode(Node):
             self.get_logger().error(f'Failed to open {port}: {e}')
             self.ser = None
 
+        self._port = port
+        self._baud = baud
+
         # Timer to read serial at 50 Hz
         self.create_timer(0.02, self.read_serial)
 
@@ -72,8 +75,9 @@ class TeensyBridgeNode(Node):
                 if not line:
                     continue
                 self.parse_and_publish(line)
-        except serial.SerialException as e:
-            self.get_logger().warn(f'Serial read error: {e}')
+        except (serial.SerialException, OSError) as e:
+            self.get_logger().warn(f'Serial error: {e}, attempting reconnect...')
+            self._reconnect()
 
     def parse_and_publish(self, line):
         try:
@@ -129,6 +133,21 @@ class TeensyBridgeNode(Node):
             raw_msg = Float64()
             raw_msg.data = dist_cm
             self.sonar_raw_pub.publish(raw_msg)
+
+    def _reconnect(self):
+        """Try to reconnect to the Teensy."""
+        try:
+            if self.ser and self.ser.is_open:
+                self.ser.close()
+        except Exception:
+            pass
+        self.ser = None
+
+        try:
+            self.ser = serial.Serial(self._port, self._baud, timeout=0.1)
+            self.get_logger().info(f'Reconnected to {self._port}')
+        except (serial.SerialException, OSError):
+            pass  # Will retry on next timer tick
 
     def destroy_node(self):
         if self.ser and self.ser.is_open:
