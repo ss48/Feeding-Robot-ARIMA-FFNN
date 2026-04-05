@@ -28,7 +28,7 @@
           0, 0, 1, 0,
           0, 0, 0, 1
         </param>
-        <param name="ros_update_freq">200</param>
+        <param name="ros_update_freq">50</param>
         <param name="dynamixel_state_pub_msg_name">dynamixel_hardware_interface/dxl_state</param>
         <param name="get_dynamixel_data_srv_name">dynamixel_hardware_interface/get_dxl_data</param>
         <param name="set_dynamixel_data_srv_name">dynamixel_hardware_interface/set_dxl_data</param>
