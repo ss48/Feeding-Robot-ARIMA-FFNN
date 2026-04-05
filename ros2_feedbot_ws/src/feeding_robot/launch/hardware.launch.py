@@ -36,6 +36,11 @@ def generate_launch_description():
         description='Use STL mesh files'
     )
 
+    camera_device_arg = DeclareLaunchArgument(
+        'camera_device', default_value='/dev/video0',
+        description='Camera device path'
+    )
+
     # ==================== ROBOT DESCRIPTION ====================
     xacro_file = os.path.join(pkg_dir, 'description', 'feeding_robot.urdf.xacro')
     robot_description = ParameterValue(
@@ -95,11 +100,31 @@ def generate_launch_description():
         )
     )
 
+    # ==================== CAMERA (Raspberry Pi Camera) ====================
+    camera_node = Node(
+        package='v4l2_camera',
+        executable='v4l2_camera_node',
+        name='feeding_camera',
+        parameters=[{
+            'video_device': LaunchConfiguration('camera_device'),
+            'image_size': [640, 480],
+            'pixel_format': 'YUYV',
+            'camera_frame_id': 'camera_link',
+        }],
+        remappings=[
+            ('/image_raw', '/feeding_robot/camera/image_raw'),
+            ('/camera_info', '/feeding_robot/camera/camera_info'),
+        ],
+        output='screen',
+    )
+
     return LaunchDescription([
         port_arg,
         use_meshes_arg,
+        camera_device_arg,
         ros2_control_node,
         robot_state_publisher,
         delayed_joint_state_broadcaster,
         delayed_arm_controller,
+        camera_node,
     ])
