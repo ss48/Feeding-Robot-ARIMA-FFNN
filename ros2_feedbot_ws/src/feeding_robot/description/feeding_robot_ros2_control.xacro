@@ -11,7 +11,7 @@
       <xacro:unless value="$(arg use_sim)">
         <plugin>dynamixel_hardware_interface/DynamixelHardware</plugin>
         <param name="port_name">/dev/ttyACM0</param>
-        <param name="baud_rate">57600</param>
+        <param name="baud_rate">1000000</param>
         <param name="error_timeout_sec">0.2</param>
         <param name="dynamixel_model_folder">/param/dxl_model</param>
         <param name="number_of_joints">4</param>
@@ -28,7 +28,7 @@
           0, 0, 1, 0,
           0, 0, 0, 1
         </param>
-        <param name="ros_update_freq">50</param>
+        <param name="ros_update_freq">200</param>
         <param name="dynamixel_state_pub_msg_name">dynamixel_hardware_interface/dxl_state</param>
         <param name="get_dynamixel_data_srv_name">dynamixel_hardware_interface/get_dxl_data</param>
         <param name="set_dynamixel_data_srv_name">dynamixel_hardware_interface/set_dxl_data</param>
