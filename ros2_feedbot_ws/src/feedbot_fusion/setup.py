@@ -33,6 +33,7 @@ setup(
             'fuzzy_controller = feedbot_fusion.fuzzy_controller_node:main',
             'mouth_animator = feedbot_fusion.mouth_animator_node:main',
             'sonar_bridge = feedbot_fusion.sonar_bridge_node:main',
+            'teensy_bridge = feedbot_fusion.teensy_bridge_node:main',
         ],
     },
 )

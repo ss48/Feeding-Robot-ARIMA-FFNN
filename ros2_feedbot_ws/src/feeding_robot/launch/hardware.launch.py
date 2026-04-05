@@ -41,6 +41,11 @@ def generate_launch_description():
         description='Camera device path'
     )
 
+    teensy_port_arg = DeclareLaunchArgument(
+        'teensy_port', default_value='/dev/ttyACM1',
+        description='Teensy serial port (force sensor + sonar)'
+    )
+
     # ==================== ROBOT DESCRIPTION ====================
     xacro_file = os.path.join(pkg_dir, 'description', 'feeding_robot.urdf.xacro')
     robot_description = ParameterValue(
@@ -118,13 +123,36 @@ def generate_launch_description():
         output='screen',
     )
 
+    # ==================== TEENSY BRIDGE (Force Sensor + Sonar) ====================
+    teensy_bridge_node = Node(
+        package='feedbot_fusion',
+        executable='teensy_bridge',
+        name='teensy_bridge',
+        parameters=[{
+            'serial_port': LaunchConfiguration('teensy_port'),
+            'baud_rate': 115200,
+        }],
+        output='screen',
+    )
+
+    # ==================== SONAR BRIDGE (routes sonar to plate/mouth topics) ====================
+    sonar_bridge_node = Node(
+        package='feedbot_fusion',
+        executable='sonar_bridge',
+        name='sonar_bridge',
+        output='screen',
+    )
+
     return LaunchDescription([
         port_arg,
         use_meshes_arg,
         camera_device_arg,
+        teensy_port_arg,
         ros2_control_node,
         robot_state_publisher,
         delayed_joint_state_broadcaster,
         delayed_arm_controller,
         camera_node,
+        teensy_bridge_node,
+        sonar_bridge_node,
     ])

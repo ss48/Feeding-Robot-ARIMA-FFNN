@@ -1152,3 +1152,182 @@ Fuzzy controller outputs
 Full feeding cycle integration test — step-by-step walkthrough of triggering and observing the complete state cycle
 Common integration issues table with symptoms, causes, and fixes
 Monitoring tips using rqt and run_feeding.sh sim for quick testing
+
+---
+
+## Real Hardware Setup (Raspberry Pi 5) — Updated 2026-04-05
+
+### Platform
+
+- Raspberry Pi 5 running Ubuntu 22.04 + ROS 2 Humble
+- Dynamixel XM430-W350R servos via U2D2 on `/dev/ttyACM0`
+- Raspberry Pi Camera V2.1 at `/dev/video0`
+
+### Dynamixel Servo Configuration
+
+| Servo ID | Joint | Role |
+|----------|-------|------|
+| 11 | `base_y_joint` | Base yaw rotation |
+| 12 | `lower_z_joint` | Shoulder pitch |
+| 13 | `upper_z_joint` | Elbow pitch |
+| 14 | `feeder_joint` | Wrist pitch (feeder head tilt) |
+| 15 | (unused) | Was gripper — replaced with feeder face + sensors |
+
+- **Baud rate:** 1000000 (changed from factory default 57600)
+- **Port:** `/dev/ttyACM0`
+- **Protocol:** Dynamixel Protocol 2.0
+
+### Feeder Head (Replaced Gripper)
+
+The standard Open Manipulator-X gripper (servo ID 15) was removed and replaced with a custom feeder face. The following components are mounted on the feeder head:
+
+| Component | Mesh File | URDF Link |
+|-----------|-----------|-----------|
+| Feeder face | `frontface.stl` | `feeder_link` |
+| Raspberry Pi Camera V2.1 | `camera.stl` | `camera_link` |
+| HC-SR04 Ultrasonic Sensor | `sonar.stl` | `ultrasonic_link` |
+| HX711 Force Sensor | `forceSensor.stl` | `load_cell_frame` |
+
+All meshes are in CAD coordinates with origin at CAD (0,0,0). The URDF applies offsets relative to the feeder joint at CAD position (194, 0, 351) mm.
+
+### Hardware Launch
+
+Instead of `open_manipulator_x_bringup`, use the custom `feeding_robot` hardware launch:
+
+```bash
+# Install dependencies (one-time)
+sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-moveit ros-humble-v4l2-camera
+pip3 install pyserial
+
+# Set serial port permissions
+sudo chmod 666 /dev/ttyACM0
+# Or permanently: sudo usermod -aG dialout $USER (then reboot)
+
+# Build and launch
+cd ~/feeding_robot_ws/ros2_feedbot_ws
+colcon build --symlink-install --packages-select feeding_robot
+source install/setup.bash
+ros2 launch feeding_robot hardware.launch.py
+```
+
+This launches:
+- `ros2_control_node` with Dynamixel hardware interface (4 joints, no gripper)
+- `robot_state_publisher` (TF tree)
+- `joint_state_broadcaster` + `arm_controller` (joint trajectory controller)
+- `v4l2_camera_node` (Pi camera → `/feeding_robot/camera/image_raw`)
+
+### Launch Arguments
+
+```bash
+ros2 launch feeding_robot hardware.launch.py port_name:=/dev/ttyACM0 camera_device:=/dev/video0 use_meshes:=true
+```
+
+### Moving Joints
+
+```bash
+# Check joint states
+source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
+ros2 topic echo /joint_states --once
+
+# Move all joints to home position (0,0,0,0) over 3 seconds
+ros2 action send_goal /arm_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
+  trajectory: {
+    joint_names: [base_y_joint, lower_z_joint, upper_z_joint, feeder_joint],
+    points: [{
+      positions: [0.0, 0.0, 0.0, 0.0],
+      time_from_start: {sec: 3, nanosec: 0}
+    }]
+  }
+}"
+
+# Move a single joint (e.g., base to 0.5 rad)
+ros2 action send_goal /arm_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
+  trajectory: {
+    joint_names: [base_y_joint, lower_z_joint, upper_z_joint, feeder_joint],
+    points: [{
+      positions: [0.5, 0.0, 0.0, 0.0],
+      time_from_start: {sec: 3, nanosec: 0}
+    }]
+  }
+}"
+```
+
+### Viewing Camera Feed
+
+```bash
+# Check camera is publishing
+ros2 topic hz /feeding_robot/camera/image_raw
+
+# View image (requires display)
+sudo apt install ros-humble-rqt-image-view
+ros2 run rqt_image_view rqt_image_view /feeding_robot/camera/image_raw
+```
+
+### Scanning/Diagnosing Dynamixel Servos
+
+```bash
+# Scan for connected servos at all common baud rates
+python3 -c "
+from dynamixel_sdk import *
+port = PortHandler('/dev/ttyACM0')
+packet = PacketHandler(2.0)
+port.openPort()
+for baud in [57600, 115200, 1000000, 9600, 4000000]:
+    port.setBaudRate(baud)
+    print(f'Scanning baud rate: {baud}...')
+    for i in range(0, 30):
+        model, result, error = packet.ping(port, i)
+        if result == 0:
+            print(f'  FOUND servo ID: {i}, model: {model}')
+print('Scan complete.')
+port.closePort()
+"
+```
+
+### Changing Servo Baud Rate
+
+If servos are at wrong baud rate (e.g., factory 57600), change to 1000000:
+
+```bash
+python3 -c "
+from dynamixel_sdk import *
+port = PortHandler('/dev/ttyACM0')
+packet = PacketHandler(2.0)
+port.openPort()
+port.setBaudRate(57600)  # current baud rate
+for dxl_id in [11, 12, 13, 14]:
+    packet.write1ByteTxRx(port, dxl_id, 64, 0)  # disable torque
+    result, error = packet.write1ByteTxRx(port, dxl_id, 8, 3)  # 3 = 1000000 bps
+    if result == 0:
+        print(f'ID {dxl_id}: baud rate set to 1000000')
+    else:
+        print(f'ID {dxl_id}: FAILED')
+port.closePort()
+print('Power cycle the servos now.')
+"
+```
+
+**Important:** After changing baud rate, power cycle the servos (turn 12V supply off and on).
+
+### Key Files (feeding_robot package)
+
+| File | Purpose |
+|------|---------|
+| `description/feeding_robot_ros2_control.xacro` | Hardware interface config (Dynamixel plugin, servo IDs, baud rate, GPIO blocks) |
+| `description/feeding_robot_core.xacro` | URDF links/joints, mesh references, sensor mounts |
+| `config/feeding_robot_controllers.yaml` | Controller manager config (joint trajectory controller, 100 Hz) |
+| `launch/hardware.launch.py` | Real hardware launch (servos + camera) |
+| `launch/gazebo.launch.py` | Simulation launch (Gazebo + bridges) |
+| `meshes/visual/` | STL mesh files (frontface, camera, sonar, forceSensor, arm links) |
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `Failed to open port` | Permission denied or wrong port | `sudo chmod 666 /dev/ttyACM0`, check `ls /dev/ttyACM*` |
+| `No status packet` (ping fails) | Wrong baud rate or no power | Scan all baud rates, check 12V supply is on |
+| `SYNC_READ_FAIL` continuously | Baud rate too slow for update rate | Ensure servos are at 1000000 baud |
+| `plugin not found` | Wrong plugin name | Use `dynamixel_hardware_interface/DynamixelHardware` |
+| `number_of_joints not found` | Missing hardware params | Check ros2_control xacro has all required params |
+| Camera not publishing | Wrong device or not enabled | Check `ls /dev/video*`, run `sudo raspi-config` to enable camera |
+| Meshes missing in RViz | STL files not in workspace `src/` | Copy from project root `feeding_robot/meshes/visual/` to workspace |
