@@ -194,16 +194,16 @@ class VisionNode(Node):
 
     def _init_mediapipe(self):
         try:
-            # Download EfficientDet-Lite0 model if not present
+            # Use EfficientDet-Lite2 (float32) for better accuracy on Pi 4
             model_path = os.path.expanduser(
-                '~/.mediapipe/efficientdet_lite0.tflite')
+                '~/.mediapipe/efficientdet_lite2_float32.tflite')
             if not os.path.exists(model_path):
-                self.get_logger().info('Downloading EfficientDet-Lite0 model...')
+                self.get_logger().info('Downloading EfficientDet-Lite2 model...')
                 os.makedirs(os.path.dirname(model_path), exist_ok=True)
                 import urllib.request
                 url = ('https://storage.googleapis.com/mediapipe-models/'
-                       'object_detector/efficientdet_lite0/int8/latest/'
-                       'efficientdet_lite0.tflite')
+                       'object_detector/efficientdet_lite2/float32/latest/'
+                       'efficientdet_lite2_float32.tflite')
                 urllib.request.urlretrieve(url, model_path)
                 self.get_logger().info(f'Model downloaded to {model_path}')
 
@@ -216,7 +216,7 @@ class VisionNode(Node):
             self._mp_detector = mp_vision.ObjectDetector.create_from_options(options)
             self._backend = 'mediapipe'
             self.get_logger().info(
-                'Detection backend: MediaPipe EfficientDet-Lite0 (CPU)')
+                'Detection backend: MediaPipe EfficientDet-Lite2 float32 (CPU)')
         except Exception as e:
             self.get_logger().error(f'MediaPipe init failed: {e}')
             self._backend = 'hsv'
