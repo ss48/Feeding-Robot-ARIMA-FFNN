@@ -1830,26 +1830,9 @@ If the calibrator auto-saved it, just restart the launch and the warning will be
 Quick alternative — if you don't need precise calibration right now, create a default calibration file:
 
 
-mkdir -p ~/.ros/camera_info
-cat > ~/.ros/camera_info/mmal_service_16.1.yaml << 'EOF'
-image_width: 640
-image_height: 480
-camera_name: mmal_service_16.1
-camera_matrix:
-  rows: 3
-  cols: 3
-  data: [554.25, 0, 320, 0, 554.25, 240, 0, 0, 1]
-distortion_model: plumb_bob
-distortion_coefficients:
-  rows: 1
-  cols: 5
-  data: [0, 0, 0, 0, 0]
-rectification_matrix:
-  rows: 3
-  cols: 3
-  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-projection_matrix:
-  rows: 3
-  cols: 4
-  data: [554.25, 0, 320, 0, 0, 554.25, 240, 0, 0, 0, 1, 0]
-EOF
+source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
+ros2 run camera_calibration cameracalibrator \
+  --size 9x6 \
+  --square 0.025 \
+  --no-service-check \
+  --ros-args -r image:=/feeding_robot/camera/image_raw -r camera:=/feeding_robot/camera
