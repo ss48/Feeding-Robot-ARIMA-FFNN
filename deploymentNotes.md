@@ -1155,11 +1155,11 @@ Monitoring tips using rqt and run_feeding.sh sim for quick testing
 
 ---
 
-## Real Hardware Setup (Raspberry Pi 5) — Updated 2026-04-09
+## Real Hardware Setup (Raspberry Pi 4 8GB) — Updated 2026-04-09
 
 ### Platform
 
-- Raspberry Pi 5 running Ubuntu 22.04 + ROS 2 Humble
+- Raspberry Pi 4 (8 GB) running Ubuntu 22.04 + ROS 2 Humble
 - Dynamixel XM430-W350R servos via U2D2 (ROBOTIS OpenCR)
 - Teensy microcontroller for HX711 force sensor + HC-SR04 ultrasonic
 - Raspberry Pi Camera V2.1 at `/dev/video0`
@@ -1412,3 +1412,222 @@ Load Cell Reading: 9.1 g
 | Teensy `OSError: I/O error` | Teensy disconnected mid-read | Bridge auto-reconnects; check USB cable |
 | Camera not publishing | Wrong device or not enabled | Check `ls /dev/video*`; `sudo raspi-config` → enable camera |
 | Meshes missing in RViz | STL files not in workspace | Ensure `frontface.stl`, `camera.stl`, `sonar.stl`, `forceSensor.stl` in `meshes/visual/` |
+
+---
+
+## Computer Vision & AI Intelligence — Updated 2026-04-09
+
+### Overview
+
+The robot operates in a fully autonomous feeding loop without requiring a spacebar press:
+
+```
+detect plate → detect food → fork food → find user's face →
+wait for mouth open → feed → retract → repeat
+```
+
+### Dependencies
+
+```bash
+pip3 install mediapipe>=0.10.9
+```
+
+MediaPipe Face Mesh runs on Pi 4 CPU at ~5-8 fps (no GPU needed). The `process_every_n` parameter (default 3) skips frames to maintain acceptable throughput.
+
+### Face Detection Node (`face_node.py`)
+
+**File:** `feedbot_fusion/feedbot_fusion/face_node.py`
+
+Uses MediaPipe Face Mesh (478 landmarks with iris refinement) for:
+
+| Feature | Method | Landmarks Used |
+|---------|--------|----------------|
+| Face detection | MediaPipe Face Mesh | All 478 |
+| Mouth open/closed | Mouth Aspect Ratio (MAR) | 13 (upper lip), 14 (lower lip), 78 (left corner), 308 (right corner) |
+| Eye alertness | Eye Aspect Ratio (EAR) | Left: 33,160,158,133,153,144; Right: 362,385,387,263,373,380 |
+| Face depth | Inter-pupillary distance (IPD=63mm) via pinhole model | 468 (left iris), 473 (right iris) |
+| Expression | "ready" (eyes open + face toward camera) or "not_ready" | EAR + face mesh confidence |
+
+**MAR formula:** `|upper_lip(13) - lower_lip(14)| / |left_corner(78) - right_corner(308)|`
+- Mouth open when MAR > 0.3 (configurable via `mar_threshold` parameter)
+
+**Published topics:**
+
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/face_detected` | Bool | Face found in frame |
+| `/face_center` | Point | cx, cy (pixels), z=face_area |
+| `/face_bearing` | Point | bearing_h, bearing_v (rad), estimated_depth (m) |
+| `/mouth_open` | Bool | MAR > threshold |
+| `/mouth_aspect_ratio` | Float64 | Raw MAR value for tuning |
+| `/face_expression` | String | "ready" / "not_ready" / "no_face" |
+| `/mouth_ready_prediction` | Bool | face detected + mouth open + ready |
+
+**Parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `camera_topic` | `/feeding_robot/camera/image_raw` | Camera input |
+| `mar_threshold` | 0.3 | Mouth Aspect Ratio threshold for "open" |
+| `ear_threshold` | 0.2 | Eye Aspect Ratio threshold for "alert" |
+| `detection_confidence` | 0.5 | MediaPipe face detection confidence |
+| `tracking_confidence` | 0.5 | MediaPipe face tracking confidence |
+| `max_num_faces` | 1 | Only track one user |
+| `process_every_n` | 3 | Process every Nth frame (~8-10fps on Pi 4) |
+
+### Plate Detection (in `vision_node.py`)
+
+Added shape-based plate detection via contour circularity analysis:
+- Canny edge detection → contour finding → circularity check
+- Large, roughly circular contour (area > 5000px, circularity > 0.4) = plate
+- Publishes `/plate_detected` (Bool)
+
+### Autonomous FSM (in `feeding_fsm_node.py`)
+
+The state machine now operates autonomously with camera-based face detection:
+
+```
+WAITING ──[plate+food detected (auto) OR spacebar (manual)]──> IDLE
+IDLE ──[food_visible]──> DETECT_FOOD
+DETECT_FOOD ──[food confirmed]──> LOCATE_FOOD
+LOCATE_FOOD ──[EKF stable + IK computed]──> COLLECT_FOOD
+COLLECT_FOOD ──[force > 2N]──> DETECT_PATIENT
+DETECT_PATIENT ──[face_detected + expression=="ready"]──> PRE_FEED
+PRE_FEED ──[face-approach IK + at target + safe]──> FEED
+FEED ──[mouth_open for 5 consecutive frames]──> RETRACT
+RETRACT ──[at target]──> WAITING (auto-restart)
+```
+
+**Key changes from previous version:**
+
+| State | Before | After |
+|-------|--------|-------|
+| WAITING → IDLE | Spacebar required | Auto: plate + food detected (spacebar still works) |
+| DETECT_PATIENT | ARIMA heuristic (not real detection) | Camera face detection via face_node |
+| PRE_FEED | Fixed pre_feed pose | Dynamic face-approach IK from face bearing |
+| FEED | ARIMA mouth prediction | Real mouth-open detection (5 consecutive frames = 0.5s) |
+| RETRACT → WAITING | Manual spacebar for next cycle | Auto-restart when plate+food still visible |
+
+### Face-Approach Inverse Kinematics
+
+New method `_compute_face_approach_ik(bearing_h, bearing_v, depth)`:
+- Computes joint angles to position fork ~5cm in front of user's face
+- Uses same 2-link analytical IK as food pickup but targeting face position
+- Slower approach trajectory (4 seconds vs 2 seconds for food pickup)
+- Fork held roughly horizontal (j4 = 0.3 rad) for feeding
+
+### Safety Features
+
+| Safety | Trigger | Action |
+|--------|---------|--------|
+| Face lost (PRE_FEED) | No face for 3 seconds (30 frames) | Retract |
+| Face lost (FEED) | No face for 1.5 seconds (15 frames) | Retreat to PRE_FEED |
+| Mouth closes | `mouth_open` goes False during FEED | Pause, wait for re-open |
+| Force collision | Force > 5N during face approach | Emergency retract |
+| Mouth-open debounce | Requires 5 consecutive open frames | Prevents accidental feeding |
+| Expression gating | Only proceeds when expression == "ready" | Pauses if eyes closed / face turned away |
+| Manual override | `/feeding_override` topic | Bypasses face/mouth checks |
+
+### Fusion Node Updates
+
+- Subscribes to `/face_bearing` and `/face_detected` from face_node
+- Publishes `/face_position_3d` (Point) — EMA-smoothed 3D face position in camera frame
+- Updates `/mouth_distance` from face depth when face is detected
+
+### Testing Face Detection
+
+```bash
+# Install MediaPipe
+pip3 install mediapipe
+
+# Build
+cd ~/feeding_robot_ws/ros2_feedbot_ws
+colcon build --symlink-install --packages-select feedbot_fusion feeding_robot
+source install/setup.bash
+
+# Test face_node standalone (camera must be running)
+ros2 run feedbot_fusion face_node &
+ros2 topic echo /face_detected --once
+ros2 topic echo /mouth_open --once
+ros2 topic echo /mouth_aspect_ratio --once
+ros2 topic echo /face_expression --once
+ros2 topic echo /face_bearing --once
+```
+
+### Calibrating Mouth Threshold
+
+To find the optimal MAR threshold for your user:
+
+```bash
+# Watch raw MAR values while opening/closing mouth
+ros2 topic echo /mouth_aspect_ratio
+
+# Typical values:
+#   Mouth closed: MAR ~ 0.05-0.15
+#   Mouth slightly open: MAR ~ 0.2-0.3
+#   Mouth wide open: MAR ~ 0.4-0.7
+#   Default threshold: 0.3
+
+# Override threshold at launch:
+ros2 run feedbot_fusion face_node --ros-args -p mar_threshold:=0.25
+```
+
+### Full Autonomous Launch
+
+```bash
+ros2 launch feeding_robot hardware.launch.py
+```
+
+This now launches all nodes including face_node. The robot will:
+1. Wait at home position
+2. Auto-start when plate and food are both detected
+3. Fork food using EKF-fused 3D position + analytical IK
+4. Rotate to find user's face
+5. Approach face using face-bearing IK (stops 5cm away)
+6. Wait for mouth to open (5 consecutive frames)
+7. Deliver food
+8. Retract and auto-restart
+
+### Complete ROS 2 Topic Map (with CV/AI)
+
+| Topic | Type | Source | Purpose |
+|-------|------|--------|---------|
+| `/face_detected` | Bool | face_node | Face found in frame |
+| `/face_center` | Point | face_node | Face position in pixels |
+| `/face_bearing` | Point | face_node | Face bearing + depth |
+| `/mouth_open` | Bool | face_node | Mouth open/closed |
+| `/mouth_aspect_ratio` | Float64 | face_node | Raw MAR for tuning |
+| `/face_expression` | String | face_node | "ready"/"not_ready"/"no_face" |
+| `/mouth_ready_prediction` | Bool | face_node | Combined readiness signal |
+| `/plate_detected` | Bool | vision_node | Plate found via shape analysis |
+| `/face_position_3d` | Point | fusion_node | EMA-smoothed 3D face position |
+| `/food_visible` | Bool | vision_node | Food detected |
+| `/food_bearing` | Point | vision_node | Food bearing + depth |
+| `/food_position_3d` | Point | fusion_node | EKF-fused 3D food position |
+| `/spoon_force` | Float64 | teensy_bridge | Force sensor (N) |
+| `/sonar_raw_cm` | Float64 | teensy_bridge | Ultrasonic distance (cm) |
+| `/feeding_state` | String | feeding_fsm | Current FSM state |
+
+### Key Files (CV/AI)
+
+| File | Purpose |
+|------|---------|
+| `feedbot_fusion/face_node.py` | MediaPipe face/mouth detection, expression, depth |
+| `feedbot_fusion/vision_node.py` | Food detection + plate detection |
+| `feedbot_fusion/feeding_fsm_node.py` | Autonomous FSM with face tracking + mouth wait |
+| `feedbot_fusion/fusion_node.py` | EKF fusion + face position pass-through |
+| `feedbot_fusion/arima_ffnn_node.py` | ARIMA-FFNN prediction (mouth prediction removed) |
+| `requirements.txt` | Added `mediapipe>=0.10.9` |
+
+### Troubleshooting (CV/AI)
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `ModuleNotFoundError: mediapipe` | Not installed | `pip3 install mediapipe` |
+| Face never detected | Camera blocked or face too far | Check `/feeding_robot/camera/image_raw` is publishing; move face within 0.5m |
+| MAR always below threshold | Threshold too high or face at angle | Lower `mar_threshold` (try 0.2); face camera directly |
+| Face node too slow (<3fps) | Pi 4 CPU load | Increase `process_every_n` to 4 or 5 |
+| FSM auto-starts prematurely | Plate detection false positive | Adjust circularity threshold in `vision_node._detect_plate()` |
+| Robot doesn't approach face | Face depth out of IK range | Face must be 0.15-0.40m from camera; check `/face_bearing` z value |
+| Feed never triggers | Mouth-open debounce too strict | Reduce `MOUTH_OPEN_CONFIRM_FRAMES` in FSM (default 5) |
+| Emergency retract during approach | Force sensor noise | Increase `FORCE_COLLISION_THRESHOLD` (default 5.0N) or check HX711 calibration |

@@ -35,6 +35,7 @@ setup(
             'sonar_bridge = feedbot_fusion.sonar_bridge_node:main',
             'teensy_bridge = feedbot_fusion.teensy_bridge_node:main',
             'face_node = feedbot_fusion.face_node:main',
+            'teleop_arm = feedbot_fusion.teleop_arm_node:main',
         ],
     },
 )
