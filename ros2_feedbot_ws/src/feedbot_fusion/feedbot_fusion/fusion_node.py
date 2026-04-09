@@ -288,6 +288,18 @@ class FusionNode(Node):
         # NEW: fused 3D food position in camera frame
         self.food_pos_pub = self.create_publisher(
             Point, '/food_position_3d', 10)
+        # Face position pass-through (EMA-smoothed from face_node bearing)
+        self.face_pos_pub = self.create_publisher(
+            Point, '/face_position_3d', 10)
+
+        # Face detection data
+        self.face_bearing = None
+        self.face_detected = False
+        self._face_ema = [0.0, 0.0, 0.5]
+        self.create_subscription(
+            Point, '/face_bearing', self._cb_face_bearing, 10)
+        self.create_subscription(
+            Bool, '/face_detected', self._cb_face_detected, 10)
 
         # ----- Fusion at 10 Hz -----
         self.timer = self.create_timer(0.1, self._fuse_and_publish)
@@ -340,6 +352,12 @@ class FusionNode(Node):
     def _cb_sonar_mouth(self, msg):
         self.sonar_mouth_dist = msg.data
         self.health_mon.touch(4, msg.data, time.monotonic())
+
+    def _cb_face_bearing(self, msg):
+        self.face_bearing = (msg.x, msg.y, msg.z)
+
+    def _cb_face_detected(self, msg):
+        self.face_detected = msg.data
 
     # ----------------------------------------------------------------
     # Main fusion loop
@@ -495,6 +513,28 @@ class FusionNode(Node):
         health_msg = Float64MultiArray()
         health_msg.data = health.tolist()
         self.health_pub.publish(health_msg)
+
+        # Face position pass-through (EMA-smoothed)
+        if self.face_detected and self.face_bearing is not None:
+            import math as _math
+            bh, bv, depth = self.face_bearing
+            face_x = depth * _math.tan(bh)
+            face_y = depth * _math.tan(bv)
+            face_z = depth
+            self._face_ema[0] = _ema(self._face_ema[0], face_x, self.EMA_ALPHA)
+            self._face_ema[1] = _ema(self._face_ema[1], face_y, self.EMA_ALPHA)
+            self._face_ema[2] = _ema(self._face_ema[2], face_z, self.EMA_ALPHA)
+            face_pos = Point()
+            face_pos.x = float(self._face_ema[0])
+            face_pos.y = float(self._face_ema[1])
+            face_pos.z = float(self._face_ema[2])
+            self.face_pos_pub.publish(face_pos)
+
+            # Update mouth_distance from face depth
+            face_dist_cm = depth * 100.0
+            mouth_out = _ema(self.ema_mouth_dist, face_dist_cm, self.EMA_ALPHA)
+            self.ema_mouth_dist = mouth_out
+            self.mouth_dist_pub.publish(Float64(data=mouth_out))
 
 
 # ===================================================================

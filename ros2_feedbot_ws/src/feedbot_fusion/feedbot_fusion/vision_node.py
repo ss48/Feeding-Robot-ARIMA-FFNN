@@ -211,6 +211,7 @@ class VisionNode(Node):
         self.fruits_pub = self.create_publisher(
             Float64MultiArray, '/detected_fruits', 10)
         self.bearing_pub = self.create_publisher(Point, '/food_bearing', 10)
+        self.plate_pub = self.create_publisher(Bool, '/plate_detected', 10)
 
         method = 'jetson-inference ML (detectNet)' if self._use_ml else 'HSV colour'
         self.get_logger().info(
@@ -325,6 +326,29 @@ class VisionNode(Node):
         return (cx, cy, area, x, y, w, h)
 
     # ----------------------------------------------------------------
+    # Plate detection via shape analysis
+    # ----------------------------------------------------------------
+    def _detect_plate(self, frame):
+        """Detect plate/bowl using contour circularity in the frame."""
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+        edges = cv2.Canny(blurred, 50, 150)
+        contours, _ = cv2.findContours(
+            edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area < 5000:
+                continue
+            perimeter = cv2.arcLength(cnt, True)
+            if perimeter < 1:
+                continue
+            circularity = 4 * math.pi * area / (perimeter * perimeter)
+            if circularity > 0.4:
+                return True
+        return False
+
+    # ----------------------------------------------------------------
     # 3D bearing estimation from pinhole camera model
     # ----------------------------------------------------------------
     def _estimate_bearing_and_depth(self, cx, cy, bbox_w, food_name):
@@ -346,7 +370,11 @@ class VisionNode(Node):
     def image_callback(self, msg):
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
-        # Run detection (ML or HSV)
+        # Plate detection
+        plate_found = self._detect_plate(frame)
+        self.plate_pub.publish(Bool(data=plate_found))
+
+        # Food detection (ML or HSV)
         if self._use_ml and self._net is not None:
             detections = self._detect_ml(frame)
         else:

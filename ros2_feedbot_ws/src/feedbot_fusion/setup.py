@@ -34,6 +34,7 @@ setup(
             'mouth_animator = feedbot_fusion.mouth_animator_node:main',
             'sonar_bridge = feedbot_fusion.sonar_bridge_node:main',
             'teensy_bridge = feedbot_fusion.teensy_bridge_node:main',
+            'face_node = feedbot_fusion.face_node:main',
         ],
     },
 )

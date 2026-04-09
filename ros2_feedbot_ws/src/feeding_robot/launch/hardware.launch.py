@@ -135,6 +135,19 @@ def generate_launch_description():
         output='screen',
     )
 
+    # ==================== FACE NODE (MediaPipe face/mouth detection) ====================
+    face_node = Node(
+        package='feedbot_fusion',
+        executable='face_node',
+        name='face_node',
+        parameters=[{
+            'camera_topic': '/feeding_robot/camera/image_raw',
+            'mar_threshold': 0.3,
+            'process_every_n': 3,
+        }],
+        output='screen',
+    )
+
     # ==================== SONAR BRIDGE (routes sonar to plate/mouth topics) ====================
     sonar_bridge_node = Node(
         package='feedbot_fusion',
@@ -155,4 +168,5 @@ def generate_launch_description():
         camera_node,
         teensy_bridge_node,
         sonar_bridge_node,
+        face_node,
     ])

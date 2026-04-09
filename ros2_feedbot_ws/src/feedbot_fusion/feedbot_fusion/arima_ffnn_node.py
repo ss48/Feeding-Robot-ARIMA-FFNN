@@ -330,8 +330,7 @@ class ARIMAFFNNNode(Node):
             Float64MultiArray, '/predicted_state', 10)
         self.pred_error_pub = self.create_publisher(
             Float64, '/prediction_error', 10)
-        self.mouth_ready_pub = self.create_publisher(
-            Bool, '/mouth_ready_prediction', 10)
+        # mouth_ready_prediction is now published by face_node (camera-based)
 
         # ------ timer ------
         self.timer = self.create_timer(
@@ -433,15 +432,7 @@ class ARIMAFFNNNode(Node):
         err_msg.data = self.cumulative_mse
         self.pred_error_pub.publish(err_msg)
 
-        # --- Mouth-readiness prediction ---
-        # Simple heuristic: if food has been visible for several consecutive
-        # frames, predict the user will be ready soon.
-        mouth_msg = Bool()
-        recent_visible = sum(
-            1 for v in list(self.food_x_history)[-10:]
-            if v >= 0)
-        mouth_msg.data = recent_visible >= 7
-        self.mouth_ready_pub.publish(mouth_msg)
+        # mouth_ready_prediction removed — now handled by face_node
 
         self.iteration += 1
         if self.iteration % 50 == 0:

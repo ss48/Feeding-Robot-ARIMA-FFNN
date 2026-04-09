@@ -1,14 +1,15 @@
 """
 Feeding Finite State Machine (FSM) Node
 
-Coordinates the full feeding sequence:
+Coordinates the full autonomous feeding sequence:
 
   WAITING -> IDLE -> DETECT_FOOD -> LOCATE_FOOD -> COLLECT_FOOD ->
   DETECT_PATIENT -> PRE_FEED -> FEED -> RETRACT -> WAITING
 
-The FSM starts in WAITING and waits for a /feeding_start signal (published
-when the user presses the spacebar).  After each feeding cycle completes
-it returns to WAITING for the next spacebar press.
+Autonomous mode: auto-starts when plate and food are detected.
+Face tracking: uses MediaPipe face detection for patient detection,
+mouth-open verification before feeding, and face-approach IK.
+Manual mode: spacebar still works as fallback.
 
 Uses EKF-fused 3D food position (camera + ultrasonic Kalman filter) from
 the fusion_node for precise fork positioning.  The arm computes joint angles
@@ -72,6 +73,7 @@ JOINT_LIMITS = {
 POSITION_TOLERANCE = 0.08  # rad
 STATE_TIMEOUT = 15.0
 TRAJECTORY_DURATION_SEC = 2
+FACE_APPROACH_DURATION_SEC = 4  # slower approach near face
 CONFIDENCE_THRESHOLD = 0.3
 PLATE_NEAR_CM = 15.0
 MOUTH_NEAR_CM = 10.0
@@ -79,6 +81,12 @@ MOUTH_NEAR_CM = 10.0
 # Number of consecutive frames with stable 3D position before forking
 LOCATE_STABLE_COUNT = 5
 LOCATE_POSITION_TOLERANCE = 0.02  # metres — position must be stable within 2cm
+
+# Face/mouth safety thresholds
+MOUTH_OPEN_CONFIRM_FRAMES = 5   # consecutive open frames before feeding (0.5s at 10Hz)
+FACE_LOST_RETRACT_FRAMES = 30   # retract if face lost for 3s (30 frames at 10Hz)
+FACE_APPROACH_OFFSET = 0.05     # stop 5cm before face (metres)
+FORCE_COLLISION_THRESHOLD = 5.0  # emergency retract if force exceeds this during approach
 
 
 class FeedingFSMNode(Node):
@@ -112,6 +120,17 @@ class FeedingFSMNode(Node):
         self.food_position_3d = (0.0, 0.0, 0.5)  # x, y, z in camera frame (m)
         self._food_pos_history = []  # for stability check
 
+        # Face detection data (from face_node)
+        self.face_detected = False
+        self.face_bearing = (0.0, 0.0, 0.5)  # bearing_h, bearing_v, depth
+        self.mouth_open = False
+        self.face_expression = 'no_face'
+        self.plate_detected = False
+
+        # Face safety counters
+        self.consecutive_mouth_open = 0
+        self.face_lost_count = 0
+
         # Fuzzy controller outputs
         self.target_force = 0.0
         self.target_angle = 0.0
@@ -142,6 +161,18 @@ class FeedingFSMNode(Node):
             Bool, '/feeding_override', self.override_cb, 10)
         self.create_subscription(
             Bool, '/feeding_start', self.start_cb, 10)
+
+        # ---- subscribers: face detection (from face_node) ----
+        self.create_subscription(
+            Bool, '/face_detected', self.face_detected_cb, 10)
+        self.create_subscription(
+            Point, '/face_bearing', self.face_bearing_cb, 10)
+        self.create_subscription(
+            Bool, '/mouth_open', self.mouth_open_cb, 10)
+        self.create_subscription(
+            String, '/face_expression', self.expression_cb, 10)
+        self.create_subscription(
+            Bool, '/plate_detected', self.plate_detected_cb, 10)
 
         # ---- subscribers: EKF fusion outputs ----
         self.create_subscription(
@@ -207,6 +238,22 @@ class FeedingFSMNode(Node):
         if msg.data:
             self.start_requested = True
             self.get_logger().info('Start signal received (spacebar pressed)')
+
+    # ---- callbacks: face detection ----
+    def face_detected_cb(self, msg):
+        self.face_detected = msg.data
+
+    def face_bearing_cb(self, msg):
+        self.face_bearing = (msg.x, msg.y, msg.z)
+
+    def mouth_open_cb(self, msg):
+        self.mouth_open = msg.data
+
+    def expression_cb(self, msg):
+        self.face_expression = msg.data
+
+    def plate_detected_cb(self, msg):
+        self.plate_detected = msg.data
 
     # ---- callbacks: EKF fusion ----
     def plate_dist_cb(self, msg):
@@ -368,6 +415,49 @@ class FeedingFSMNode(Node):
         spread = max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs))
         return spread < LOCATE_POSITION_TOLERANCE
 
+    # ---- Face approach IK ----
+    def _compute_face_approach_ik(self, bearing_h, bearing_v, depth):
+        """Compute joint angles to position the fork near the user's mouth.
+
+        Uses face bearing angles and depth from face_node.
+        Stops FACE_APPROACH_OFFSET metres before the face.
+        Returns [j1, j2, j3, j4] or None if unreachable.
+        """
+        approach_depth = max(depth - FACE_APPROACH_OFFSET, 0.10)
+
+        # j1: base rotation toward face
+        j1 = bearing_h
+        j1 = max(JOINT_LIMITS['joint1'][0], min(j1, JOINT_LIMITS['joint1'][1]))
+
+        # Target position in arm plane
+        target_x = approach_depth * math.tan(bearing_v)
+        r = approach_depth
+        z = L1_HEIGHT - target_x  # vertical from joint2
+
+        d_sq = r * r + z * z
+        d = math.sqrt(d_sq)
+
+        if d > (L2_LENGTH + L3_LENGTH) * 0.98 or d < abs(L2_LENGTH - L3_LENGTH) * 1.02:
+            return None
+
+        cos_j3 = (d_sq - L2_LENGTH**2 - L3_LENGTH**2) / (2 * L2_LENGTH * L3_LENGTH)
+        cos_j3 = max(-1.0, min(1.0, cos_j3))
+        j3 = -math.acos(cos_j3)
+
+        alpha = math.atan2(r, z)
+        beta = math.atan2(
+            L3_LENGTH * math.sin(j3),
+            L2_LENGTH + L3_LENGTH * math.cos(j3))
+        j2 = alpha - beta
+
+        j2 = max(JOINT_LIMITS['joint2'][0], min(j2, JOINT_LIMITS['joint2'][1]))
+        j3 = max(JOINT_LIMITS['joint3'][0], min(j3, JOINT_LIMITS['joint3'][1]))
+
+        # Keep fork roughly horizontal for feeding
+        j4 = 0.3
+
+        return [j1, j2, j3, j4]
+
     # ---- FSM tick ----
     def tick(self):
         state_msg = String()
@@ -376,12 +466,16 @@ class FeedingFSMNode(Node):
 
         elapsed = self._state_elapsed()
 
-        # ---- WAITING (wait for spacebar / start signal) ----
+        # ---- WAITING (auto-start on plate+food, or manual spacebar) ----
         if self.state == FeedingState.WAITING:
             self._command_pose(POSES['home'])
-            if self.start_requested:
+            if self.plate_detected and self.food_visible:
+                self.get_logger().info(
+                    'Plate and food detected — auto-starting feeding cycle')
+                self._set_state(FeedingState.IDLE)
+            elif self.start_requested:
                 self.start_requested = False
-                self.get_logger().info('Starting feeding cycle...')
+                self.get_logger().info('Manual start (spacebar) — starting cycle')
                 self._set_state(FeedingState.IDLE)
 
         # ---- IDLE ----
@@ -457,58 +551,112 @@ class FeedingFSMNode(Node):
                 self.get_logger().warn('Food collection timed out')
                 self._set_state(FeedingState.RETRACT)
 
-        # ---- DETECT_PATIENT ----
+        # ---- DETECT_PATIENT (face detection via camera) ----
         elif self.state == FeedingState.DETECT_PATIENT:
-            if self.mouth_ready or self.override:
+            # Rotate toward expected patient position to scan for face
+            self._command_pose(POSES['pre_feed'])
+
+            if self.face_detected and self.face_expression == 'ready':
+                self.get_logger().info(
+                    f'Patient detected: bearing=('
+                    f'{math.degrees(self.face_bearing[0]):.1f}°, '
+                    f'{math.degrees(self.face_bearing[1]):.1f}°), '
+                    f'depth={self.face_bearing[2]:.2f}m')
+                self.face_lost_count = 0
+                self._set_state(FeedingState.PRE_FEED)
+            elif self.override:
                 self._set_state(FeedingState.PRE_FEED)
             elif elapsed > STATE_TIMEOUT:
-                self.get_logger().warn('Patient detection timed out')
+                self.get_logger().warn('Patient detection timed out — no face found')
                 self._set_state(FeedingState.RETRACT)
 
-        # ---- PRE_FEED ----
+        # ---- PRE_FEED (dynamic face-approach IK) ----
         elif self.state == FeedingState.PRE_FEED:
-            self._command_pose(POSES['pre_feed'])
-            if self._at_target() or elapsed > 5.0:
-                if (self.feeding_safe or self.override) and self._fusion_ok():
-                    self.get_logger().info(
-                        f'Pre-feed OK (fuzzy: force={self.target_force:.1f}N, '
-                        f'angle={self.target_angle:.1f}deg, '
-                        f'mouth_dist={self.mouth_distance:.1f}cm)')
-                    self._set_state(FeedingState.FEED)
-                elif not self._fusion_ok():
-                    self.get_logger().warn(
-                        f'Low fusion confidence ({self.fusion_confidence:.2f}) '
-                        f'— waiting for sensors')
-                elif elapsed > STATE_TIMEOUT:
+            # Force collision safety during approach
+            if self.current_force > FORCE_COLLISION_THRESHOLD:
+                self.get_logger().warn(
+                    f'High force during approach ({self.current_force:.1f}N) '
+                    f'— emergency retract')
+                self._set_state(FeedingState.RETRACT)
+                return
+
+            if self.face_detected:
+                self.face_lost_count = 0
+                # Compute IK to approach the face
+                approach_pose = self._compute_face_approach_ik(
+                    self.face_bearing[0], self.face_bearing[1],
+                    self.face_bearing[2])
+                if approach_pose is not None:
+                    self._command_pose(approach_pose,
+                                       duration_sec=FACE_APPROACH_DURATION_SEC)
+                else:
+                    self._command_pose(POSES['pre_feed'])
+
+                if self._at_target() or elapsed > 5.0:
+                    if self.feeding_safe or self.override:
+                        self.get_logger().info(
+                            f'Pre-feed OK — approaching face at '
+                            f'{self.face_bearing[2]:.2f}m')
+                        self.consecutive_mouth_open = 0
+                        self._set_state(FeedingState.FEED)
+            else:
+                self.face_lost_count += 1
+                if self.face_lost_count > FACE_LOST_RETRACT_FRAMES:
+                    self.get_logger().warn('Face lost during PRE_FEED — retracting')
                     self._set_state(FeedingState.RETRACT)
 
-        # ---- FEED ----
+            if elapsed > STATE_TIMEOUT:
+                self._set_state(FeedingState.RETRACT)
+
+        # ---- FEED (wait for mouth open, then deliver) ----
         elif self.state == FeedingState.FEED:
-            if (self.mouth_ready or self.override) and self._fusion_ok():
+            # Force collision safety
+            if self.current_force > FORCE_COLLISION_THRESHOLD:
+                self.get_logger().warn(
+                    f'High force during feed ({self.current_force:.1f}N) '
+                    f'— emergency retract')
+                self._set_state(FeedingState.RETRACT)
+                return
+
+            # Face lost safety
+            if not self.face_detected:
+                self.face_lost_count += 1
+                if self.face_lost_count > FACE_LOST_RETRACT_FRAMES // 2:
+                    self.get_logger().warn('Face lost during FEED — retreating')
+                    self._set_state(FeedingState.PRE_FEED)
+                return
+            self.face_lost_count = 0
+
+            # Track mouth open/closed
+            if self.mouth_open:
+                self.consecutive_mouth_open += 1
+            else:
+                self.consecutive_mouth_open = 0
+
+            # Require N consecutive mouth-open frames for safety
+            if self.consecutive_mouth_open >= MOUTH_OPEN_CONFIRM_FRAMES or self.override:
                 self._command_pose(POSES['feed'])
                 if self._at_target() or elapsed > 5.0:
                     self.feed_count += 1
                     self.get_logger().info(
                         f'Feed #{self.feed_count} delivered '
                         f'(mouth_dist={self.mouth_distance:.1f}cm, '
-                        f'force={self.current_force:.1f}N, '
-                        f'confidence={self.fusion_confidence:.2f})')
+                        f'force={self.current_force:.1f}N)')
+                    self.consecutive_mouth_open = 0
                     self._set_state(FeedingState.RETRACT)
-            else:
-                if not self._fusion_ok():
-                    self.get_logger().info(
-                        f'Low confidence ({self.fusion_confidence:.2f}) '
-                        f'— pausing feed')
-                else:
-                    self.get_logger().info(
-                        'Mouth not ready - pausing feed sequence')
+            elif elapsed % 2.0 < 0.15:
+                self.get_logger().info(
+                    f'Waiting for mouth open '
+                    f'(consecutive={self.consecutive_mouth_open}/'
+                    f'{MOUTH_OPEN_CONFIRM_FRAMES})')
 
-        # ---- RETRACT ----
+        # ---- RETRACT (auto-restart) ----
         elif self.state == FeedingState.RETRACT:
             self._command_pose(POSES['retract'])
             if self._at_target() or elapsed > 5.0:
                 self.get_logger().info(
-                    'Feeding cycle complete. Press SPACE to start next cycle.')
+                    f'Feeding cycle #{self.feed_count} complete — '
+                    f'returning to WAITING (auto-restart when plate+food visible)')
                 self._set_state(FeedingState.WAITING)
 
 

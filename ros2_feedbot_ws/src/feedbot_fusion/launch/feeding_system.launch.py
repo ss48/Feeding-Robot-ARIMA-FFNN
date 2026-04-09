@@ -77,4 +77,15 @@ def generate_launch_description():
                 'open_threshold': 0.5,
             }],
         ),
+        Node(
+            package='feedbot_fusion',
+            executable='face_node',
+            name='face_node',
+            output='screen',
+            parameters=[{
+                'camera_topic': '/feeding_robot/camera/image_raw',
+                'mar_threshold': 0.3,
+                'process_every_n': 3,
+            }],
+        ),
     ])
