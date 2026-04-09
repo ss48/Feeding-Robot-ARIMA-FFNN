@@ -6,3 +6,4 @@ trimesh>=3.9.0
 matplotlib>=3.5.0
 mediapipe>=0.10.9
 pyserial>=3.5
+RPi.GPIO>=0.7.0

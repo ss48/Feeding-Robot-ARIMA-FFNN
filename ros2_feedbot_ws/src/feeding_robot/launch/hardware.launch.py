@@ -148,6 +148,20 @@ def generate_launch_description():
         output='screen',
     )
 
+    # ==================== EMERGENCY STOP (GPIO button) ====================
+    estop_node = Node(
+        package='feedbot_fusion',
+        executable='estop_node',
+        name='estop_node',
+        parameters=[{
+            'gpio_pin': 17,
+            'hold_before_disable': 2.0,
+            'dynamixel_port': LaunchConfiguration('port_name'),
+            'baud_rate': 1000000,
+        }],
+        output='screen',
+    )
+
     # ==================== SONAR BRIDGE (routes sonar to plate/mouth topics) ====================
     sonar_bridge_node = Node(
         package='feedbot_fusion',
@@ -169,4 +183,5 @@ def generate_launch_description():
         teensy_bridge_node,
         sonar_bridge_node,
         face_node,
+        estop_node,
     ])

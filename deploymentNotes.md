@@ -1631,3 +1631,133 @@ This now launches all nodes including face_node. The robot will:
 | Robot doesn't approach face | Face depth out of IK range | Face must be 0.15-0.40m from camera; check `/face_bearing` z value |
 | Feed never triggers | Mouth-open debounce too strict | Reduce `MOUTH_OPEN_CONFIRM_FRAMES` in FSM (default 5) |
 | Emergency retract during approach | Force sensor noise | Increase `FORCE_COLLISION_THRESHOLD` (default 5.0N) or check HX711 calibration |
+
+---
+
+## Keyboard Teleop — Manual Joint Control
+
+A keyboard teleop node for manually moving the arm joint-by-joint.
+
+### Usage
+
+```bash
+# With hardware.launch.py already running in another terminal:
+source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
+ros2 run feedbot_fusion teleop_arm
+```
+
+### Controls
+
+| Key | Action |
+|-----|--------|
+| W / S | Joint 1 (base yaw) +/- |
+| E / D | Joint 2 (shoulder pitch) +/- |
+| R / F | Joint 3 (elbow pitch) +/- |
+| T / G | Joint 4 (feeder tilt) +/- |
+| H | Home position (0, 0, 0, 0) |
+| + / - | Increase / decrease step size |
+| Q | Quit |
+
+- Default step size: 0.05 rad (~2.9° per keypress)
+- Uses the `arm_controller/follow_joint_trajectory` action interface
+- Respects joint limits from the URDF
+- Shows current joint angles after each keypress
+
+**File:** `feedbot_fusion/feedbot_fusion/teleop_arm_node.py`
+
+---
+
+## Teensy Auto-Reconnect Behaviour
+
+The Teensy bridge node (`teensy_bridge_node.py`) automatically handles connect/disconnect:
+
+- On startup, attempts to connect to `/dev/teensy` (udev symlink)
+- If the Teensy is **not plugged in**: logs a warning every **5 seconds** (not spamming)
+- If the Teensy **disconnects mid-session** (USB cable pulled, I/O error): auto-reconnects on the next retry cycle
+- If the Teensy is **plugged in later**: auto-connects within 5 seconds
+- The robot operates normally without the Teensy — servos, camera, and face detection all work. Only force/sonar data is unavailable until the Teensy connects.
+
+---
+
+## Emergency Stop Button (Physical GPIO)
+
+### Hardware Wiring
+
+Connect a normally-open (NO) push button or mushroom-head E-Stop between GPIO 17 and GND:
+
+```
+Raspberry Pi 4:
+  GPIO 17 (physical pin 11) ──── E-Stop Button ──── GND (physical pin 9)
+```
+
+No external resistor needed — the Pi's internal pull-up resistor is used.
+
+### How It Works
+
+1. **Button pressed** → `/emergency_stop` topic publishes `True`
+2. **Immediately** → FSM enters `EMERGENCY_STOP` state, arm freezes at current position
+3. **After 2 seconds** → Dynamixel torque disabled (arm goes limp)
+4. **Button released** → Torque re-enabled, FSM returns to `WAITING`
+
+### Dependencies
+
+```bash
+# Install GPIO library (on the Pi)
+pip3 install RPi.GPIO
+# or for modern kernel interface:
+sudo apt install python3-gpiod gpiod
+```
+
+### Launch
+
+The E-Stop node starts automatically with the hardware launch:
+
+```bash
+ros2 launch feeding_robot hardware.launch.py
+```
+
+### Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `gpio_pin` | 17 | BCM GPIO pin number |
+| `hold_before_disable` | 2.0 | Seconds to hold position before torque off |
+| `dynamixel_port` | `/dev/dynamixel` | Dynamixel serial port |
+| `baud_rate` | 1000000 | Dynamixel baud rate |
+
+### Software E-Stop Fallback
+
+If no physical button is wired, you can trigger E-Stop from any terminal:
+
+```bash
+# Activate E-Stop
+ros2 topic pub /emergency_stop_sw std_msgs/msg/Bool "{data: true}" --once
+
+# Release E-Stop
+ros2 topic pub /emergency_stop_sw std_msgs/msg/Bool "{data: false}" --once
+```
+
+### Testing
+
+```bash
+# Monitor E-Stop state
+ros2 topic echo /emergency_stop
+
+# Monitor FSM state (should show EMERGENCY_STOP when pressed)
+ros2 topic echo /feeding_state
+```
+
+### FSM State: EMERGENCY_STOP
+
+When E-Stop is active:
+- All FSM state transitions are blocked
+- Arm holds at the position it was in when E-Stop was pressed
+- After `hold_before_disable` seconds, torque is disabled via Dynamixel SDK
+- On release: torque re-enabled, FSM returns to `WAITING`
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `feedbot_fusion/estop_node.py` | GPIO monitor, torque control via Dynamixel SDK |
+| `feedbot_fusion/feeding_fsm_node.py` | EMERGENCY_STOP state, `/emergency_stop` subscriber |

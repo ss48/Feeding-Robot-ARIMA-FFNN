@@ -39,6 +39,7 @@ class FeedingState:
     PRE_FEED = 'PRE_FEED'
     FEED = 'FEED'
     RETRACT = 'RETRACT'
+    EMERGENCY_STOP = 'EMERGENCY_STOP'
 
 
 # Joint names matching the feedbot_description URDF
@@ -161,6 +162,12 @@ class FeedingFSMNode(Node):
             Bool, '/feeding_override', self.override_cb, 10)
         self.create_subscription(
             Bool, '/feeding_start', self.start_cb, 10)
+        self.create_subscription(
+            Bool, '/emergency_stop', self.estop_cb, 10)
+
+        # Emergency stop state
+        self.emergency_stop = False
+        self._pre_estop_state = None
 
         # ---- subscribers: face detection (from face_node) ----
         self.create_subscription(
@@ -238,6 +245,20 @@ class FeedingFSMNode(Node):
         if msg.data:
             self.start_requested = True
             self.get_logger().info('Start signal received (spacebar pressed)')
+
+    def estop_cb(self, msg):
+        if msg.data and not self.emergency_stop:
+            self.emergency_stop = True
+            self._pre_estop_state = self.state
+            self.get_logger().warn('EMERGENCY STOP — freezing arm at current position')
+            # Hold at current position
+            hold_pose = [self.current_positions[j] for j in JOINT_NAMES]
+            self._command_pose(hold_pose)
+            self._set_state(FeedingState.EMERGENCY_STOP)
+        elif not msg.data and self.emergency_stop:
+            self.emergency_stop = False
+            self.get_logger().info('E-Stop released — returning to WAITING')
+            self._set_state(FeedingState.WAITING)
 
     # ---- callbacks: face detection ----
     def face_detected_cb(self, msg):
@@ -464,6 +485,10 @@ class FeedingFSMNode(Node):
         state_msg.data = self.state
         self.state_pub.publish(state_msg)
 
+        # E-Stop overrides everything
+        if self.emergency_stop and self.state != FeedingState.EMERGENCY_STOP:
+            return
+
         elapsed = self._state_elapsed()
 
         # ---- WAITING (auto-start on plate+food, or manual spacebar) ----
@@ -649,6 +674,11 @@ class FeedingFSMNode(Node):
                     f'Waiting for mouth open '
                     f'(consecutive={self.consecutive_mouth_open}/'
                     f'{MOUTH_OPEN_CONFIRM_FRAMES})')
+
+        # ---- EMERGENCY_STOP (hold position, wait for release) ----
+        elif self.state == FeedingState.EMERGENCY_STOP:
+            # Keep holding at current position — do nothing until released
+            return
 
         # ---- RETRACT (auto-restart) ----
         elif self.state == FeedingState.RETRACT:
