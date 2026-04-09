@@ -27,7 +27,9 @@ def generate_launch_description():
             name='vision_node',
             output='screen',
             parameters=[{
-                'detection_method': 'hsv',  # 'auto', 'ml', or 'hsv'
+                'detection_method': 'auto',  # 'auto', 'mediapipe', 'ml', 'hsv'
+                'ml_confidence': 0.35,
+                'process_every_n': 2,
             }],
         ),
         Node(

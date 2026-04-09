@@ -1,24 +1,22 @@
 """
-Vision Node — ML-based food detection with 3D position estimation
+Vision Node — Object and food detection with 3D position estimation.
 
-Uses NVIDIA jetson-inference (detectNet / SSD-Mobilenet) for object detection
-and segmentation when available (Jetson hardware).  Falls back to HSV colour
-segmentation when jetson-inference is not installed (e.g. dev PC / Gazebo).
+Detection backends (selected automatically or via parameter):
+  1. jetson-inference (Jetson Orin/Nano with NVIDIA GPU)
+  2. MediaPipe Object Detection (Pi 4/5 CPU — EfficientDet-Lite)
+  3. HSV colour segmentation (fallback for Gazebo / basic)
 
-jetson-inference repo: https://github.com/dusty-nv/jetson-inference
-  - detectNet uses SSD-Mobilenet-v2 trained on COCO (91 classes including food)
-  - COCO food classes: apple (53), banana (52), orange (55), sandwich (48),
-    broccoli (56), carrot (57), cake (61), pizza (59), donut (60), etc.
-
-Camera intrinsics from URDF: horizontal_fov=1.047 rad (60 deg), 640x480
+All backends detect COCO objects including food items, plates, utensils.
+MediaPipe runs at ~5-8fps on Pi 4 with EfficientDet-Lite0.
 
 Publishes:
-  /food_visible       (Bool)               — detection flag
-  /food_center        (Point)              — cx, cy, area
+  /food_visible       (Bool)               — food detection flag
+  /food_center        (Point)              — cx, cy, area of primary food
   /food_type          (String)             — detected food class name
   /detected_fruits    (Float64MultiArray)  — flat [cx, cy, area, class_id, ...]
-  /food_bearing       (Point)              — bearing_h (rad), bearing_v (rad),
-                                             estimated_depth (m)
+  /food_bearing       (Point)              — bearing_h, bearing_v, depth (m)
+  /plate_detected     (Bool)               — plate/bowl found
+  /objects_detected   (String)             — comma-separated list of all detected objects
 """
 
 import rclpy
@@ -33,47 +31,51 @@ from cv_bridge import CvBridge
 import cv2
 import numpy as np
 import math
+import os
 
 # ───────────────────────────────────────────────────────────────────────
-# Try to import jetson-inference for ML detection
+# Try to import detection backends
 # ───────────────────────────────────────────────────────────────────────
 try:
     import jetson_inference
     import jetson_utils
-    HAS_JETSON_INFERENCE = True
+    HAS_JETSON = True
 except ImportError:
-    HAS_JETSON_INFERENCE = False
+    HAS_JETSON = False
+
+try:
+    import mediapipe as mp
+    from mediapipe.tasks import python as mp_python
+    from mediapipe.tasks.python import vision as mp_vision
+    HAS_MEDIAPIPE = True
+except ImportError:
+    HAS_MEDIAPIPE = False
 
 # ───────────────────────────────────────────────────────────────────────
-# COCO class IDs for food items (SSD-Mobilenet-v2)
+# COCO class definitions
 # ───────────────────────────────────────────────────────────────────────
-FOOD_CLASS_IDS = {
-    47: 'cup',
-    48: 'fork',
-    49: 'knife',
-    50: 'spoon',
-    51: 'bowl',
-    52: 'banana',
-    53: 'apple',
-    54: 'sandwich',
-    55: 'orange',
-    56: 'broccoli',
-    57: 'carrot',
-    58: 'hot_dog',
-    59: 'pizza',
-    60: 'donut',
-    61: 'cake',
-}
-
-# Food names we care about for the feeding robot
 FOOD_NAMES = {
     'apple', 'banana', 'orange', 'sandwich', 'broccoli', 'carrot',
-    'hot_dog', 'pizza', 'donut', 'cake', 'strawberry',
-    'grape', 'kiwi',
+    'hot_dog', 'pizza', 'donut', 'cake', 'strawberry', 'grape', 'kiwi',
+}
+
+PLATE_NAMES = {'bowl', 'cup', 'plate', 'dining table'}
+
+UTENSIL_NAMES = {'fork', 'knife', 'spoon'}
+
+# All objects we care about for the feeding robot
+ALL_OBJECT_NAMES = FOOD_NAMES | PLATE_NAMES | UTENSIL_NAMES
+
+# COCO class IDs (for jetson-inference SSD-Mobilenet)
+FOOD_CLASS_IDS = {
+    47: 'cup', 48: 'fork', 49: 'knife', 50: 'spoon', 51: 'bowl',
+    52: 'banana', 53: 'apple', 54: 'sandwich', 55: 'orange',
+    56: 'broccoli', 57: 'carrot', 58: 'hot_dog', 59: 'pizza',
+    60: 'donut', 61: 'cake',
 }
 
 # ───────────────────────────────────────────────────────────────────────
-# HSV fallback (for Gazebo / when jetson-inference unavailable)
+# HSV fallback ranges
 # ───────────────────────────────────────────────────────────────────────
 FRUIT_HSV_RANGES = {
     'apple':      [((0, 120, 70),  (10, 255, 255)),
@@ -87,49 +89,34 @@ FRUIT_HSV_RANGES = {
 }
 
 FRUIT_COLORS = {
-    'apple':      (30,  30, 220),
-    'strawberry': (50,  30, 180),
-    'banana':     (0,  230, 255),
-    'grape':      (180, 50, 130),
-    'orange':     (0,  140, 255),
-    'kiwi':       (30, 140,  50),
+    'apple': (30, 30, 220), 'strawberry': (50, 30, 180),
+    'banana': (0, 230, 255), 'grape': (180, 50, 130),
+    'orange': (0, 140, 255), 'kiwi': (30, 140, 50),
 }
 
 FRUIT_IDS = {name: idx for idx, name in enumerate(FRUIT_HSV_RANGES)}
 MIN_CONTOUR_AREA = 40
 
 # ───────────────────────────────────────────────────────────────────────
-# Camera intrinsics (from URDF: horizontal_fov=1.047 rad, 640x480)
+# Camera intrinsics (Pi Camera V2.1, 640x480, HFOV=60°)
 # ───────────────────────────────────────────────────────────────────────
 IMAGE_WIDTH = 640
 IMAGE_HEIGHT = 480
 H_FOV = 1.047
 V_FOV = H_FOV * (IMAGE_HEIGHT / IMAGE_WIDTH)
-
 FX = (IMAGE_WIDTH / 2.0) / math.tan(H_FOV / 2.0)
 FY = (IMAGE_HEIGHT / 2.0) / math.tan(V_FOV / 2.0)
 CX = IMAGE_WIDTH / 2.0
 CY = IMAGE_HEIGHT / 2.0
 
-# Known approximate food diameters (metres) for monocular depth
+# Known food diameters (metres) for monocular depth estimation
 FOOD_DIAMETERS = {
-    'apple':      0.08,
-    'strawberry': 0.035,
-    'banana':     0.04,
-    'grape':      0.02,
-    'orange':     0.075,
-    'kiwi':       0.06,
-    'sandwich':   0.12,
-    'broccoli':   0.10,
-    'carrot':     0.03,
-    'pizza':      0.15,
-    'donut':      0.10,
-    'cake':       0.12,
-    'hot_dog':    0.04,
+    'apple': 0.08, 'strawberry': 0.035, 'banana': 0.04, 'grape': 0.02,
+    'orange': 0.075, 'kiwi': 0.06, 'sandwich': 0.12, 'broccoli': 0.10,
+    'carrot': 0.03, 'pizza': 0.15, 'donut': 0.10, 'cake': 0.12,
+    'hot_dog': 0.04,
 }
 DEFAULT_FOOD_DIAMETER = 0.06
-
-# ML detection confidence threshold
 ML_CONFIDENCE_THRESHOLD = 0.35
 
 
@@ -143,105 +130,149 @@ class VisionNode(Node):
 
         # Parameters
         self.declare_parameter('camera_topic', '/feeding_robot/camera/image_raw')
-        self.declare_parameter('detection_method', 'auto')  # 'auto', 'ml', 'hsv'
-        self.declare_parameter('ml_model', 'ssd-mobilenet-v2')
+        self.declare_parameter('detection_method', 'auto')  # 'auto', 'mediapipe', 'ml', 'hsv'
         self.declare_parameter('ml_confidence', ML_CONFIDENCE_THRESHOLD)
+        self.declare_parameter('process_every_n', 2)
 
         camera_topic = self.get_parameter('camera_topic').value
-        self._detection_method = self.get_parameter('detection_method').value
-        ml_model = self.get_parameter('ml_model').value
+        detection_method = self.get_parameter('detection_method').value
         self._ml_confidence = self.get_parameter('ml_confidence').value
+        self._process_every_n = self.get_parameter('process_every_n').value
 
-        # Decide detection method
-        if self._detection_method == 'auto':
-            self._use_ml = HAS_JETSON_INFERENCE
-        elif self._detection_method == 'ml':
-            self._use_ml = HAS_JETSON_INFERENCE
-            if not HAS_JETSON_INFERENCE:
-                self.get_logger().warn(
-                    'ML detection requested but jetson-inference not installed! '
-                    'Falling back to HSV.')
-        else:
-            self._use_ml = False
-
-        # Initialize ML detector if available
+        self._frame_count = 0
+        self._backend = 'hsv'  # default fallback
         self._net = None
-        if self._use_ml:
-            try:
-                # Try ONNX model first (required for TensorRT 10+)
-                import os
-                onnx_path = os.path.expanduser(
-                    '~/jetson-inference/data/networks/ssd_mobilenet_v2.onnx')
-                labels_path = os.path.expanduser(
-                    '~/jetson-inference/data/networks/ssd_coco_labels.txt')
+        self._mp_detector = None
 
-                if os.path.exists(onnx_path):
-                    self._net = jetson_inference.detectNet(
-                        argv=[
-                            '--model=' + onnx_path,
-                            '--labels=' + labels_path,
-                            '--input-blob=input_0',
-                            '--output-cvg=scores',
-                            '--output-bbox=boxes',
-                            '--threshold=' + str(self._ml_confidence),
-                        ])
-                    self.get_logger().info(
-                        f'ML detection initialized: ONNX model '
-                        f'(confidence threshold: {self._ml_confidence})')
-                else:
-                    # Fallback to built-in model name
-                    self._net = jetson_inference.detectNet(
-                        ml_model, threshold=self._ml_confidence)
-                    self.get_logger().info(
-                        f'ML detection initialized: {ml_model} '
-                        f'(confidence threshold: {self._ml_confidence})')
-            except Exception as e:
-                self.get_logger().error(
-                    f'Failed to load ML model: {e} — falling back to HSV')
-                self._use_ml = False
+        # Select detection backend
+        if detection_method == 'auto':
+            if HAS_JETSON:
+                self._init_jetson()
+            elif HAS_MEDIAPIPE:
+                self._init_mediapipe()
+            else:
+                self._backend = 'hsv'
+        elif detection_method == 'ml' and HAS_JETSON:
+            self._init_jetson()
+        elif detection_method == 'mediapipe' and HAS_MEDIAPIPE:
+            self._init_mediapipe()
+        else:
+            self._backend = 'hsv'
 
         # Subscriber
-        self.image_sub = self.create_subscription(
-            Image, camera_topic, self.image_callback, 10)
+        self.create_subscription(Image, camera_topic, self.image_callback, 10)
 
         # Publishers
         self.visible_pub = self.create_publisher(Bool, '/food_visible', 10)
         self.center_pub = self.create_publisher(Point, '/food_center', 10)
         self.type_pub = self.create_publisher(String, '/food_type', 10)
-        self.fruits_pub = self.create_publisher(
-            Float64MultiArray, '/detected_fruits', 10)
+        self.fruits_pub = self.create_publisher(Float64MultiArray, '/detected_fruits', 10)
         self.bearing_pub = self.create_publisher(Point, '/food_bearing', 10)
         self.plate_pub = self.create_publisher(Bool, '/plate_detected', 10)
+        self.objects_pub = self.create_publisher(String, '/objects_detected', 10)
 
-        method = 'jetson-inference ML (detectNet)' if self._use_ml else 'HSV colour'
         self.get_logger().info(
-            f'Vision node started — detection method: {method}')
+            f'Vision node started — backend: {self._backend}, '
+            f'confidence: {self._ml_confidence}, '
+            f'process every {self._process_every_n} frames')
 
-    # ----------------------------------------------------------------
-    # ML detection using jetson-inference detectNet
-    # ----------------------------------------------------------------
-    def _detect_ml(self, frame):
-        """Run ML object detection. Returns dict of name → (cx, cy, area, x, y, w, h)."""
-        detections = {}
+    # ────────────────────────────────────────────────────────────────
+    # Backend initialization
+    # ────────────────────────────────────────────────────────────────
+    def _init_jetson(self):
+        try:
+            self._net = jetson_inference.detectNet(
+                'ssd-mobilenet-v2', threshold=self._ml_confidence)
+            self._backend = 'jetson'
+            self.get_logger().info('Detection backend: jetson-inference (SSD-Mobilenet-v2)')
+        except Exception as e:
+            self.get_logger().error(f'Jetson init failed: {e}')
+            if HAS_MEDIAPIPE:
+                self._init_mediapipe()
+            else:
+                self._backend = 'hsv'
 
-        # Convert OpenCV BGR to CUDA image for jetson-inference
+    def _init_mediapipe(self):
+        try:
+            # Download EfficientDet-Lite0 model if not present
+            model_path = os.path.expanduser(
+                '~/.mediapipe/efficientdet_lite0.tflite')
+            if not os.path.exists(model_path):
+                self.get_logger().info('Downloading EfficientDet-Lite0 model...')
+                os.makedirs(os.path.dirname(model_path), exist_ok=True)
+                import urllib.request
+                url = ('https://storage.googleapis.com/mediapipe-models/'
+                       'object_detector/efficientdet_lite0/int8/latest/'
+                       'efficientdet_lite0.tflite')
+                urllib.request.urlretrieve(url, model_path)
+                self.get_logger().info(f'Model downloaded to {model_path}')
+
+            base_options = mp_python.BaseOptions(model_asset_path=model_path)
+            options = mp_vision.ObjectDetectorOptions(
+                base_options=base_options,
+                max_results=10,
+                score_threshold=self._ml_confidence,
+            )
+            self._mp_detector = mp_vision.ObjectDetector.create_from_options(options)
+            self._backend = 'mediapipe'
+            self.get_logger().info(
+                'Detection backend: MediaPipe EfficientDet-Lite0 (CPU)')
+        except Exception as e:
+            self.get_logger().error(f'MediaPipe init failed: {e}')
+            self._backend = 'hsv'
+
+    # ────────────────────────────────────────────────────────────────
+    # MediaPipe detection
+    # ────────────────────────────────────────────────────────────────
+    def _detect_mediapipe(self, frame):
+        """Run MediaPipe object detection. Returns (food_detections, all_detections)."""
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        results = self._mp_detector.detect(mp_image)
+
+        food_detections = {}
+        all_names = []
+
+        for det in results.detections:
+            name = det.categories[0].category_name.lower()
+            score = det.categories[0].score
+            all_names.append(f'{name}({score:.2f})')
+
+            bbox = det.bounding_box
+            x, y, w, h = bbox.origin_x, bbox.origin_y, bbox.width, bbox.height
+            cx = int(x + w / 2)
+            cy = int(y + h / 2)
+            area = w * h
+
+            # Draw on frame
+            color = (0, 255, 0) if name in FOOD_NAMES else (255, 200, 0)
+            cv2.rectangle(frame, (int(x), int(y)), (int(x + w), int(y + h)), color, 2)
+            cv2.putText(frame, f'{name} {score:.2f}',
+                        (int(x), int(y) - 6), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.4, color, 1, cv2.LINE_AA)
+
+            if name in FOOD_NAMES:
+                food_detections[name] = (cx, cy, area, int(x), int(y), int(w), int(h))
+
+        return food_detections, all_names
+
+    # ────────────────────────────────────────────────────────────────
+    # Jetson-inference detection
+    # ────────────────────────────────────────────────────────────────
+    def _detect_jetson(self, frame):
+        """Run jetson-inference detection. Returns (food_detections, all_detections)."""
         img_rgba = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
         cuda_img = jetson_utils.cudaFromNumpy(img_rgba)
-
-        # Run detection
         det_list = self._net.Detect(cuda_img, overlay='none')
+
+        food_detections = {}
+        all_names = []
 
         for det in det_list:
             class_id = det.ClassID
             class_name = self._net.GetClassDesc(class_id).lower()
+            all_names.append(f'{class_name}({det.Confidence:.2f})')
 
-            # Check if it's a food item
-            is_food = (class_name in FOOD_NAMES or
-                       class_id in FOOD_CLASS_IDS)
-            if not is_food:
-                continue
-
-            # Use the COCO class name
             if class_id in FOOD_CLASS_IDS:
                 name = FOOD_CLASS_IDS[class_id]
             else:
@@ -249,43 +280,31 @@ class VisionNode(Node):
 
             cx = int(det.Center[0])
             cy = int(det.Center[1])
-            x = int(det.Left)
-            y = int(det.Top)
-            w = int(det.Width)
-            h = int(det.Height)
-            area = float(w * h)
+            x, y = int(det.Left), int(det.Top)
+            w, h = int(det.Width), int(det.Height)
+            area = w * h
 
-            # Keep largest detection per class
-            if name not in detections or area > detections[name][2]:
-                detections[name] = (cx, cy, area, x, y, w, h)
+            if name in FOOD_NAMES:
+                food_detections[name] = (cx, cy, area, x, y, w, h)
 
-            # Draw on frame
-            color = FRUIT_COLORS.get(name, (0, 255, 0))
-            cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
-            cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
-            conf = det.Confidence
-            bh, bv, depth = self._estimate_bearing_and_depth(cx, cy, w, name)
-            cv2.putText(frame, f"{name} {conf:.0%} d={depth:.2f}m",
-                        (x, y - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                        color, 1, cv2.LINE_AA)
+        return food_detections, all_names
 
-        return detections
-
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     # HSV fallback detection
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     def _detect_hsv(self, frame):
-        """Run HSV colour-based detection. Returns dict of name → (cx, cy, area, x, y, w, h)."""
+        """Run HSV colour-based detection. Returns (food_detections, all_names)."""
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        detections = {}
+        food_detections = {}
+        all_names = []
 
         for fruit_name in FRUIT_HSV_RANGES:
             result = self._detect_fruit_hsv(hsv, fruit_name)
             if result is not None:
-                detections[fruit_name] = result
+                food_detections[fruit_name] = result
+                all_names.append(fruit_name)
 
-        # Draw on frame
-        for name, (cx, cy, area, x, y, w, h) in detections.items():
+        for name, (cx, cy, area, x, y, w, h) in food_detections.items():
             color = FRUIT_COLORS.get(name, (255, 255, 255))
             cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
             cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
@@ -294,7 +313,7 @@ class VisionNode(Node):
                         (x, y - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
                         color, 1, cv2.LINE_AA)
 
-        return detections
+        return food_detections, all_names
 
     def _detect_fruit_hsv(self, hsv, fruit_name):
         """HSV detection for a single fruit type."""
@@ -325,17 +344,23 @@ class VisionNode(Node):
         x, y, w, h = cv2.boundingRect(largest)
         return (cx, cy, area, x, y, w, h)
 
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     # Plate detection via shape analysis
-    # ----------------------------------------------------------------
-    def _detect_plate(self, frame):
-        """Detect plate/bowl using contour circularity in the frame."""
+    # ────────────────────────────────────────────────────────────────
+    def _detect_plate(self, frame, all_names):
+        """Detect plate — from ML detections or shape analysis fallback."""
+        # Check if ML already found a plate/bowl
+        for name in all_names:
+            obj = name.split('(')[0]  # strip confidence
+            if obj in PLATE_NAMES:
+                return True
+
+        # Shape-based fallback
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (11, 11), 0)
         edges = cv2.Canny(blurred, 50, 150)
         contours, _ = cv2.findContours(
             edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
         for cnt in contours:
             area = cv2.contourArea(cnt)
             if area < 5000:
@@ -348,56 +373,62 @@ class VisionNode(Node):
                 return True
         return False
 
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     # 3D bearing estimation from pinhole camera model
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     def _estimate_bearing_and_depth(self, cx, cy, bbox_w, food_name):
-        """Compute bearing angles and monocular depth estimate."""
         bearing_h = math.atan2(cx - CX, FX)
         bearing_v = math.atan2(cy - CY, FY)
-
         known_diameter = FOOD_DIAMETERS.get(food_name, DEFAULT_FOOD_DIAMETER)
         if bbox_w > 5:
             estimated_depth = (known_diameter * FX) / bbox_w
         else:
             estimated_depth = 1.0
-
         return bearing_h, bearing_v, estimated_depth
 
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     # Main callback
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     def image_callback(self, msg):
+        self._frame_count += 1
+        if self._frame_count % self._process_every_n != 0:
+            return
+
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
+        # Run detection based on backend
+        if self._backend == 'jetson':
+            food_detections, all_names = self._detect_jetson(frame)
+        elif self._backend == 'mediapipe':
+            food_detections, all_names = self._detect_mediapipe(frame)
+        else:
+            food_detections, all_names = self._detect_hsv(frame)
+
         # Plate detection
-        plate_found = self._detect_plate(frame)
+        plate_found = self._detect_plate(frame, all_names)
         self.plate_pub.publish(Bool(data=plate_found))
 
-        # Food detection (ML or HSV)
-        if self._use_ml and self._net is not None:
-            detections = self._detect_ml(frame)
-        else:
-            detections = self._detect_hsv(frame)
+        # Publish all detected object names
+        self.objects_pub.publish(String(data=', '.join(all_names) if all_names else ''))
 
-        # --- Publish all detections as flat array ---
+        # Publish food detections
         flat = []
-        for name, (cx, cy, area, *_) in detections.items():
+        for name, (cx, cy, area, *_) in food_detections.items():
             type_id = float(FRUIT_IDS.get(name, hash(name) % 100))
             flat.extend([float(cx), float(cy), float(area), type_id])
         fruits_msg = Float64MultiArray()
         fruits_msg.data = flat
         self.fruits_pub.publish(fruits_msg)
 
-        # --- Primary food = largest detection ---
+        # Primary food = largest detection
         visible_msg = Bool()
         center_msg = Point()
         type_msg = String()
         bearing_msg = Point()
 
-        if detections:
-            primary_name = max(detections, key=lambda n: detections[n][2])
-            cx, cy, area, x, y, w, h = detections[primary_name]
+        if food_detections:
+            primary_name = max(food_detections, key=lambda n: food_detections[n][2])
+            cx, cy, area, x, y, w, h = food_detections[primary_name]
 
             visible_msg.data = True
             center_msg.x = float(cx)
@@ -405,8 +436,7 @@ class VisionNode(Node):
             center_msg.z = float(area)
             type_msg.data = primary_name
 
-            bh, bv, depth = self._estimate_bearing_and_depth(
-                cx, cy, w, primary_name)
+            bh, bv, depth = self._estimate_bearing_and_depth(cx, cy, w, primary_name)
             bearing_msg.x = bh
             bearing_msg.y = bv
             bearing_msg.z = depth
@@ -416,12 +446,11 @@ class VisionNode(Node):
             self.type_pub.publish(type_msg)
             self.bearing_pub.publish(bearing_msg)
 
-            method = 'ML' if self._use_ml else 'HSV'
             self.get_logger().info(
-                f"[{method}] Detected {len(detections)} food(s), "
-                f"primary={primary_name} x={cx} y={cy} area={area:.0f} "
-                f"bearing=({math.degrees(bh):.1f}, {math.degrees(bv):.1f}) "
-                f"depth={depth:.3f}m")
+                f'[{self._backend}] {len(food_detections)} food(s), '
+                f'primary={primary_name} ({cx},{cy}) '
+                f'depth={depth:.2f}m | all: {", ".join(all_names)}',
+                throttle_duration_sec=2.0)
         else:
             visible_msg.data = False
             center_msg.x = -1.0
@@ -433,10 +462,10 @@ class VisionNode(Node):
             self.center_pub.publish(center_msg)
             self.type_pub.publish(type_msg)
 
-            self.get_logger().info("No food detected")
-
-        cv2.imshow("camera_view", frame)
-        cv2.waitKey(1)
+            if all_names:
+                self.get_logger().info(
+                    f'[{self._backend}] No food — objects: {", ".join(all_names)}',
+                    throttle_duration_sec=5.0)
 
 
 def main(args=None):
