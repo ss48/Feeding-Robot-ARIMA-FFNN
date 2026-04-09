@@ -15,9 +15,6 @@ Parameters:
   baud_rate    (int)   — default 115200
 """
 
-import json
-import math
-
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import WrenchStamped
@@ -80,42 +77,14 @@ class TeensyBridgeNode(Node):
             self._reconnect()
 
     def parse_and_publish(self, line):
-        try:
-            data = json.loads(line)
-        except json.JSONDecodeError:
-            return
-
-        # Skip status messages
-        if 'status' in data or 'tare' in data:
-            self.get_logger().info(f'Teensy: {line}')
-            return
-
         now = self.get_clock().now().to_msg()
 
-        # ---- Force ----
-        if 'force' in data:
-            force_n = float(data['force'])
-
-            # Publish WrenchStamped (force_node subscribes to this)
-            wrench_msg = WrenchStamped()
-            wrench_msg.header.stamp = now
-            wrench_msg.header.frame_id = 'load_cell_frame'
-            wrench_msg.wrench.force.z = force_n  # Main axis
-            self.wrench_pub.publish(wrench_msg)
-
-            # Also publish filtered force directly
-            self.force_buffer.append(abs(force_n))
-            if len(self.force_buffer) > self.FORCE_BUFFER_SIZE:
-                self.force_buffer.pop(0)
-            filtered = sum(self.force_buffer) / len(self.force_buffer)
-
-            force_msg = Float64()
-            force_msg.data = filtered
-            self.force_pub.publish(force_msg)
-
-        # ---- Sonar ----
-        if 'dist_cm' in data and data['dist_cm'] is not None:
-            dist_cm = float(data['dist_cm'])
+        # Parse "Distance (cm): 8.86"
+        if line.startswith('Distance (cm):'):
+            try:
+                dist_cm = float(line.split(':')[1].strip())
+            except (ValueError, IndexError):
+                return
             dist_m = dist_cm / 100.0
 
             # Publish Range (sonar_bridge_node accepts this)
@@ -133,6 +102,32 @@ class TeensyBridgeNode(Node):
             raw_msg = Float64()
             raw_msg.data = dist_cm
             self.sonar_raw_pub.publish(raw_msg)
+
+        # Parse "Load Cell Reading: 9.2 g"
+        elif line.startswith('Load Cell Reading:'):
+            try:
+                val_str = line.split(':')[1].strip()
+                grams = float(val_str.replace('g', '').strip())
+            except (ValueError, IndexError):
+                return
+            force_n = grams * 0.00981  # grams to Newtons
+
+            # Publish WrenchStamped (force_node subscribes to this)
+            wrench_msg = WrenchStamped()
+            wrench_msg.header.stamp = now
+            wrench_msg.header.frame_id = 'load_cell_frame'
+            wrench_msg.wrench.force.z = force_n
+            self.wrench_pub.publish(wrench_msg)
+
+            # Also publish filtered force directly
+            self.force_buffer.append(abs(force_n))
+            if len(self.force_buffer) > self.FORCE_BUFFER_SIZE:
+                self.force_buffer.pop(0)
+            filtered = sum(self.force_buffer) / len(self.force_buffer)
+
+            force_msg = Float64()
+            force_msg.data = filtered
+            self.force_pub.publish(force_msg)
 
     def _reconnect(self):
         """Try to reconnect to the Teensy."""
