@@ -46,6 +46,8 @@ class TeensyBridgeNode(Node):
 
         self.force_buffer = []
         self.ser = None
+        self._reconnect_interval = 5.0  # seconds between reconnect attempts
+        self._last_reconnect = 0.0
         self._connect()
 
         self.create_timer(0.02, self.read_serial)
@@ -55,7 +57,7 @@ class TeensyBridgeNode(Node):
             self.ser = serial.Serial(self._port, self._baud, timeout=0.1)
             self.get_logger().info(f'Teensy connected on {self._port} @ {self._baud}')
         except (serial.SerialException, OSError) as e:
-            self.get_logger().error(f'Failed to open {self._port}: {e}')
+            self.get_logger().warn(f'Teensy not available ({self._port}) — will retry every {self._reconnect_interval:.0f}s')
             self.ser = None
 
     def _reconnect(self):
@@ -69,6 +71,11 @@ class TeensyBridgeNode(Node):
 
     def read_serial(self):
         if self.ser is None or not self.ser.is_open:
+            import time
+            now = time.monotonic()
+            if now - self._last_reconnect < self._reconnect_interval:
+                return
+            self._last_reconnect = now
             self._reconnect()
             return
 
