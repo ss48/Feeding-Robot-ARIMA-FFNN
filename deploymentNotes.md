@@ -1761,3 +1761,31 @@ When E-Stop is active:
 |------|---------|
 | `feedbot_fusion/estop_node.py` | GPIO monitor, torque control via Dynamixel SDK |
 | `feedbot_fusion/feeding_fsm_node.py` | EMERGENCY_STOP state, `/emergency_stop` subscriber |
+
+
+
+
+calibration 
+mkdir -p ~/.ros/camera_info
+cat > ~/.ros/camera_info/mmal_service_16.1.yaml << 'EOF'
+image_width: 640
+image_height: 480
+camera_name: mmal_service_16.1
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [554.25, 0, 320, 0, 554.25, 240, 0, 0, 1]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0, 0, 0, 0, 0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [554.25, 0, 320, 0, 0, 554.25, 240, 0, 0, 0, 1, 0]
+EOF
