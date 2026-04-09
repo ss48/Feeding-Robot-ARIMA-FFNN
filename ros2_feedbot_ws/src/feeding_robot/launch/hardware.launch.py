@@ -123,6 +123,20 @@ def generate_launch_description():
         output='screen',
     )
 
+    # ==================== VISION NODE (Food + Object Detection) ====================
+    vision_node = Node(
+        package='feedbot_fusion',
+        executable='vision_node',
+        name='vision_node',
+        parameters=[{
+            'camera_topic': '/feeding_robot/camera/image_raw',
+            'detection_method': 'auto',
+            'ml_confidence': 0.35,
+            'process_every_n': 2,
+        }],
+        output='screen',
+    )
+
     # ==================== TEENSY BRIDGE (Force Sensor + Sonar) ====================
     teensy_bridge_node = Node(
         package='feedbot_fusion',
@@ -180,6 +194,7 @@ def generate_launch_description():
         delayed_joint_state_broadcaster,
         delayed_arm_controller,
         camera_node,
+        vision_node,
         teensy_bridge_node,
         sonar_bridge_node,
         face_node,
