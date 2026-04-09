@@ -10,7 +10,7 @@
       </xacro:if>
       <xacro:unless value="$(arg use_sim)">
         <plugin>dynamixel_hardware_interface/DynamixelHardware</plugin>
-        <param name="port_name">/dev/ttyACM0</param>
+        <param name="port_name">/dev/dynamixel</param>
         <param name="baud_rate">1000000</param>
         <param name="error_timeout_sec">0.2</param>
         <param name="dynamixel_model_folder">/param/dxl_model</param>

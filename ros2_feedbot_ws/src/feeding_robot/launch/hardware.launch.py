@@ -27,8 +27,8 @@ def generate_launch_description():
 
     # ==================== LAUNCH ARGUMENTS ====================
     port_arg = DeclareLaunchArgument(
-        'port_name', default_value='/dev/ttyACM0',
-        description='Dynamixel USB port'
+        'port_name', default_value='/dev/dynamixel',
+        description='Dynamixel USB port (udev symlink or /dev/ttyACMx)'
     )
 
     use_meshes_arg = DeclareLaunchArgument(
@@ -42,7 +42,7 @@ def generate_launch_description():
     )
 
     teensy_port_arg = DeclareLaunchArgument(
-        'teensy_port', default_value='/dev/ttyACM1',
+        'teensy_port', default_value='/dev/teensy',
         description='Teensy serial port (force sensor + sonar)'
     )
 
