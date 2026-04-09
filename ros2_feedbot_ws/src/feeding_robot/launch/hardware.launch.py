@@ -1,11 +1,11 @@
 """
 Launch file for real hardware of the Feeding Robot.
-Starts ros2_control with Dynamixel hardware interface, robot_state_publisher,
-and joint controllers.
+Starts Dynamixel servos, Pi camera, Teensy sensor bridge (force + sonar),
+robot_state_publisher, and joint controllers.
 
 Usage:
   ros2 launch feeding_robot hardware.launch.py
-  ros2 launch feeding_robot hardware.launch.py port_name:=/dev/ttyACM0
+  ros2 launch feeding_robot hardware.launch.py port_name:=/dev/dynamixel teensy_port:=/dev/teensy
 """
 
 import os

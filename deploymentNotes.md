@@ -1155,13 +1155,29 @@ Monitoring tips using rqt and run_feeding.sh sim for quick testing
 
 ---
 
-## Real Hardware Setup (Raspberry Pi 5) — Updated 2026-04-05
+## Real Hardware Setup (Raspberry Pi 5) — Updated 2026-04-09
 
 ### Platform
 
 - Raspberry Pi 5 running Ubuntu 22.04 + ROS 2 Humble
-- Dynamixel XM430-W350R servos via U2D2 on `/dev/ttyACM0`
+- Dynamixel XM430-W350R servos via U2D2 (ROBOTIS OpenCR)
+- Teensy microcontroller for HX711 force sensor + HC-SR04 ultrasonic
 - Raspberry Pi Camera V2.1 at `/dev/video0`
+
+### USB Device Mapping (udev Rules)
+
+USB ports can swap on reboot. Use udev rules for stable device names:
+
+```bash
+sudo bash -c 'cat > /etc/udev/rules.d/99-feedbot.rules << "EOF"
+SUBSYSTEM=="tty", ATTRS{manufacturer}=="Teensyduino", SYMLINK+="teensy", MODE="0666"
+SUBSYSTEM=="tty", ATTRS{manufacturer}=="ROBOTIS", SYMLINK+="dynamixel", MODE="0666"
+EOF'
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+This creates `/dev/dynamixel` and `/dev/teensy` symlinks that always point to the correct devices.
 
 ### Dynamixel Servo Configuration
 
@@ -1174,12 +1190,27 @@ Monitoring tips using rqt and run_feeding.sh sim for quick testing
 | 15 | (unused) | Was gripper — replaced with feeder face + sensors |
 
 - **Baud rate:** 1000000 (changed from factory default 57600)
-- **Port:** `/dev/ttyACM0`
+- **Port:** `/dev/dynamixel` (symlink to `/dev/ttyACMx`)
 - **Protocol:** Dynamixel Protocol 2.0
+
+### Teensy Sensor Board
+
+The Teensy reads HX711 force sensor and HC-SR04 ultrasonic sensor, sending data over serial at 115200 baud.
+
+| Sensor | Teensy Pin | Serial Output Format |
+|--------|-----------|---------------------|
+| HX711 DOUT | Pin 2 | `Load Cell Reading: 9.2 g` |
+| HX711 SCK | Pin 3 | |
+| HC-SR04 TRIG | Pin 4 | `Distance (cm): 8.86` |
+| HC-SR04 ECHO | Pin 5 | |
+
+- **Port:** `/dev/teensy` (symlink to `/dev/ttyACMx`)
+- **Baud rate:** 115200
+- **Firmware:** `firmware/teensy_sensors.ino`
 
 ### Feeder Head (Replaced Gripper)
 
-The standard Open Manipulator-X gripper (servo ID 15) was removed and replaced with a custom feeder face. The following components are mounted on the feeder head:
+The standard Open Manipulator-X gripper (servo ID 15) was removed and replaced with a custom feeder face:
 
 | Component | Mesh File | URDF Link |
 |-----------|-----------|-----------|
@@ -1188,46 +1219,85 @@ The standard Open Manipulator-X gripper (servo ID 15) was removed and replaced w
 | HC-SR04 Ultrasonic Sensor | `sonar.stl` | `ultrasonic_link` |
 | HX711 Force Sensor | `forceSensor.stl` | `load_cell_frame` |
 
-All meshes are in CAD coordinates with origin at CAD (0,0,0). The URDF applies offsets relative to the feeder joint at CAD position (194, 0, 351) mm.
+All meshes are in CAD coordinates. The URDF applies offsets relative to the feeder joint at CAD position (194, 0, 351) mm.
+
+### One-Time Setup
+
+```bash
+# Install ROS 2 dependencies
+sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers \
+    ros-humble-moveit ros-humble-v4l2-camera ros-humble-rqt-image-view
+
+# Install Python dependencies
+pip3 install pyserial
+
+# Add user to dialout group (avoids chmod every boot)
+sudo usermod -aG dialout $USER
+# Then reboot
+
+# Create udev rules (see above)
+
+# Flash Teensy with firmware/teensy_sensors.ino via Arduino IDE
+```
 
 ### Hardware Launch
 
-Instead of `open_manipulator_x_bringup`, use the custom `feeding_robot` hardware launch:
-
 ```bash
-# Install dependencies (one-time)
-sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-moveit ros-humble-v4l2-camera
-pip3 install pyserial
-
-# Set serial port permissions
-sudo chmod 666 /dev/ttyACM0
-# Or permanently: sudo usermod -aG dialout $USER (then reboot)
-
-# Build and launch
 cd ~/feeding_robot_ws/ros2_feedbot_ws
-colcon build --symlink-install --packages-select feeding_robot
+colcon build --symlink-install --packages-select feeding_robot feedbot_fusion
 source install/setup.bash
 ros2 launch feeding_robot hardware.launch.py
 ```
 
-This launches:
-- `ros2_control_node` with Dynamixel hardware interface (4 joints, no gripper)
-- `robot_state_publisher` (TF tree)
-- `joint_state_broadcaster` + `arm_controller` (joint trajectory controller)
-- `v4l2_camera_node` (Pi camera → `/feeding_robot/camera/image_raw`)
+This launches all hardware nodes:
+- `ros2_control_node` — Dynamixel hardware interface (4 joints, no gripper)
+- `robot_state_publisher` — TF tree from URDF
+- `joint_state_broadcaster` + `arm_controller` — joint trajectory controller at 100 Hz
+- `v4l2_camera_node` — Pi camera → `/feeding_robot/camera/image_raw` (640x480)
+- `teensy_bridge` — serial bridge → `/spoon_force`, `/spoon/wrench`, `/feeding_robot/ultrasonic/range`, `/sonar_raw_cm`
+- `sonar_bridge` — routes ultrasonic data to `/sonar_plate_distance` or `/sonar_mouth_distance` based on feeding state
 
 ### Launch Arguments
 
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `port_name` | `/dev/dynamixel` | Dynamixel USB port |
+| `teensy_port` | `/dev/teensy` | Teensy serial port |
+| `camera_device` | `/dev/video0` | Camera device path |
+| `use_meshes` | `true` | Use STL mesh files in URDF |
+
 ```bash
-ros2 launch feeding_robot hardware.launch.py port_name:=/dev/ttyACM0 camera_device:=/dev/video0 use_meshes:=true
+ros2 launch feeding_robot hardware.launch.py port_name:=/dev/dynamixel teensy_port:=/dev/teensy
+```
+
+### Verifying Sensor Data
+
+```bash
+source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
+
+# Joint states
+ros2 topic echo /joint_states --once
+
+# Force sensor (Newtons)
+ros2 topic echo /spoon_force --once
+
+# Sonar distance (cm)
+ros2 topic echo /sonar_raw_cm --once
+
+# Camera frame rate
+ros2 topic hz /feeding_robot/camera/image_raw
+
+# View camera (requires display)
+ros2 run rqt_image_view rqt_image_view /feeding_robot/camera/image_raw
+
+# List all sensor topics
+ros2 topic list | grep -E "force|sonar|spoon|camera|joint"
 ```
 
 ### Moving Joints
 
 ```bash
-# Check joint states
 source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
-ros2 topic echo /joint_states --once
 
 # Move all joints to home position (0,0,0,0) over 3 seconds
 ros2 action send_goal /arm_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
@@ -1239,43 +1309,20 @@ ros2 action send_goal /arm_controller/follow_joint_trajectory control_msgs/actio
     }]
   }
 }"
-
-# Move a single joint (e.g., base to 0.5 rad)
-ros2 action send_goal /arm_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
-  trajectory: {
-    joint_names: [base_y_joint, lower_z_joint, upper_z_joint, feeder_joint],
-    points: [{
-      positions: [0.5, 0.0, 0.0, 0.0],
-      time_from_start: {sec: 3, nanosec: 0}
-    }]
-  }
-}"
-```
-
-### Viewing Camera Feed
-
-```bash
-# Check camera is publishing
-ros2 topic hz /feeding_robot/camera/image_raw
-
-# View image (requires display)
-sudo apt install ros-humble-rqt-image-view
-ros2 run rqt_image_view rqt_image_view /feeding_robot/camera/image_raw
 ```
 
 ### Scanning/Diagnosing Dynamixel Servos
 
 ```bash
-# Scan for connected servos at all common baud rates
 python3 -c "
 from dynamixel_sdk import *
-port = PortHandler('/dev/ttyACM0')
+port = PortHandler('/dev/dynamixel')
 packet = PacketHandler(2.0)
 port.openPort()
-for baud in [57600, 115200, 1000000, 9600, 4000000]:
+for baud in [57600, 115200, 1000000]:
     port.setBaudRate(baud)
     print(f'Scanning baud rate: {baud}...')
-    for i in range(0, 30):
+    for i in range(0, 20):
         model, result, error = packet.ping(port, i)
         if result == 0:
             print(f'  FOUND servo ID: {i}, model: {model}')
@@ -1286,48 +1333,82 @@ port.closePort()
 
 ### Changing Servo Baud Rate
 
-If servos are at wrong baud rate (e.g., factory 57600), change to 1000000:
+If servos are at factory 57600, change to 1000000:
 
 ```bash
 python3 -c "
 from dynamixel_sdk import *
-port = PortHandler('/dev/ttyACM0')
+port = PortHandler('/dev/dynamixel')
 packet = PacketHandler(2.0)
 port.openPort()
-port.setBaudRate(57600)  # current baud rate
+port.setBaudRate(57600)
 for dxl_id in [11, 12, 13, 14]:
-    packet.write1ByteTxRx(port, dxl_id, 64, 0)  # disable torque
-    result, error = packet.write1ByteTxRx(port, dxl_id, 8, 3)  # 3 = 1000000 bps
-    if result == 0:
-        print(f'ID {dxl_id}: baud rate set to 1000000')
-    else:
-        print(f'ID {dxl_id}: FAILED')
+    packet.write1ByteTxRx(port, dxl_id, 64, 0)
+    result, error = packet.write1ByteTxRx(port, dxl_id, 8, 3)
+    print(f'ID {dxl_id}: {\"OK\" if result == 0 else \"FAILED\"} ')
 port.closePort()
 print('Power cycle the servos now.')
 "
 ```
 
-**Important:** After changing baud rate, power cycle the servos (turn 12V supply off and on).
+### Testing Teensy Serial Directly
 
-### Key Files (feeding_robot package)
+```bash
+python3 -c "
+import serial, time
+s = serial.Serial('/dev/teensy', 115200, timeout=2)
+time.sleep(2)
+for i in range(5):
+    print(s.readline().decode().strip())
+s.close()
+"
+```
+
+Expected output:
+```
+Distance (cm): 8.86
+Load Cell Reading: 9.2 g
+Distance (cm): 8.84
+Load Cell Reading: 9.1 g
+```
+
+### Key Files
 
 | File | Purpose |
 |------|---------|
-| `description/feeding_robot_ros2_control.xacro` | Hardware interface config (Dynamixel plugin, servo IDs, baud rate, GPIO blocks) |
-| `description/feeding_robot_core.xacro` | URDF links/joints, mesh references, sensor mounts |
-| `config/feeding_robot_controllers.yaml` | Controller manager config (joint trajectory controller, 100 Hz) |
-| `launch/hardware.launch.py` | Real hardware launch (servos + camera) |
-| `launch/gazebo.launch.py` | Simulation launch (Gazebo + bridges) |
-| `meshes/visual/` | STL mesh files (frontface, camera, sonar, forceSensor, arm links) |
+| `feeding_robot/description/feeding_robot_ros2_control.xacro` | Dynamixel hardware interface (servo IDs, baud rate, GPIO blocks) |
+| `feeding_robot/description/feeding_robot_core.xacro` | URDF links/joints, mesh references, sensor mounts |
+| `feeding_robot/config/feeding_robot_controllers.yaml` | Controller manager (joint trajectory controller, 100 Hz) |
+| `feeding_robot/launch/hardware.launch.py` | Real hardware launch (servos + camera + sensors) |
+| `feeding_robot/launch/gazebo.launch.py` | Simulation launch (Gazebo + bridges) |
+| `feeding_robot/meshes/visual/` | STL meshes (frontface, camera, sonar, forceSensor, arm links) |
+| `feedbot_fusion/teensy_bridge_node.py` | Teensy serial bridge (force + sonar → ROS topics) |
+| `feedbot_fusion/sonar_bridge_node.py` | Routes sonar to plate/mouth topics by feeding state |
+| `firmware/teensy_sensors.ino` | Teensy firmware (HX711 + HC-SR04) |
+
+### ROS 2 Topic Map (Real Hardware)
+
+| Topic | Type | Source | Rate |
+|-------|------|--------|------|
+| `/joint_states` | JointState | joint_state_broadcaster | 50 Hz |
+| `/feeding_robot/camera/image_raw` | Image | v4l2_camera | 30 Hz |
+| `/spoon_force` | Float64 | teensy_bridge | ~10 Hz |
+| `/spoon/wrench` | WrenchStamped | teensy_bridge | ~10 Hz |
+| `/feeding_robot/ultrasonic/range` | Range | teensy_bridge | ~10 Hz |
+| `/sonar_raw_cm` | Float64 | teensy_bridge | ~10 Hz |
+| `/sonar_plate_distance` | Float64 | sonar_bridge | ~10 Hz |
+| `/sonar_mouth_distance` | Float64 | sonar_bridge | ~10 Hz |
 
 ### Troubleshooting
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `Failed to open port` | Permission denied or wrong port | `sudo chmod 666 /dev/ttyACM0`, check `ls /dev/ttyACM*` |
-| `No status packet` (ping fails) | Wrong baud rate or no power | Scan all baud rates, check 12V supply is on |
-| `SYNC_READ_FAIL` continuously | Baud rate too slow for update rate | Ensure servos are at 1000000 baud |
+| `Failed to open port` | Permission denied or wrong port | Check `ls /dev/dynamixel /dev/teensy`; recreate udev rules |
+| `No status packet` (ping fails) | Wrong baud rate or no power | Scan all baud rates; check 12V supply is on |
+| `SYNC_READ_FAIL` continuously | Baud too slow for update rate | Ensure servos at 1000000 baud |
 | `plugin not found` | Wrong plugin name | Use `dynamixel_hardware_interface/DynamixelHardware` |
-| `number_of_joints not found` | Missing hardware params | Check ros2_control xacro has all required params |
-| Camera not publishing | Wrong device or not enabled | Check `ls /dev/video*`, run `sudo raspi-config` to enable camera |
-| Meshes missing in RViz | STL files not in workspace `src/` | Copy from project root `feeding_robot/meshes/visual/` to workspace |
+| Ports swapped after reboot | USB enumeration order changed | Use udev symlinks (`/dev/dynamixel`, `/dev/teensy`) |
+| No force/sonar data | Teensy not flashed or disconnected | Test with direct serial read (see above) |
+| Teensy `OSError: I/O error` | Teensy disconnected mid-read | Bridge auto-reconnects; check USB cable |
+| Camera not publishing | Wrong device or not enabled | Check `ls /dev/video*`; `sudo raspi-config` → enable camera |
+| Meshes missing in RViz | STL files not in workspace | Ensure `frontface.stl`, `camera.stl`, `sonar.stl`, `forceSensor.stl` in `meshes/visual/` |
