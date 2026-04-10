@@ -53,13 +53,14 @@ L3_LENGTH = 0.199    # horizontal arm: elbow to wrist (upper_arm_length)
 FEEDER_LENGTH = 0.168  # feeder + fork tip (0.148 + 0.02)
 
 # Predefined joint poses [base_y, lower_z, upper_z, feeder]
-# Patient sits to the RIGHT of the robot (positive base_y rotation)
+# Calibrated on real hardware 2026-04-10
+# Patient sits to the LEFT of the robot (negative base_y rotation)
 POSES = {
-    'home':        [0.0,   0.3,  -0.3,  -1.0],   # slight bend, camera at plate
-    'plate_above': [0.0,   0.5,  -0.5,  -0.8],   # bent over plate for food detection
-    'pre_feed':    [1.3,   0.3,  -0.3,   0.0],   # rotate right to patient, camera forward
-    'feed':        [1.3,   0.2,  -0.2,   0.3],   # extend toward mouth
-    'retract':     [0.7,   0.3,  -0.3,   0.0],   # intermediate retract
+    'home':        [ 0.121, -0.325,  0.227, -1.448],  # camera sees plate from above
+    'plate_above': [ 0.077,  0.529,  0.026, -1.643],  # fork over plate, ready to stab
+    'pre_feed':    [-1.342,  0.652, -1.727, -1.083],  # rotated to patient, fork raised
+    'feed':        [-1.465,  0.284, -1.115, -0.716],  # fork at patient's mouth
+    'retract':     [-1.342,  0.163, -1.724, -1.083],  # pulling back from patient
 }
 
 # Joint limits (from URDF)
