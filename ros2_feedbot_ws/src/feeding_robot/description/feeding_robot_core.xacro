@@ -68,7 +68,6 @@
           <mesh filename="${mesh_vis}/base_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0 0 0" rpy="0 0 0"/>
-        <material name="dark_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -122,7 +121,6 @@
           <mesh filename="${mesh_vis}/shoulder_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0.025 0 -0.088" rpy="0 0 0"/>
-        <material name="dark_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -176,7 +174,6 @@
           <mesh filename="${mesh_vis}/lower_arm_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0.016 0 -0.131" rpy="0 0 0"/>
-        <material name="light_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -237,7 +234,6 @@
           <mesh filename="${mesh_vis}/upper_arm_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0.005 0 -0.331" rpy="0 0 0"/>
-        <material name="light_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -282,7 +278,7 @@
     <parent link="upper_arm_link"/>
     <child link="feeder_link"/>
     <origin xyz="${upper_arm_length} 0 0" rpy="0 0 0"/>
-    <axis xyz="0 -1 0"/>
+    <axis xyz="0 1 0"/>
     <limit lower="${-90.0 * pi / 180.0}" upper="${115.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
     <dynamics damping="0.2" friction="0.05"/>
@@ -442,6 +438,33 @@
     <parent link="feeder_link"/>
     <child link="load_cell_frame"/>
     <origin xyz="${feeder_length} 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== PLATE (fixed in front of robot) ==================== -->
+  <link name="plate_link">
+    <visual>
+      <geometry>
+        <mesh filename="${mesh_vis}/plate_printing.stl"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="${mesh_vis}/plate_printing.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+               iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="plate_joint" type="fixed">
+    <parent link="world"/>
+    <child link="plate_link"/>
+    <!-- Plate position: ~15cm in front of base, at table height (below base) -->
+    <origin xyz="0.15 0.0 -0.02" rpy="0 0 0"/>
   </joint>
 
 </robot>
