@@ -177,6 +177,7 @@ class VisionNode(Node):
         self.bearing_pub = self.create_publisher(Point, '/food_bearing', 10)
         self.plate_pub = self.create_publisher(Bool, '/plate_detected', 10)
         self.objects_pub = self.create_publisher(String, '/objects_detected', 10)
+        self.annotated_pub = self.create_publisher(Image, '/vision/annotated_image', 10)
 
         self.get_logger().info(
             f'Vision node started — backend: {self._backend}, '
@@ -499,6 +500,15 @@ class VisionNode(Node):
                 self.get_logger().info(
                     f'[{self._backend}] No food — objects: {", ".join(all_names)}',
                     throttle_duration_sec=5.0)
+
+        # Publish annotated frame with bounding boxes
+        try:
+            annotated_msg = self.bridge.cv2_to_imgmsg(frame, encoding='bgr8')
+            annotated_msg.header.stamp = self.get_clock().now().to_msg()
+            annotated_msg.header.frame_id = 'camera_link'
+            self.annotated_pub.publish(annotated_msg)
+        except Exception:
+            pass
 
 
 def main(args=None):
