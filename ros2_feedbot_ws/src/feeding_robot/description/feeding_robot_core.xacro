@@ -157,7 +157,8 @@
   <joint name="lower_z_joint" type="revolute">
     <parent link="shoulder_link"/>
     <child link="lower_arm_link"/>
-    <origin xyz="0 0 ${shoulder_joint_z - base_top_z}" rpy="0 0 0"/>
+    <!-- Offset: servo zero = arm tilted ~45° forward from vertical -->
+    <origin xyz="0 0 ${shoulder_joint_z - base_top_z}" rpy="0 0.785 0"/>
     <axis xyz="0 1 0"/>
     <limit lower="${-90.0 * pi / 180.0}" upper="${90.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
@@ -217,7 +218,8 @@
   <joint name="upper_z_joint" type="revolute">
     <parent link="lower_arm_link"/>
     <child link="upper_arm_link"/>
-    <origin xyz="0 0 ${lower_arm_length}" rpy="0 0 0"/>
+    <!-- Offset: servo zero = elbow bent ~-45° (horizontal arm angles down) -->
+    <origin xyz="0 0 ${lower_arm_length}" rpy="0 -0.785 0"/>
     <axis xyz="0 1 0"/>
     <limit lower="${-120.0 * pi / 180.0}" upper="${75.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
@@ -463,8 +465,8 @@
   <joint name="plate_joint" type="fixed">
     <parent link="world"/>
     <child link="plate_link"/>
-    <!-- Plate position: ~15cm in front of base, at table height (below base) -->
-    <origin xyz="0.15 0.0 -0.02" rpy="0 0 0"/>
+    <!-- Plate position: 25cm from base front (~30cm from base axis) -->
+    <origin xyz="0.30 0.0 -0.02" rpy="0 0 0"/>
   </joint>
 
 </robot>
