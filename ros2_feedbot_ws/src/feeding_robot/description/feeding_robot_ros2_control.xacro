@@ -15,8 +15,8 @@
       <state_interface name="Torque Enable"/>
       <state_interface name="Present Input Voltage"/>
       <param name="Position P Gain">600</param>
-      <param name="Position I Gain">50</param>
-      <param name="Position D Gain">200</param>
+      <param name="Position I Gain">0</param>
+      <param name="Position D Gain">300</param>
       <param name="Profile Velocity">150</param>
       <param name="Profile Acceleration">40</param>
       <param name="Drive Mode">0</param>
