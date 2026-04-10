@@ -153,6 +153,14 @@ def generate_launch_description():
         output='screen',
     )
 
+    # ==================== FEEDING FSM (Autonomous feeding state machine) ====================
+    feeding_fsm_node = Node(
+        package='feedbot_fusion',
+        executable='feeding_fsm',
+        name='feeding_fsm_node',
+        output='screen',
+    )
+
     # ==================== TEENSY BRIDGE (Force Sensor + Sonar) ====================
     teensy_bridge_node = Node(
         package='feedbot_fusion',
@@ -247,6 +255,7 @@ def generate_launch_description():
         teensy_bridge_node,
         sonar_bridge_node,
         face_node,
+        feeding_fsm_node,
         estop_node,
         benchmark_node,
         arima_node,
