@@ -153,6 +153,30 @@ def generate_launch_description():
         output='screen',
     )
 
+    # ==================== FUSION NODE (6-state EKF sensor fusion) ====================
+    fusion_node = Node(
+        package='feedbot_fusion',
+        executable='fusion_node',
+        name='fusion_node',
+        output='screen',
+    )
+
+    # ==================== FUZZY CONTROLLER (force/angle regulation) ====================
+    fuzzy_node = Node(
+        package='feedbot_fusion',
+        executable='fuzzy_controller',
+        name='fuzzy_controller_node',
+        output='screen',
+    )
+
+    # ==================== FORCE NODE (force filtering) ====================
+    force_node = Node(
+        package='feedbot_fusion',
+        executable='force_node',
+        name='force_node',
+        output='screen',
+    )
+
     # ==================== FEEDING FSM (Autonomous feeding state machine) ====================
     feeding_fsm_node = Node(
         package='feedbot_fusion',
@@ -255,6 +279,9 @@ def generate_launch_description():
         teensy_bridge_node,
         sonar_bridge_node,
         face_node,
+        fusion_node,
+        force_node,
+        fuzzy_node,
         feeding_fsm_node,
         estop_node,
         benchmark_node,

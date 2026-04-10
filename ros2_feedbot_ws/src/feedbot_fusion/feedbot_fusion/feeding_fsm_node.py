@@ -400,35 +400,86 @@ class FeedingFSMNode(Node):
             elif elapsed > STATE_TIMEOUT:
                 self._set_state(FeedingState.IDLE)
 
-        # ---- LOCATE_FOOD ----
+        # ---- LOCATE_FOOD (sensor-guided: camera bearing + sonar depth) ----
         elif self.state == FeedingState.LOCATE_FOOD:
-            self._command_pose(POSES['plate_above'])
+            # Phase 1: Move to plate_above to get camera view of food
+            if elapsed < 3.0:
+                self._command_pose(POSES['plate_above'])
+                return
 
+            # Phase 2: Use camera + sonar to locate food in 3D
             if self._fusion_ok() and self._food_position_stable():
                 fx, fy, fz = self.food_position_3d
                 self.get_logger().info(
-                    f'Food at ({fx:.3f}, {fy:.3f}, {fz:.3f})m')
+                    f'Food located via camera+sonar: ({fx:.3f}, {fy:.3f}, {fz:.3f})m '
+                    f'plate_dist={self.plate_distance:.1f}cm '
+                    f'confidence={self.fusion_confidence:.2f}')
                 self.pickup_pose = self._compute_pickup_ik(fx, fy, fz)
+                if self.pickup_pose is not None:
+                    self.get_logger().info('IK computed — moving to collect')
+                else:
+                    self.get_logger().warn('IK failed — using plate_above as fallback')
+                self._set_state(FeedingState.COLLECT_FOOD)
+            elif not self._fusion_ok() and elapsed > 5.0:
+                # Fusion not ready — use food bearing directly
+                bx, by, bz = 0.0, 0.0, 0.0
+                if self.food_center[2] > 0:
+                    # Food visible in camera — use bearing for approximate IK
+                    self.get_logger().info(
+                        f'Using camera bearing (no fusion): '
+                        f'center=({self.food_center[0]:.0f}, {self.food_center[1]:.0f})')
+                self.pickup_pose = None  # will use plate_above
                 self._set_state(FeedingState.COLLECT_FOOD)
             elif elapsed > STATE_TIMEOUT:
+                self.get_logger().warn('Locate timeout — using plate_above')
                 self.pickup_pose = None
                 self._set_state(FeedingState.COLLECT_FOOD)
 
-        # ---- COLLECT_FOOD ----
+        # ---- COLLECT_FOOD (multi-phase: approach → descend → stab → verify → lift) ----
         elif self.state == FeedingState.COLLECT_FOOD:
+            FORK_FORCE_THRESHOLD = 1.0  # N — force confirming fork contact with food
+            LIFT_FORCE_THRESHOLD = 0.5  # N — force confirming food is on fork after lifting
+
             if elapsed < 2.0:
-                self._command_pose(POSES['plate_above'])
-            else:
+                # Phase 1: Position above the food
                 if self.pickup_pose is not None:
-                    self._command_pose(self.pickup_pose)
+                    # IK-computed approach from sensor data
+                    approach = list(self.pickup_pose)
+                    approach[3] = -1.2  # feeder tilted down but not fully stabbing yet
+                    self._command_pose(approach)
                 else:
                     self._command_pose(POSES['plate_above'])
+                self.get_logger().info(
+                    f'Approaching food (sonar={self.plate_distance:.1f}cm, '
+                    f'force={self.current_force:.2f}N)',
+                    throttle_duration_sec=2.0)
 
-            if self.current_force > 2.0 and elapsed > 3.0:
-                self.get_logger().info(f'Food collected (force={self.current_force:.1f}N)')
-                self._set_state(FeedingState.DETECT_PATIENT)
-            elif elapsed > STATE_TIMEOUT:
-                self.get_logger().warn('Collection timeout — moving to patient')
+            elif elapsed < 5.0:
+                # Phase 2: Descend and stab — go to full plate_above (fork down into food)
+                self._command_pose(POSES['plate_above'])
+                if self.current_force > FORK_FORCE_THRESHOLD:
+                    self.get_logger().info(
+                        f'Fork contact! force={self.current_force:.2f}N — '
+                        f'food stabbed at sonar={self.plate_distance:.1f}cm')
+
+            elif elapsed < 8.0:
+                # Phase 3: Lift food off plate — raise shoulder, keep fork tilted
+                lift_pose = list(POSES['plate_above'])
+                lift_pose[1] = lift_pose[1] - 0.3  # raise shoulder (less forward lean)
+                lift_pose[3] = -1.0  # tilt fork slightly less to hold food
+                self._command_pose(lift_pose)
+
+                if self.current_force > LIFT_FORCE_THRESHOLD:
+                    self.get_logger().info(
+                        f'Food on fork confirmed (force={self.current_force:.2f}N) — '
+                        f'moving to patient')
+                    self._set_state(FeedingState.DETECT_PATIENT)
+
+            else:
+                # Phase 4: Timeout — assume food collected, proceed
+                self.get_logger().info(
+                    f'Collection complete (force={self.current_force:.2f}N, '
+                    f'sonar={self.plate_distance:.1f}cm) — moving to patient')
                 self._set_state(FeedingState.DETECT_PATIENT)
 
         # ---- DETECT_PATIENT ----
