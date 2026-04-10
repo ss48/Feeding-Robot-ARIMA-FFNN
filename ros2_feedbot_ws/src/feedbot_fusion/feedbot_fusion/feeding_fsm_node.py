@@ -505,7 +505,7 @@ class FeedingFSMNode(Node):
 
         # ---- WAITING (auto-start on plate+food, or manual spacebar) ----
         if self.state == FeedingState.WAITING:
-            self._command_pose(POSES['home'])
+            # Don't continuously command home — allows teleop to work
             if self.plate_detected and self.food_visible:
                 self.get_logger().info(
                     'Plate and food detected — auto-starting feeding cycle')
@@ -517,7 +517,6 @@ class FeedingFSMNode(Node):
 
         # ---- IDLE ----
         elif self.state == FeedingState.IDLE:
-            self._command_pose(POSES['home'])
             if self.food_visible:
                 self._set_state(FeedingState.DETECT_FOOD)
 
