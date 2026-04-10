@@ -80,11 +80,11 @@
       <state_interface name="Present Current"/>
       <state_interface name="Torque Enable"/>
       <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">800</param>
-      <param name="Position I Gain">100</param>
-      <param name="Position D Gain">100</param>
-      <param name="Profile Velocity">100</param>
-      <param name="Profile Acceleration">25</param>
+      <param name="Position P Gain">400</param>
+      <param name="Position I Gain">20</param>
+      <param name="Position D Gain">150</param>
+      <param name="Profile Velocity">60</param>
+      <param name="Profile Acceleration">15</param>
       <param name="Drive Mode">0</param>
       <param name="Return Delay Time">0</param>
     </gpio>
@@ -98,11 +98,11 @@
       <state_interface name="Present Current"/>
       <state_interface name="Torque Enable"/>
       <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">800</param>
-      <param name="Position I Gain">100</param>
-      <param name="Position D Gain">100</param>
-      <param name="Profile Velocity">100</param>
-      <param name="Profile Acceleration">25</param>
+      <param name="Position P Gain">400</param>
+      <param name="Position I Gain">20</param>
+      <param name="Position D Gain">150</param>
+      <param name="Profile Velocity">60</param>
+      <param name="Profile Acceleration">15</param>
       <param name="Drive Mode">0</param>
       <param name="Return Delay Time">0</param>
     </gpio>
@@ -116,11 +116,11 @@
       <state_interface name="Present Current"/>
       <state_interface name="Torque Enable"/>
       <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">800</param>
-      <param name="Position I Gain">100</param>
-      <param name="Position D Gain">100</param>
-      <param name="Profile Velocity">100</param>
-      <param name="Profile Acceleration">25</param>
+      <param name="Position P Gain">400</param>
+      <param name="Position I Gain">20</param>
+      <param name="Position D Gain">150</param>
+      <param name="Profile Velocity">60</param>
+      <param name="Profile Acceleration">15</param>
       <param name="Drive Mode">0</param>
       <param name="Return Delay Time">0</param>
     </gpio>
@@ -134,11 +134,11 @@
       <state_interface name="Present Current"/>
       <state_interface name="Torque Enable"/>
       <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">800</param>
-      <param name="Position I Gain">100</param>
-      <param name="Position D Gain">100</param>
-      <param name="Profile Velocity">100</param>
-      <param name="Profile Acceleration">25</param>
+      <param name="Position P Gain">400</param>
+      <param name="Position I Gain">20</param>
+      <param name="Position D Gain">150</param>
+      <param name="Profile Velocity">60</param>
+      <param name="Profile Acceleration">15</param>
       <param name="Drive Mode">0</param>
       <param name="Return Delay Time">0</param>
     </gpio>

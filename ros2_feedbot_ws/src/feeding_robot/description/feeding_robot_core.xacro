@@ -67,8 +67,8 @@
         <geometry>
           <mesh filename="${mesh_vis}/base_link.stl" scale="${stl_scale}"/>
         </geometry>
-        <!-- CAD origin is at world origin, no offset needed -->
         <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="dark_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -121,8 +121,8 @@
         <geometry>
           <mesh filename="${mesh_vis}/shoulder_link.stl" scale="${stl_scale}"/>
         </geometry>
-        <!-- Offset: shift mesh so joint position (CAD X=-25,Y=0,Z=88) is at link origin -->
         <origin xyz="0.025 0 -0.088" rpy="0 0 0"/>
+        <material name="dark_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -175,8 +175,8 @@
         <geometry>
           <mesh filename="${mesh_vis}/lower_arm_link.stl" scale="${stl_scale}"/>
         </geometry>
-        <!-- Offset: shift mesh so joint position (CAD X=-16,Y=0,Z=131) is at link origin -->
         <origin xyz="0.016 0 -0.131" rpy="0 0 0"/>
+        <material name="light_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -236,8 +236,8 @@
         <geometry>
           <mesh filename="${mesh_vis}/upper_arm_link.stl" scale="${stl_scale}"/>
         </geometry>
-        <!-- Offset: shift mesh so elbow joint (CAD X=-5,Y=0,Z=331) is at link origin -->
         <origin xyz="0.005 0 -0.331" rpy="0 0 0"/>
+        <material name="light_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -282,7 +282,7 @@
     <parent link="upper_arm_link"/>
     <child link="feeder_link"/>
     <origin xyz="${upper_arm_length} 0 0" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="0 -1 0"/>
     <limit lower="${-90.0 * pi / 180.0}" upper="${115.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
     <dynamics damping="0.2" friction="0.05"/>
