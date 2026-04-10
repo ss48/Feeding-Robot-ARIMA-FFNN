@@ -61,10 +61,10 @@ AREA_TO_DISTANCE_K = 5000.0
 # EKF dimensions
 STATE_DIM = 6   # [food_x, food_y, food_z, plate_dist, mouth_dist, force]
 
-# Robot link lengths (metres) for forward kinematics
-L1_HEIGHT = 0.042   # joint1→joint2 vertical offset
-L2_LENGTH = 0.181   # link2 length (joint2→joint3)
-L3_LENGTH = 0.164   # link3 length (joint3→joint4/feeder_head)
+# Robot link lengths (metres) — from feeding_robot_core.xacro
+L1_HEIGHT = 0.043   # base_y to shoulder (0.131 - 0.088)
+L2_LENGTH = 0.200   # vertical arm: shoulder to elbow (0.331 - 0.131)
+L3_LENGTH = 0.199   # horizontal arm: elbow to wrist (upper_arm_length)
 
 # Sensor timeout thresholds (seconds)
 VISION_TIMEOUT = 1.0
