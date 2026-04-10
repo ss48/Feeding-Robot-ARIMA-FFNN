@@ -61,8 +61,9 @@ FOOD_NAMES = {
     'hot_dog', 'pizza', 'donut', 'cake', 'strawberry', 'grape', 'kiwi',
 }
 
-# Fruits NOT in COCO — need HSV fallback even when MediaPipe is active
-HSV_ONLY_FRUITS = {'grape', 'strawberry', 'kiwi'}
+# Fruits that benefit from HSV supplement even when MediaPipe is active
+# (COCO detects apple/orange but often misses them at low resolution or odd angles)
+HSV_SUPPLEMENT_FRUITS = {'grape', 'strawberry', 'kiwi', 'apple', 'orange'}
 
 PLATE_NAMES = {'bowl', 'cup', 'plate', 'dining table'}
 
@@ -83,8 +84,9 @@ FOOD_CLASS_IDS = {
 # HSV fallback ranges
 # ───────────────────────────────────────────────────────────────────────
 FRUIT_HSV_RANGES = {
-    'apple':      [((0, 120, 70),  (10, 255, 255)),
-                   ((170, 120, 70), (180, 255, 255))],
+    'apple':      [((0, 120, 70),  (10, 255, 255)),     # red skin
+                   ((170, 120, 70), (180, 255, 255)),    # red skin (wrap)
+                   ((15, 30, 180), (35, 120, 255))],     # sliced flesh (pale yellow/white)
     'strawberry': [((0, 150, 100), (8, 255, 255)),
                    ((172, 150, 100), (180, 255, 255))],
     'banana':     [((20, 100, 100), (35, 255, 255))],
@@ -352,9 +354,9 @@ class VisionNode(Node):
     # HSV supplement for non-COCO fruits (grapes, strawberry, kiwi)
     # ────────────────────────────────────────────────────────────────
     def _detect_hsv_supplement(self, frame, existing_detections):
-        """Run HSV detection only for fruits not in COCO (grape, strawberry, kiwi)."""
+        """Run HSV detection for fruits that MediaPipe may miss."""
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        for fruit_name in HSV_ONLY_FRUITS:
+        for fruit_name in HSV_SUPPLEMENT_FRUITS:
             if fruit_name in existing_detections:
                 continue
             if fruit_name not in FRUIT_HSV_RANGES:

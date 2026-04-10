@@ -147,7 +147,7 @@ def generate_launch_description():
         parameters=[{
             'camera_topic': '/feeding_robot/camera/image_raw',
             'detection_method': 'auto',
-            'ml_confidence': 0.25,
+            'ml_confidence': 0.15,
             'process_every_n': 3,
         }],
         output='screen',
