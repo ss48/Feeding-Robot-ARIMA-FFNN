@@ -28,18 +28,18 @@ arm_controller:
     allow_partial_joints_goal: false
 
     constraints:
-      stopped_velocity_tolerance: 0.01
+      stopped_velocity_tolerance: 0.05
       goal_time: 0.0
 
       base_y_joint:
-        trajectory: 0.1
-        goal: 0.05
+        trajectory: 1.0
+        goal: 0.1
       lower_z_joint:
-        trajectory: 0.1
-        goal: 0.05
+        trajectory: 1.0
+        goal: 0.1
       upper_z_joint:
-        trajectory: 0.1
-        goal: 0.05
+        trajectory: 1.0
+        goal: 0.1
       feeder_joint:
-        trajectory: 0.1
-        goal: 0.05
+        trajectory: 1.0
+        goal: 0.1
