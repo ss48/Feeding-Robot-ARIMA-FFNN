@@ -52,6 +52,16 @@ def generate_launch_description():
         description='Launch RViz2 as digital twin (set true when monitor connected)'
     )
 
+    benchmark_arg = DeclareLaunchArgument(
+        'benchmark', default_value='false',
+        description='Enable performance benchmarking'
+    )
+
+    mode_arg = DeclareLaunchArgument(
+        'mode', default_value='pid_only',
+        description='Control mode: pid_only or pid_arima'
+    )
+
     # ==================== ROBOT DESCRIPTION ====================
     xacro_file = os.path.join(pkg_dir, 'description', 'feeding_robot.urdf.xacro')
     robot_description = ParameterValue(
@@ -193,6 +203,25 @@ def generate_launch_description():
         condition=LaunchConfigurationEquals('digital_twin', 'true'),
     )
 
+    # ==================== BENCHMARK (performance metrics) ====================
+    benchmark_node = Node(
+        package='feedbot_fusion',
+        executable='benchmark_node',
+        name='benchmark_node',
+        parameters=[{'mode': LaunchConfiguration('mode')}],
+        output='screen',
+        condition=LaunchConfigurationEquals('benchmark', 'true'),
+    )
+
+    # ==================== ARIMA-FFNN (predictive controller) ====================
+    arima_node = Node(
+        package='feedbot_fusion',
+        executable='arima_ffnn',
+        name='arima_ffnn_node',
+        output='screen',
+        condition=LaunchConfigurationEquals('mode', 'pid_arima'),
+    )
+
     # ==================== SONAR BRIDGE (routes sonar to plate/mouth topics) ====================
     sonar_bridge_node = Node(
         package='feedbot_fusion',
@@ -207,6 +236,8 @@ def generate_launch_description():
         camera_device_arg,
         teensy_port_arg,
         digital_twin_arg,
+        benchmark_arg,
+        mode_arg,
         ros2_control_node,
         robot_state_publisher,
         delayed_joint_state_broadcaster,
@@ -217,5 +248,7 @@ def generate_launch_description():
         sonar_bridge_node,
         face_node,
         estop_node,
+        benchmark_node,
+        arima_node,
         rviz2,
     ])

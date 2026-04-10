@@ -37,6 +37,8 @@ setup(
             'face_node = feedbot_fusion.face_node:main',
             'teleop_arm = feedbot_fusion.teleop_arm_node:main',
             'estop_node = feedbot_fusion.estop_node:main',
+            'benchmark_node = feedbot_fusion.benchmark_node:main',
+            'arima_feedforward = feedbot_fusion.arima_feedforward_node:main',
         ],
     },
 )

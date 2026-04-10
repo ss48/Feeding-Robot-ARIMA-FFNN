@@ -95,6 +95,9 @@ class FeedingFSMNode(Node):
     def __init__(self):
         super().__init__('feeding_fsm_node')
 
+        self.declare_parameter('use_arima_feedforward', False)
+        self.use_arima_ff = self.get_parameter('use_arima_feedforward').value
+
         self.state = FeedingState.WAITING
         self.state_start_time = self.get_clock().now()
 
@@ -320,8 +323,21 @@ class FeedingFSMNode(Node):
 
     def _command_pose(self, pose, duration_sec=TRAJECTORY_DURATION_SEC):
         self.target_pose = pose
-        msg = Float64MultiArray()
-        msg.data = [float(p) for p in pose]
+
+        if self.use_arima_ff and len(self.predicted_state) >= 4:
+            # ARIMA feedforward: blend predicted trajectory with target
+            # This pre-compensates for expected motion, reducing lag
+            ff_gain = 0.2
+            adjusted = []
+            for i in range(4):
+                pred_offset = ff_gain * (self.predicted_state[i] - list(self.current_positions.values())[i])
+                adjusted.append(float(pose[i]) + pred_offset)
+            msg = Float64MultiArray()
+            msg.data = adjusted
+        else:
+            msg = Float64MultiArray()
+            msg.data = [float(p) for p in pose]
+
         self.cmd_pub.publish(msg)
 
     def _classify_food(self):

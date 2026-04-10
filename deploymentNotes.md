@@ -2092,6 +2092,108 @@ EMERGENCY_STOP ── (any state, triggered by E-Stop button or /emergency_stop 
 
 ---
 
+## ARIMA-FFNN vs PID Performance Comparison
+
+### Overview
+
+The robot supports two control modes for A/B performance comparison:
+
+| Mode | Description | What's Active |
+|------|-------------|---------------|
+| `pid_only` | Dynamixel internal PID only (baseline) | Servo PID control, no predictions |
+| `pid_arima` | PID + ARIMA-FFNN feedforward | Servo PID + predictive compensation |
+
+### How ARIMA Feedforward Works
+
+```
+ARIMA-FFNN predicts next joint positions → feedforward offset computed →
+trajectory goal pre-compensated → PID starts correcting earlier → less lag
+```
+
+The feedforward offset is: `offset[i] = gain * (predicted[i] - current[i])`
+This anticipates where the joint will be, reducing reactive delay.
+
+### Running the Benchmark
+
+**Step 1: PID-only baseline (10 feeding cycles)**
+```bash
+ros2 launch feeding_robot hardware.launch.py benchmark:=true mode:=pid_only
+# Run teleop or autonomous feeding for several cycles
+# Ctrl+C when done — CSV saved to ~/feedbot_benchmark/
+```
+
+**Step 2: PID+ARIMA mode (10 feeding cycles)**
+```bash
+ros2 launch feeding_robot hardware.launch.py benchmark:=true mode:=pid_arima
+# Run the same trajectory/cycles
+# Ctrl+C — CSV saved to ~/feedbot_benchmark/
+```
+
+**Step 3: Compare results**
+```bash
+ls ~/feedbot_benchmark/
+# pid_only_20260410_093700.csv
+# pid_arima_20260410_094200.csv
+```
+
+### Live Metrics Monitoring
+
+```bash
+# Watch real-time metrics (JSON)
+ros2 topic echo /benchmark/metrics
+```
+
+Output example:
+```json
+{
+  "mode": "pid_arima",
+  "base_y_joint": {"rmse": 0.012, "overshoot": 0.035, "settle_time": 0.8, "avg_jerk": 12.5},
+  "lower_z_joint": {"rmse": 0.015, "overshoot": 0.042, "settle_time": 1.1, "avg_jerk": 15.2},
+  "upper_z_joint": {"rmse": 0.010, "overshoot": 0.028, "settle_time": 0.6, "avg_jerk": 10.1},
+  "feeder_joint": {"rmse": 0.008, "overshoot": 0.020, "settle_time": 0.5, "avg_jerk": 8.3},
+  "avg_cycle_time": 12.5,
+  "cycles": 5
+}
+```
+
+### Metrics Recorded
+
+| Metric | Description | Unit | Better = |
+|--------|-------------|------|----------|
+| RMSE | Root mean square tracking error | rad | Lower |
+| Overshoot | Max deviation beyond target | rad | Lower |
+| Settling time | Time to reach within 0.02 rad of target | seconds | Lower |
+| Avg jerk | Average jerk (smoothness) | rad/s³ | Lower |
+| Prediction error | ARIMA predicted vs actual | rad | Lower |
+| Cycle time | Total feeding cycle duration | seconds | Lower |
+
+### CSV Format
+
+```
+time,j1_target,j1_actual,j1_error,j1_predicted,j1_pred_error,...,fsm_state
+0.020,0.0000,-0.0012,-0.0012,0.0015,0.0027,IDLE
+0.040,0.0000,-0.0008,-0.0008,0.0010,0.0018,IDLE
+...
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `feedbot_fusion/benchmark_node.py` | Records metrics to CSV, publishes `/benchmark/metrics` |
+| `feedbot_fusion/arima_feedforward_node.py` | ARIMA feedforward compensator (action proxy) |
+| `feedbot_fusion/arima_ffnn_node.py` | ARIMA(3,1,1) + FFNN(10→16→8→1) predictive model |
+| `feedbot_fusion/feeding_fsm_node.py` | `use_arima_feedforward` parameter for in-FSM compensation |
+
+### Launch Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `benchmark` | `false` | Enable benchmark recording |
+| `mode` | `pid_only` | `pid_only` or `pid_arima` |
+
+---
+
 ## Quick Start Checklist
 
 ```bash
