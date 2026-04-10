@@ -76,7 +76,7 @@ class TeleopArmNode(Node):
     def __init__(self):
         super().__init__('teleop_arm_node')
 
-        self.step_size = 0.05  # radians per keypress
+        self.step_size = 0.122  # radians per keypress (~7 degrees)
         self.trajectory_duration = 1.0  # seconds per move (smooth transition)
 
         self.current_positions = [0.0] * 4
