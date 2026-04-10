@@ -61,6 +61,9 @@ FOOD_NAMES = {
     'hot_dog', 'pizza', 'donut', 'cake', 'strawberry', 'grape', 'kiwi',
 }
 
+# Fruits NOT in COCO — need HSV fallback even when MediaPipe is active
+HSV_ONLY_FRUITS = {'grape', 'strawberry', 'kiwi'}
+
 PLATE_NAMES = {'bowl', 'cup', 'plate', 'dining table'}
 
 UTENSIL_NAMES = {'fork', 'knife', 'spoon'}
@@ -346,6 +349,28 @@ class VisionNode(Node):
         return (cx, cy, area, x, y, w, h)
 
     # ────────────────────────────────────────────────────────────────
+    # HSV supplement for non-COCO fruits (grapes, strawberry, kiwi)
+    # ────────────────────────────────────────────────────────────────
+    def _detect_hsv_supplement(self, frame, existing_detections):
+        """Run HSV detection only for fruits not in COCO (grape, strawberry, kiwi)."""
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        for fruit_name in HSV_ONLY_FRUITS:
+            if fruit_name in existing_detections:
+                continue
+            if fruit_name not in FRUIT_HSV_RANGES:
+                continue
+            result = self._detect_fruit_hsv(hsv, fruit_name)
+            if result is not None:
+                existing_detections[fruit_name] = result
+                cx, cy, area, x, y, w, h = result
+                color = FRUIT_COLORS.get(fruit_name, (255, 255, 255))
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+                cv2.putText(frame, f'{fruit_name} (hsv)',
+                            (x, y - 6), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.4, color, 1, cv2.LINE_AA)
+        return existing_detections
+
+    # ────────────────────────────────────────────────────────────────
     # Plate detection via shape analysis
     # ────────────────────────────────────────────────────────────────
     def _detect_plate(self, frame, all_names):
@@ -402,6 +427,11 @@ class VisionNode(Node):
             food_detections, all_names = self._detect_jetson(frame)
         elif self._backend == 'mediapipe':
             food_detections, all_names = self._detect_mediapipe(frame)
+            # Supplement with HSV for non-COCO fruits (grape, strawberry, kiwi)
+            food_detections = self._detect_hsv_supplement(frame, food_detections)
+            for name in food_detections:
+                if name not in [n.split('(')[0] for n in all_names]:
+                    all_names.append(f'{name}(hsv)')
         else:
             food_detections, all_names = self._detect_hsv(frame)
 
