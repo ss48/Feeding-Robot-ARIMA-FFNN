@@ -1,0 +1,55 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Topic:
+        Value: /robot_description
+      Visual Enabled: true
+      Collision Enabled: false
+      Alpha: 1.0
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Names: true
+      Show Axes: true
+      Show Arrows: false
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+    - Class: rviz_default_plugins/Image
+      Name: Camera
+      Enabled: true
+      Topic:
+        Value: /feeding_robot/camera/image_raw
+        Reliability Policy: Best Effort
+      Max Value: 1.0
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Count: 10
+      Cell Size: 0.1
+      Color: 160; 160; 164
+      Plane: XY
+      Plane Cell Count: 10
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 0.8
+      Focal Point:
+        X: 0.1
+        Y: 0.0
+        Z: 0.2
+      Pitch: 0.5
+      Yaw: 0.8

@@ -56,6 +56,7 @@ HELP_TEXT = """
   T/G  —  Joint 4 (feeder tilt) +/-
   H    —  Home position (0,0,0,0)
   +/-  —  Step size up/down
+  [/]  —  Speed slower/faster
   Q    —  Quit
 ─────────────────────────────────────
 """
@@ -76,7 +77,7 @@ class TeleopArmNode(Node):
         super().__init__('teleop_arm_node')
 
         self.step_size = 0.05  # radians per keypress
-        self.trajectory_duration = 0.5  # seconds per move
+        self.trajectory_duration = 1.0  # seconds per move (smooth transition)
 
         self.current_positions = [0.0] * 4
         self.target_positions = [0.0] * 4
@@ -102,13 +103,21 @@ class TeleopArmNode(Node):
         goal = FollowJointTrajectory.Goal()
         goal.trajectory.joint_names = JOINT_NAMES
 
-        point = JointTrajectoryPoint()
-        point.positions = [float(p) for p in positions]
-        point.time_from_start = Duration(
+        # Start point at current position with zero velocity
+        start = JointTrajectoryPoint()
+        start.positions = [float(p) for p in self.current_positions]
+        start.velocities = [0.0] * 4
+        start.time_from_start = Duration(sec=0, nanosec=0)
+
+        # End point with zero velocity (smooth stop)
+        end = JointTrajectoryPoint()
+        end.positions = [float(p) for p in positions]
+        end.velocities = [0.0] * 4
+        end.time_from_start = Duration(
             sec=int(self.trajectory_duration),
             nanosec=int((self.trajectory_duration % 1) * 1e9))
 
-        goal.trajectory.points = [point]
+        goal.trajectory.points = [start, end]
         self.action_client.send_goal_async(goal)
 
     def run(self):
@@ -141,6 +150,14 @@ class TeleopArmNode(Node):
                 elif key == '-':
                     self.step_size = max(self.step_size - 0.01, 0.01)
                     print(f'\n  Step size: {math.degrees(self.step_size):.1f}°')
+
+                elif key == '[':
+                    self.trajectory_duration = min(self.trajectory_duration + 0.25, 5.0)
+                    print(f'\n  Speed: {self.trajectory_duration:.2f}s per move (slower)')
+
+                elif key == ']':
+                    self.trajectory_duration = max(self.trajectory_duration - 0.25, 0.25)
+                    print(f'\n  Speed: {self.trajectory_duration:.2f}s per move (faster)')
 
                 elif key.lower() in KEY_MAP:
                     joint_idx, direction = KEY_MAP[key.lower()]

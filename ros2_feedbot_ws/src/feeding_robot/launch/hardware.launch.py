@@ -15,6 +15,7 @@ from launch.actions import (
     RegisterEventHandler,
     TimerAction,
 )
+from launch.conditions import LaunchConfigurationEquals
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
@@ -44,6 +45,11 @@ def generate_launch_description():
     teensy_port_arg = DeclareLaunchArgument(
         'teensy_port', default_value='/dev/teensy',
         description='Teensy serial port (force sensor + sonar)'
+    )
+
+    digital_twin_arg = DeclareLaunchArgument(
+        'digital_twin', default_value='false',
+        description='Launch RViz2 as digital twin (set true when monitor connected)'
     )
 
     # ==================== ROBOT DESCRIPTION ====================
@@ -176,6 +182,17 @@ def generate_launch_description():
         output='screen',
     )
 
+    # ==================== RVIZ2 DIGITAL TWIN ====================
+    rviz_config = os.path.join(pkg_dir, 'config', 'digital_twin.rviz')
+    rviz2 = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config],
+        output='screen',
+        condition=LaunchConfigurationEquals('digital_twin', 'true'),
+    )
+
     # ==================== SONAR BRIDGE (routes sonar to plate/mouth topics) ====================
     sonar_bridge_node = Node(
         package='feedbot_fusion',
@@ -189,6 +206,7 @@ def generate_launch_description():
         use_meshes_arg,
         camera_device_arg,
         teensy_port_arg,
+        digital_twin_arg,
         ros2_control_node,
         robot_state_publisher,
         delayed_joint_state_broadcaster,
@@ -199,4 +217,5 @@ def generate_launch_description():
         sonar_bridge_node,
         face_node,
         estop_node,
+        rviz2,
     ])
