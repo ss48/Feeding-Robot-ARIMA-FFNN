@@ -106,7 +106,6 @@ class FeedingFSMNode(Node):
         self.food_visible = False
         self.food_center = (0.0, 0.0, 0.0)
         self.feeding_safe = False
-        self.mouth_ready = False
         self.predicted_state = [0.0] * 4
         self.current_force = 0.0
         self.override = False
@@ -156,8 +155,8 @@ class FeedingFSMNode(Node):
             Float64, '/spoon_force', self.force_cb, 10)
         self.create_subscription(
             Float64MultiArray, '/predicted_state', self.pred_cb, 10)
-        self.create_subscription(
-            Bool, '/mouth_ready_prediction', self.mouth_cb, 10)
+        # mouth_ready_prediction now published by face_node (camera-based)
+        # FSM uses /mouth_open and /face_expression directly instead
         self.create_subscription(
             Bool, '/feeding_override', self.override_cb, 10)
         self.create_subscription(
@@ -228,9 +227,6 @@ class FeedingFSMNode(Node):
 
     def safe_cb(self, msg):
         self.feeding_safe = msg.data
-
-    def mouth_cb(self, msg):
-        self.mouth_ready = msg.data
 
     def pred_cb(self, msg):
         self.predicted_state = list(msg.data)

@@ -1762,10 +1762,15 @@ When E-Stop is active:
 | `feedbot_fusion/estop_node.py` | GPIO monitor, torque control via Dynamixel SDK |
 | `feedbot_fusion/feeding_fsm_node.py` | EMERGENCY_STOP state, `/emergency_stop` subscriber |
 
+---
 
+## Camera Calibration
 
+### Quick Setup (Default Calibration)
 
-calibration 
+Create a default calibration file using Pi Camera V2.1 specs (62° HFOV, fx=fy=554.25 at 640x480):
+
+```bash
 mkdir -p ~/.ros/camera_info
 cat > ~/.ros/camera_info/mmal_service_16.1.yaml << 'EOF'
 image_width: 640
@@ -1789,50 +1794,334 @@ projection_matrix:
   cols: 4
   data: [554.25, 0, 320, 0, 0, 554.25, 240, 0, 0, 0, 1, 0]
 EOF
+```
 
+This stops the calibration warning and provides approximate intrinsics for the robot's operation.
 
-Camera calibration corrects lens distortion and gives accurate focal length/principal point values. Here's how:
+### Proper Checkerboard Calibration (Optional)
 
-1. Install the calibration tool:
+For more accurate results (requires a monitor connected to the Pi):
 
-
+```bash
+# 1. Install calibration tool
 sudo apt install ros-humble-camera-calibration
-2. Print a checkerboard pattern:
 
-Download and print a 9x6 checkerboard (9 inner corners wide, 6 tall)
-Each square should be a known size (e.g., 25mm = 0.025m)
-Tape it flat on cardboard
-3. Run the calibrator (with hardware.launch.py already running):
+# 2. Print a 9x6 checkerboard (25mm squares), tape flat on cardboard
 
+# 3. Start hardware launch in Terminal 1
+ros2 launch feeding_robot hardware.launch.py
 
-ros2 run camera_calibration cameracalibrator \
-  --size 9x6 \
-  --square 0.025 \
-  --ros-args -r image:=/feeding_robot/camera/image_raw \
-  -r camera:=/feeding_robot/camera
-4. Move the checkerboard around in front of the camera:
-
-Hold it at different angles, distances, and positions
-Cover all corners of the image
-The bars at the top (X, Y, Size, Skew) will fill up green
-When all bars are green, click CALIBRATE
-5. Click SAVE — it saves to /tmp/calibrationdata.tar.gz and also writes the yaml file
-
-6. Copy the calibration file to where the camera expects it:
-
-
-mkdir -p ~/.ros/camera_info/
-cp /tmp/calibrationdata.tar.gz ~/
-# Extract and find the yaml file, or it may auto-save to:
-# ~/.ros/camera_info/mmal_service_16.1.yaml
-If the calibrator auto-saved it, just restart the launch and the warning will be gone.
-
-Quick alternative — if you don't need precise calibration right now, create a default calibration file:
-
-
-source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
+# 4. Run calibrator in Terminal 2
 ros2 run camera_calibration cameracalibrator \
   --size 9x6 \
   --square 0.025 \
   --no-service-check \
-  --ros-args -r image:=/feeding_robot/camera/image_raw -r camera:=/feeding_robot/camera
+  --ros-args -r image:=/feeding_robot/camera/image_raw \
+  -r camera:=/feeding_robot/camera
+
+# 5. Move checkerboard around — cover all corners, angles, distances
+# 6. When X/Y/Size/Skew bars are green → click CALIBRATE → SAVE → COMMIT
+```
+
+---
+
+## Digital Twin (RViz2)
+
+The hardware launch can optionally start RViz2 as a real-time digital twin of the robot arm.
+
+### Usage
+
+```bash
+# With monitor connected to Pi:
+ros2 launch feeding_robot hardware.launch.py digital_twin:=true
+
+# Headless (default, no RViz):
+ros2 launch feeding_robot hardware.launch.py
+```
+
+### What It Shows
+
+- 3D robot model moving in real-time (from `/joint_states`)
+- TF coordinate frames for all links and sensors
+- Grid reference plane
+- Plate mesh in front of the robot (matches real setup)
+
+### RViz Config
+
+Pre-configured in `feeding_robot/config/digital_twin.rviz`:
+- Fixed Frame: `world`
+- RobotModel from `/robot_description`
+- TF frames enabled
+- Orbit camera view centered on the robot
+
+### Plate in URDF
+
+A plate mesh (`plate_printing.stl`) is included as a fixed link in front of the robot base, matching the real-world setup:
+
+```xml
+<joint name="plate_joint" type="fixed">
+  <parent link="world"/>
+  <child link="plate_link"/>
+  <origin xyz="0.15 0.0 -0.02" rpy="0 0 0"/>
+</joint>
+```
+
+Adjust `xyz` values in `feeding_robot_core.xacro` if the plate position doesn't match your physical setup.
+
+---
+
+## Dynamixel PID Tuning
+
+The Dynamixel XM430-W350R servos use internal PID position control. Gains are configured in `feeding_robot_ros2_control.xacro` via a xacro macro applied to all 4 servos:
+
+### Current Values
+
+| Parameter | Value | Effect |
+|-----------|-------|--------|
+| Position P Gain | 400 | Proportional — response stiffness |
+| Position I Gain | 20 | Integral — steady-state error correction |
+| Position D Gain | 150 | Derivative — damping/overshoot reduction |
+| Profile Velocity | 60 | Max velocity (0.229 rpm units) |
+| Profile Acceleration | 15 | Acceleration ramp (214.577 rev/min² units) |
+
+### Tuning Guide
+
+| Symptom | Fix |
+|---------|-----|
+| Overshoot/oscillation | Lower P (try 300), lower I (try 10), raise D (try 200) |
+| Too sluggish/slow | Raise P (try 500), raise Profile Velocity (try 100) |
+| Jerky motion | Lower Profile Acceleration (try 10), raise trajectory duration in teleop |
+| Can't hold position under load | Raise I (try 30-50), raise P (try 500) |
+
+### Changing PID on the Fly (Without Rebuild)
+
+```bash
+# Write directly to servo register via Python
+python3 -c "
+from dynamixel_sdk import *
+port = PortHandler('/dev/dynamixel')
+packet = PacketHandler(2.0)
+port.openPort()
+port.setBaudRate(1000000)
+for sid in [11, 12, 13, 14]:
+    packet.write2ByteTxRx(port, sid, 80, 400)   # P Gain (addr 80)
+    packet.write2ByteTxRx(port, sid, 82, 20)    # I Gain (addr 82)
+    packet.write2ByteTxRx(port, sid, 84, 150)   # D Gain (addr 84)
+    packet.write4ByteTxRx(port, sid, 112, 60)   # Profile Velocity (addr 112)
+    packet.write4ByteTxRx(port, sid, 108, 15)   # Profile Acceleration (addr 108)
+    print(f'ID {sid}: PID updated')
+port.closePort()
+"
+```
+
+---
+
+## Object Detection (MediaPipe)
+
+### Detection Backends
+
+The vision_node auto-selects the best available backend:
+
+| Backend | Platform | Speed | Objects | Selection |
+|---------|----------|-------|---------|-----------|
+| jetson-inference | Jetson Orin/Nano (GPU) | ~30fps | COCO 91 classes | Auto on Jetson |
+| MediaPipe EfficientDet-Lite0 | Pi 4/5 (CPU) | ~5-8fps | COCO 80 classes | Auto on Pi |
+| HSV colour | Any (fallback) | ~30fps | 6 fruit types only | Fallback if no ML |
+
+### MediaPipe Model
+
+- **Model:** EfficientDet-Lite0 float32 (~4MB)
+- **Auto-downloads** to `~/.mediapipe/efficientdet_lite0_float32.tflite` on first run
+- **Manual download** if auto-download fails:
+
+```bash
+mkdir -p ~/.mediapipe
+wget -O ~/.mediapipe/efficientdet_lite0_float32.tflite \
+  "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/latest/efficientdet_lite0_float32.tflite"
+```
+
+### Detection Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `detection_method` | `auto` | `auto`, `mediapipe`, `ml`, `hsv` |
+| `ml_confidence` | 0.25 | Minimum detection confidence (0.0-1.0) |
+| `process_every_n` | 3 | Process every Nth camera frame |
+
+### Detected Object Categories
+
+| Category | Objects | Topic |
+|----------|---------|-------|
+| Food | apple, banana, orange, sandwich, broccoli, carrot, pizza, donut, cake, hot_dog | `/food_visible`, `/food_type` |
+| Plate/Bowl | bowl, cup, dining table, plate | `/plate_detected` |
+| Utensils | fork, knife, spoon | `/objects_detected` |
+
+### Monitoring
+
+```bash
+# All detected objects (comma-separated with confidence)
+ros2 topic echo /objects_detected
+
+# Food detection
+ros2 topic echo /food_visible --once
+ros2 topic echo /food_type --once
+
+# Plate detection
+ros2 topic echo /plate_detected --once
+```
+
+---
+
+## Complete Hardware Launch — All Nodes
+
+`ros2 launch feeding_robot hardware.launch.py` starts the following nodes:
+
+| Node | Package | Purpose |
+|------|---------|---------|
+| `ros2_control_node` | controller_manager | Dynamixel hardware interface (4 joints) |
+| `robot_state_publisher` | robot_state_publisher | TF tree from URDF |
+| `joint_state_broadcaster` | controller_manager | Publishes `/joint_states` |
+| `arm_controller` | controller_manager | Joint trajectory controller (100 Hz) |
+| `feeding_camera` | v4l2_camera | Pi Camera → `/feeding_robot/camera/image_raw` |
+| `vision_node` | feedbot_fusion | Object/food/plate detection (MediaPipe) |
+| `teensy_bridge` | feedbot_fusion | Teensy serial → force + sonar topics |
+| `sonar_bridge` | feedbot_fusion | Routes sonar to plate/mouth distance |
+| `face_node` | feedbot_fusion | MediaPipe face/mouth detection |
+| `estop_node` | feedbot_fusion | GPIO E-Stop button monitor |
+| `rviz2` | rviz2 | Digital twin (only with `digital_twin:=true`) |
+
+### Launch Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `port_name` | `/dev/dynamixel` | Dynamixel USB port |
+| `teensy_port` | `/dev/teensy` | Teensy serial port |
+| `camera_device` | `/dev/video0` | Camera device path |
+| `use_meshes` | `true` | Use STL mesh files in URDF |
+| `digital_twin` | `false` | Launch RViz2 as digital twin |
+
+---
+
+## Complete ROS 2 Topic Map
+
+| Topic | Type | Source | Purpose |
+|-------|------|--------|---------|
+| `/joint_states` | JointState | joint_state_broadcaster | Joint positions/velocities |
+| `/feeding_robot/camera/image_raw` | Image | v4l2_camera | Camera feed (640x480) |
+| `/feeding_robot/camera/camera_info` | CameraInfo | v4l2_camera | Camera intrinsics |
+| `/food_visible` | Bool | vision_node | Food detected flag |
+| `/food_center` | Point | vision_node | Food position in pixels |
+| `/food_type` | String | vision_node | Food class name |
+| `/food_bearing` | Point | vision_node | Food bearing + depth |
+| `/detected_fruits` | Float64MultiArray | vision_node | All food detections |
+| `/plate_detected` | Bool | vision_node | Plate/bowl detected |
+| `/objects_detected` | String | vision_node | All detected objects |
+| `/face_detected` | Bool | face_node | Face found |
+| `/face_center` | Point | face_node | Face position in pixels |
+| `/face_bearing` | Point | face_node | Face bearing + depth |
+| `/mouth_open` | Bool | face_node | Mouth open/closed |
+| `/mouth_aspect_ratio` | Float64 | face_node | Raw MAR value |
+| `/face_expression` | String | face_node | "ready"/"not_ready"/"no_face" |
+| `/mouth_ready_prediction` | Bool | face_node | Combined readiness |
+| `/spoon_force` | Float64 | teensy_bridge | Force sensor (N) |
+| `/spoon/wrench` | WrenchStamped | teensy_bridge | Force as wrench |
+| `/feeding_robot/ultrasonic/range` | Range | teensy_bridge | Sonar range |
+| `/sonar_raw_cm` | Float64 | teensy_bridge | Raw sonar (cm) |
+| `/sonar_plate_distance` | Float64 | sonar_bridge | Distance to plate (cm) |
+| `/sonar_mouth_distance` | Float64 | sonar_bridge | Distance to mouth (cm) |
+| `/emergency_stop` | Bool | estop_node | E-Stop state |
+| `/feeding_state` | String | feeding_fsm | Current FSM state |
+
+---
+
+## Complete File Reference
+
+| File | Purpose |
+|------|---------|
+| **feeding_robot package** | |
+| `description/feeding_robot.urdf.xacro` | Top-level URDF (includes all sub-xacros) |
+| `description/feeding_robot_core.xacro` | Links, joints, meshes, plate, sensor mounts |
+| `description/feeding_robot_ros2_control.xacro` | Dynamixel hardware interface, servo PID, GPIO configs |
+| `description/materials.xacro` | Material/color definitions |
+| `description/gazebo_plugins.xacro` | Gazebo sensor plugins (sim only) |
+| `config/feeding_robot_controllers.yaml` | Controller manager (trajectory controller, 100 Hz) |
+| `config/digital_twin.rviz` | RViz2 display configuration |
+| `launch/hardware.launch.py` | Real hardware launch (all nodes) |
+| `launch/gazebo.launch.py` | Simulation launch |
+| `meshes/visual/` | STL meshes (arm links, frontface, camera, sonar, forceSensor, plate) |
+| **feedbot_fusion package** | |
+| `face_node.py` | MediaPipe face/mouth detection |
+| `vision_node.py` | Object/food/plate detection (MediaPipe/HSV) |
+| `feeding_fsm_node.py` | Autonomous FSM (10 states including EMERGENCY_STOP) |
+| `fusion_node.py` | 6-state EKF sensor fusion + face position |
+| `teensy_bridge_node.py` | Teensy serial bridge (force + sonar) |
+| `sonar_bridge_node.py` | Routes sonar by feeding state |
+| `estop_node.py` | GPIO E-Stop + Dynamixel torque control |
+| `teleop_arm_node.py` | Keyboard joint control |
+| `force_node.py` | Force filtering (moving average) |
+| `arima_ffnn_node.py` | ARIMA-FFNN predictive controller |
+| `fuzzy_controller_node.py` | Fuzzy force/angle regulation |
+| `mouth_animator_node.py` | Simulated jaw animation (Gazebo only) |
+| **firmware** | |
+| `firmware/teensy_sensors.ino` | Teensy firmware (HX711 + HC-SR04) |
+| **config** | |
+| `requirements.txt` | Python dependencies |
+| `/etc/udev/rules.d/99-feedbot.rules` | USB device symlinks |
+| `~/.ros/camera_info/mmal_service_16.1.yaml` | Camera calibration |
+
+---
+
+## FSM States (Complete)
+
+```
+WAITING ──[plate+food detected OR spacebar]──> IDLE
+IDLE ──[food_visible]──> DETECT_FOOD
+DETECT_FOOD ──[food confirmed]──> LOCATE_FOOD
+LOCATE_FOOD ──[EKF stable + IK computed]──> COLLECT_FOOD
+COLLECT_FOOD ──[force > 2N]──> DETECT_PATIENT
+DETECT_PATIENT ──[face_detected + expression=="ready"]──> PRE_FEED
+PRE_FEED ──[face-approach IK + at target + safe]──> FEED
+FEED ──[mouth_open for 5 consecutive frames]──> RETRACT
+RETRACT ──[at target]──> WAITING (auto-restart)
+
+EMERGENCY_STOP ── (any state, triggered by E-Stop button or /emergency_stop topic)
+  → Freezes arm at current position
+  → Disables torque after 2 seconds
+  → Returns to WAITING on release
+```
+
+---
+
+## Quick Start Checklist
+
+```bash
+# 1. SSH into Pi
+ssh ss@<pi-ip>
+
+# 2. Set permissions (if first boot)
+sudo chmod 666 /dev/ttyACM*
+sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# 3. Build
+cd ~/feeding_robot_ws/ros2_feedbot_ws
+colcon build --symlink-install
+source install/setup.bash
+
+# 4. Launch (headless)
+ros2 launch feeding_robot hardware.launch.py
+
+# 4b. Launch with digital twin (monitor connected)
+ros2 launch feeding_robot hardware.launch.py digital_twin:=true
+
+# 5. Teleop (separate terminal)
+source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
+ros2 run feedbot_fusion teleop_arm
+
+# 6. Monitor sensors (separate terminal)
+source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
+ros2 topic echo /face_detected --once
+ros2 topic echo /food_visible --once
+ros2 topic echo /objects_detected
+ros2 topic echo /spoon_force --once
+ros2 topic echo /joint_states --once
+```

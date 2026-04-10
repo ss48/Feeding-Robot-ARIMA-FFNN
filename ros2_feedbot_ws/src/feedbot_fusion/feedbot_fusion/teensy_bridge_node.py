@@ -17,6 +17,8 @@ Parameters:
   baud_rate    (int)  — default 115200
 """
 
+import time
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import WrenchStamped
@@ -71,7 +73,6 @@ class TeensyBridgeNode(Node):
 
     def read_serial(self):
         if self.ser is None or not self.ser.is_open:
-            import time
             now = time.monotonic()
             if now - self._last_reconnect < self._reconnect_interval:
                 return

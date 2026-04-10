@@ -269,7 +269,6 @@ class ARIMAFFNNNode(Node):
     Topics published:
         /predicted_state        (Float64MultiArray) – [joint1..4 predicted positions]
         /prediction_error       (Float64)           – combined model error
-        /mouth_ready_prediction (Bool)              – predicted mouth-readiness
 
     Topics subscribed:
         /joint_states           (JointState)

@@ -3,6 +3,27 @@
 
   <xacro:arg name="use_sim" default="true"/>
 
+  <!-- Macro for Dynamixel servo GPIO configuration -->
+  <xacro:macro name="dynamixel_servo" params="name id">
+    <gpio name="${name}">
+      <param name="type">dxl</param>
+      <param name="ID">${id}</param>
+      <command_interface name="Goal Position"/>
+      <state_interface name="Present Position"/>
+      <state_interface name="Present Velocity"/>
+      <state_interface name="Present Current"/>
+      <state_interface name="Torque Enable"/>
+      <state_interface name="Present Input Voltage"/>
+      <param name="Position P Gain">400</param>
+      <param name="Position I Gain">20</param>
+      <param name="Position D Gain">150</param>
+      <param name="Profile Velocity">60</param>
+      <param name="Profile Acceleration">15</param>
+      <param name="Drive Mode">0</param>
+      <param name="Return Delay Time">0</param>
+    </gpio>
+  </xacro:macro>
+
   <ros2_control name="FeedingRobotSystem" type="system">
     <hardware>
       <xacro:if value="$(arg use_sim)">
@@ -38,7 +59,7 @@
       </xacro:unless>
     </hardware>
 
-    <!-- Base Y Joint - Yaw rotation -->
+    <!-- Joint interfaces -->
     <joint name="base_y_joint">
       <command_interface name="position"/>
       <state_interface name="position"/>
@@ -46,7 +67,6 @@
       <state_interface name="effort"/>
     </joint>
 
-    <!-- Lower Z Joint - Shoulder pitch -->
     <joint name="lower_z_joint">
       <command_interface name="position"/>
       <state_interface name="position"/>
@@ -54,7 +74,6 @@
       <state_interface name="effort"/>
     </joint>
 
-    <!-- Upper Z Joint - Elbow pitch -->
     <joint name="upper_z_joint">
       <command_interface name="position"/>
       <state_interface name="position"/>
@@ -62,7 +81,6 @@
       <state_interface name="effort"/>
     </joint>
 
-    <!-- Feeder Joint - Wrist pitch -->
     <joint name="feeder_joint">
       <command_interface name="position"/>
       <state_interface name="position"/>
@@ -70,78 +88,11 @@
       <state_interface name="effort"/>
     </joint>
 
-    <!-- Dynamixel servo configurations -->
-    <gpio name="dxl1">
-      <param name="type">dxl</param>
-      <param name="ID">11</param>
-      <command_interface name="Goal Position"/>
-      <state_interface name="Present Position"/>
-      <state_interface name="Present Velocity"/>
-      <state_interface name="Present Current"/>
-      <state_interface name="Torque Enable"/>
-      <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">400</param>
-      <param name="Position I Gain">20</param>
-      <param name="Position D Gain">150</param>
-      <param name="Profile Velocity">60</param>
-      <param name="Profile Acceleration">15</param>
-      <param name="Drive Mode">0</param>
-      <param name="Return Delay Time">0</param>
-    </gpio>
-
-    <gpio name="dxl2">
-      <param name="type">dxl</param>
-      <param name="ID">12</param>
-      <command_interface name="Goal Position"/>
-      <state_interface name="Present Position"/>
-      <state_interface name="Present Velocity"/>
-      <state_interface name="Present Current"/>
-      <state_interface name="Torque Enable"/>
-      <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">400</param>
-      <param name="Position I Gain">20</param>
-      <param name="Position D Gain">150</param>
-      <param name="Profile Velocity">60</param>
-      <param name="Profile Acceleration">15</param>
-      <param name="Drive Mode">0</param>
-      <param name="Return Delay Time">0</param>
-    </gpio>
-
-    <gpio name="dxl3">
-      <param name="type">dxl</param>
-      <param name="ID">13</param>
-      <command_interface name="Goal Position"/>
-      <state_interface name="Present Position"/>
-      <state_interface name="Present Velocity"/>
-      <state_interface name="Present Current"/>
-      <state_interface name="Torque Enable"/>
-      <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">400</param>
-      <param name="Position I Gain">20</param>
-      <param name="Position D Gain">150</param>
-      <param name="Profile Velocity">60</param>
-      <param name="Profile Acceleration">15</param>
-      <param name="Drive Mode">0</param>
-      <param name="Return Delay Time">0</param>
-    </gpio>
-
-    <gpio name="dxl4">
-      <param name="type">dxl</param>
-      <param name="ID">14</param>
-      <command_interface name="Goal Position"/>
-      <state_interface name="Present Position"/>
-      <state_interface name="Present Velocity"/>
-      <state_interface name="Present Current"/>
-      <state_interface name="Torque Enable"/>
-      <state_interface name="Present Input Voltage"/>
-      <param name="Position P Gain">400</param>
-      <param name="Position I Gain">20</param>
-      <param name="Position D Gain">150</param>
-      <param name="Profile Velocity">60</param>
-      <param name="Profile Acceleration">15</param>
-      <param name="Drive Mode">0</param>
-      <param name="Return Delay Time">0</param>
-    </gpio>
+    <!-- Dynamixel servo configurations (IDs 11-14) -->
+    <xacro:dynamixel_servo name="dxl1" id="11"/>
+    <xacro:dynamixel_servo name="dxl2" id="12"/>
+    <xacro:dynamixel_servo name="dxl3" id="13"/>
+    <xacro:dynamixel_servo name="dxl4" id="14"/>
 
   </ros2_control>
 

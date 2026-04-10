@@ -29,9 +29,11 @@ from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
 
 import cv2
-import numpy as np
 import math
 import os
+import urllib.request
+
+import numpy as np
 
 # ───────────────────────────────────────────────────────────────────────
 # Try to import detection backends
@@ -200,7 +202,6 @@ class VisionNode(Node):
             if not os.path.exists(model_path):
                 self.get_logger().info('Downloading EfficientDet-Lite0 float32 model...')
                 os.makedirs(os.path.dirname(model_path), exist_ok=True)
-                import urllib.request
                 url = ('https://storage.googleapis.com/mediapipe-models/'
                        'object_detector/efficientdet_lite0/float32/latest/'
                        'efficientdet_lite0_float32.tflite')
