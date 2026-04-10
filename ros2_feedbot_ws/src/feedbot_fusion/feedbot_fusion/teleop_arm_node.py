@@ -103,25 +103,24 @@ class TeleopArmNode(Node):
         goal = FollowJointTrajectory.Goal()
         goal.trajectory.joint_names = JOINT_NAMES
 
-        # Start point at current position with zero velocity
-        start = JointTrajectoryPoint()
-        start.positions = [float(p) for p in self.current_positions]
-        start.velocities = [0.0] * 4
-        start.time_from_start = Duration(sec=0, nanosec=0)
-
-        # End point with zero velocity (smooth stop)
-        end = JointTrajectoryPoint()
-        end.positions = [float(p) for p in positions]
-        end.velocities = [0.0] * 4
-        end.time_from_start = Duration(
+        point = JointTrajectoryPoint()
+        point.positions = [float(p) for p in positions]
+        point.time_from_start = Duration(
             sec=int(self.trajectory_duration),
             nanosec=int((self.trajectory_duration % 1) * 1e9))
 
-        goal.trajectory.points = [start, end]
+        goal.trajectory.points = [point]
         self.action_client.send_goal_async(goal)
 
     def run(self):
         settings = termios.tcgetattr(sys.stdin)
+
+        # Wait for actual joint positions before starting
+        print('  Waiting for joint states...')
+        for _ in range(50):
+            rclpy.spin_once(self, timeout_sec=0.1)
+            if any(p != 0.0 for p in self.current_positions):
+                break
         self.target_positions = list(self.current_positions)
 
         print(HELP_TEXT)
