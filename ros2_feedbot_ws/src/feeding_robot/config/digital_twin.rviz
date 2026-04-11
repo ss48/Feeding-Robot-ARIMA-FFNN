@@ -13,7 +13,7 @@ Visualization Manager:
         Value: /robot_description
       Visual Enabled: true
       Collision Enabled: false
-      Alpha: 0.8
+      Alpha: 1.0
     - Class: rviz_default_plugins/TF
       Name: TF
       Enabled: true
