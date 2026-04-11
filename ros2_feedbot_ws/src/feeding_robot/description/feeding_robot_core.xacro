@@ -102,13 +102,12 @@
 
   <!-- ==================== BASE Y JOINT (Yaw) ==================== -->
   <!-- At the top of the base platform, rotates around vertical Z axis -->
-  <joint name="base_y_joint" type="revolute">
+  <joint name="base_y_joint" type="continuous">
     <parent link="base_link"/>
     <child link="shoulder_link"/>
     <origin xyz="0 0 ${base_top_z}" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit lower="${-175.0 * pi / 180.0}" upper="${175.0 * pi / 180.0}"
-           velocity="${max_velocity}" effort="${max_effort}"/>
+    <limit velocity="${max_velocity}" effort="${max_effort}"/>
     <dynamics damping="0.5" friction="0.1"/>
   </joint>
 

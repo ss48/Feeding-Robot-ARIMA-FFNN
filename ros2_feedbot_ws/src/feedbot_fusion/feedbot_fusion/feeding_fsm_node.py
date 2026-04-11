@@ -65,7 +65,7 @@ POSES = {
 
 # Joint limits (from URDF)
 JOINT_LIMITS = {
-    'base_y_joint':  (-3.05, 3.05),
+    'base_y_joint':  (-6.28, 6.28),  # continuous (360°)
     'lower_z_joint': (-1.57, 1.57),
     'upper_z_joint': (-2.09, 1.31),
     'feeder_joint':  (-1.57, 2.01),
