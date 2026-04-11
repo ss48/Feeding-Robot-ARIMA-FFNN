@@ -104,6 +104,12 @@ FRUIT_COLORS = {
 FRUIT_IDS = {name: idx for idx, name in enumerate(FRUIT_HSV_RANGES)}
 MIN_CONTOUR_AREA = 40
 
+# Fork tip detection — metallic/silver color range in HSV
+FORK_HSV_RANGES = [
+    ((0, 0, 140), (180, 40, 255)),     # bright silver/metallic
+    ((0, 0, 100), (180, 30, 180)),     # darker silver
+]
+
 # ───────────────────────────────────────────────────────────────────────
 # Camera intrinsics (Pi Camera V2.1, 640x480, HFOV=60°)
 # ───────────────────────────────────────────────────────────────────────
@@ -179,6 +185,7 @@ class VisionNode(Node):
         self.plate_map_pub = self.create_publisher(Point, '/plate_map', 10)  # x=cx, y=cy, z=radius (pixels)
         self.objects_pub = self.create_publisher(String, '/objects_detected', 10)
         self.annotated_pub = self.create_publisher(Image, '/vision/annotated_image', 10)
+        self.fork_tip_pub = self.create_publisher(Point, '/fork_tip_position', 10)  # x,y in pixels, z=detected
 
         self.get_logger().info(
             f'Vision node started — backend: {self._backend}, '
@@ -353,6 +360,56 @@ class VisionNode(Node):
         return (cx, cy, area, x, y, w, h)
 
     # ────────────────────────────────────────────────────────────────
+    # Fork tip detection — find the fork tines in the camera image
+    # ────────────────────────────────────────────────────────────────
+    def _detect_fork_tip(self, frame):
+        """Detect fork tip position in pixels. Returns (cx, cy) or None."""
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
+        for lower, upper in FORK_HSV_RANGES:
+            mask |= cv2.inRange(hsv, np.array(lower), np.array(upper))
+
+        # Only look in the lower half of the image (fork hangs below camera)
+        mask[:int(IMAGE_HEIGHT * 0.3), :] = 0
+
+        # Morphology to clean up
+        kernel = np.ones((3, 3), np.uint8)
+        mask = cv2.erode(mask, kernel, iterations=1)
+        mask = cv2.dilate(mask, kernel, iterations=2)
+
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not contours:
+            return None
+
+        # Find the lowest contour (fork tip is at the bottom of visible fork)
+        best_cnt = None
+        best_bottom_y = 0
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area < 30:
+                continue
+            x, y, w, h = cv2.boundingRect(cnt)
+            bottom_y = y + h
+            if bottom_y > best_bottom_y:
+                best_bottom_y = bottom_y
+                best_cnt = cnt
+
+        if best_cnt is None:
+            return None
+
+        # Get the lowest point of the fork contour (tip)
+        lowest_point = max(best_cnt, key=lambda p: p[0][1])
+        tip_x = int(lowest_point[0][0])
+        tip_y = int(lowest_point[0][1])
+
+        # Draw fork tip on frame
+        cv2.circle(frame, (tip_x, tip_y), 8, (255, 0, 255), 2)
+        cv2.putText(frame, 'fork tip', (tip_x + 10, tip_y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255), 1)
+
+        return (tip_x, tip_y)
+
+    # ────────────────────────────────────────────────────────────────
     # HSV supplement for non-COCO fruits (grapes, strawberry, kiwi)
     # ────────────────────────────────────────────────────────────────
     def _detect_hsv_supplement(self, frame, existing_detections):
@@ -458,6 +515,19 @@ class VisionNode(Node):
             return
 
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+
+        # Detect fork tip position in camera
+        fork_tip = self._detect_fork_tip(frame)
+        fork_msg = Point()
+        if fork_tip is not None:
+            fork_msg.x = float(fork_tip[0])
+            fork_msg.y = float(fork_tip[1])
+            fork_msg.z = 1.0  # detected
+        else:
+            fork_msg.x = 320.0  # default center
+            fork_msg.y = 400.0  # default bottom area
+            fork_msg.z = 0.0  # not detected
+        self.fork_tip_pub.publish(fork_msg)
 
         # Run detection based on backend
         if self._backend == 'jetson':

@@ -123,6 +123,8 @@ class FeedingFSMNode(Node):
         self.plate_detected = False
         self.plate_center = (320.0, 240.0)  # plate center in pixels
         self.plate_radius = 0.0             # plate radius in pixels
+        self.fork_tip = (320.0, 400.0)      # fork tip position in pixels
+        self.fork_tip_detected = False
         self.consecutive_mouth_open = 0
         self.face_lost_count = 0
 
@@ -161,6 +163,7 @@ class FeedingFSMNode(Node):
         self.create_subscription(String, '/face_expression', self.expression_cb, 10)
         self.create_subscription(Bool, '/plate_detected', self.plate_detected_cb, 10)
         self.create_subscription(Point, '/plate_map', self.plate_map_cb, 10)
+        self.create_subscription(Point, '/fork_tip_position', self.fork_tip_cb, 10)
 
         # ---- Subscribers: EKF fusion ----
         self.create_subscription(Float64, '/plate_distance', self.plate_dist_cb, 10)
@@ -246,6 +249,10 @@ class FeedingFSMNode(Node):
     def plate_map_cb(self, msg):
         self.plate_center = (msg.x, msg.y)
         self.plate_radius = msg.z
+
+    def fork_tip_cb(self, msg):
+        self.fork_tip = (msg.x, msg.y)
+        self.fork_tip_detected = msg.z > 0.5
 
     def plate_dist_cb(self, msg): self.plate_distance = msg.data
     def mouth_dist_cb(self, msg): self.mouth_distance = msg.data
@@ -475,20 +482,37 @@ class FeedingFSMNode(Node):
                 f'Edge margin={edge_margin:.0f}px {"(NEAR EDGE!)" if near_edge else ""}',
                 throttle_duration_sec=2.0)
 
-            # Phase 3: Adjust base to position fork DIRECTLY ABOVE the food
-            img_center_x = 320.0
-            error_x = food_cx - img_center_x
+            # Phase 3: Align FORK TIP with food (not image center)
+            # The camera sees both fork tip and food — align them horizontally
+            fork_x = self.fork_tip[0]
+            fork_y = self.fork_tip[1]
 
-            if abs(error_x) < 60:
-                # Food is centered under fork — ready to collect
+            # Horizontal error: food should be at same X as fork tip
+            error_x = food_cx - fork_x
+            # Vertical error: food should be below fork tip (fork will stab down)
+            error_y = food_cy - fork_y
+
+            if self.fork_tip_detected:
+                align_target = f'fork tip ({fork_x:.0f},{fork_y:.0f})'
+            else:
+                align_target = 'image center (fork not detected)'
+                fork_x = 320.0
+
+            self.get_logger().info(
+                f'Aligning: food({food_cx:.0f},{food_cy:.0f}) → {align_target} '
+                f'error=({error_x:.0f},{error_y:.0f})px '
+                f'plate edge_margin={edge_margin:.0f}px',
+                throttle_duration_sec=1.0)
+
+            if abs(error_x) < 50:
+                # Fork tip is horizontally aligned with food — ready to stab!
                 self.get_logger().info(
-                    f'Fork aligned above food (error={error_x:.0f}px) — ready to stab')
-                # Store whether food is near edge for approach planning
+                    f'ALIGNED! Fork tip over food (error_x={error_x:.0f}px)')
                 self._food_near_edge = near_edge
                 self._set_state(FeedingState.COLLECT_FOOD)
             else:
-                # Adjust base rotation to center food under fork
-                correction = error_x * 0.0015  # gentler correction
+                # Adjust base rotation to align fork tip with food
+                correction = error_x * 0.001  # gentle proportional correction
                 adjusted_pose = list(POSES['plate_above'])
                 cur_base = self.current_positions['base_y_joint']
                 adjusted_pose[0] = cur_base + correction
