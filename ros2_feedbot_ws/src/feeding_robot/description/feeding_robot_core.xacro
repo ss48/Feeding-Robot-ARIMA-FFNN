@@ -350,8 +350,7 @@
   <joint name="feeder_to_spoon_tip" type="fixed">
     <parent link="feeder_link"/>
     <child link="spoon_tip_frame"/>
-    <!-- Fork tip: 10cm forward of camera, 3.2cm below camera -->
-    <origin xyz="0.15 0 -0.0" rpy="0 0 0"/>
+    <origin xyz="${feeder_length + 0.02} 0 0" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== CAMERA (Raspberry Pi Camera V2.1) ==================== -->
@@ -379,8 +378,7 @@
   <joint name="camera_joint" type="fixed">
     <parent link="feeder_link"/>
     <child link="camera_link"/>
-    <!-- Camera on feeder body: fork is 10cm forward and 3.2cm below camera -->
-    <origin xyz="0.05 0 0.032" rpy="0 0 0"/>
+    <origin xyz="0.03 0 0.05" rpy="0 0 0"/>
   </joint>
 
   <link name="camera_optical_frame"/>
@@ -416,8 +414,7 @@
   <joint name="ultrasonic_joint" type="fixed">
     <parent link="feeder_link"/>
     <child link="ultrasonic_link"/>
-    <!-- Sonar: 8.9cm behind fork tip = ~6.1cm forward of feeder joint, below camera -->
-    <origin xyz="0.061 0 -0.01" rpy="0 0 0"/>
+    <origin xyz="0.03 0 -0.04" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== LOAD CELL (HX711) ==================== -->
