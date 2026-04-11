@@ -464,53 +464,117 @@ class FeedingFSMNode(Node):
                 self.get_logger().warn('Food lost during locate — proceeding anyway')
                 self._set_state(FeedingState.COLLECT_FOOD)
 
-        # ---- COLLECT_FOOD (approach → stab → hold → lift → confirm) ----
+        # ---- COLLECT_FOOD (sensor-verified: camera + sonar + force feedback) ----
         elif self.state == FeedingState.COLLECT_FOOD:
+            # Track which phase we're in (persists across ticks)
+            if not hasattr(self, '_collect_phase'):
+                self._collect_phase = 'approach'
+                self._phase_start = elapsed
+                self._stab_force_baseline = self.current_force
 
-            if elapsed < 3.0:
-                # Phase 1: Make sure fork is at plate_above position (3s settle)
+            phase_elapsed = elapsed - self._phase_start
+
+            # ---- APPROACH: position fork above food ----
+            if self._collect_phase == 'approach':
                 self._command_pose(POSES['plate_above'], duration_sec=3)
                 self.get_logger().info(
-                    f'Phase 1: Fork above food (force={self.current_force:.2f}N)',
-                    throttle_duration_sec=3.0)
-
-            elif elapsed < 7.0:
-                # Phase 2: Push fork DOWN into food — increase shoulder forward
-                stab_pose = list(POSES['plate_above'])
-                stab_pose[1] = stab_pose[1] + 0.15  # push shoulder more forward (deeper)
-                stab_pose[3] = stab_pose[3] - 0.1   # tilt fork more down
-                self._command_pose(stab_pose, duration_sec=2)
-                self.get_logger().info(
-                    f'Phase 2: Stabbing food (force={self.current_force:.2f}N)',
+                    f'APPROACH: positioning above food '
+                    f'(sonar={self.plate_distance:.1f}cm, force={self.current_force:.2f}N)',
                     throttle_duration_sec=2.0)
 
-            elif elapsed < 10.0:
-                # Phase 3: HOLD fork in food for 3s
-                self.get_logger().info(
-                    f'Phase 3: Holding in food (force={self.current_force:.2f}N)',
-                    throttle_duration_sec=3.0)
+                # Transition: arm settled at plate_above OR 4s timeout
+                if (self._at_target() and phase_elapsed > 2.0) or phase_elapsed > 4.0:
+                    self._stab_force_baseline = self.current_force
+                    self._collect_phase = 'stab'
+                    self._phase_start = elapsed
+                    self.get_logger().info('APPROACH done — starting stab')
 
-            elif elapsed < 14.0:
-                # Phase 4: LIFT — pull shoulder back, raise fork up slowly
+            # ---- STAB: push fork down into food ----
+            elif self._collect_phase == 'stab':
+                stab_pose = list(POSES['plate_above'])
+                stab_pose[1] = stab_pose[1] + 0.15  # shoulder forward (deeper)
+                stab_pose[3] = stab_pose[3] - 0.1   # fork more down
+                self._command_pose(stab_pose, duration_sec=2)
+
+                force_change = abs(self.current_force - self._stab_force_baseline)
+                self.get_logger().info(
+                    f'STAB: pushing fork down '
+                    f'(force={self.current_force:.2f}N, change={force_change:.2f}N, '
+                    f'sonar={self.plate_distance:.1f}cm)',
+                    throttle_duration_sec=1.0)
+
+                # Transition: force increased (fork hit food) OR sonar close OR timeout
+                if force_change > 0.5:
+                    self.get_logger().info(
+                        f'STAB: force contact detected ({force_change:.2f}N change)')
+                    self._collect_phase = 'hold'
+                    self._phase_start = elapsed
+                elif self.plate_distance < 5.0 and phase_elapsed > 2.0:
+                    self.get_logger().info(
+                        f'STAB: sonar confirms plate contact ({self.plate_distance:.1f}cm)')
+                    self._collect_phase = 'hold'
+                    self._phase_start = elapsed
+                elif phase_elapsed > 6.0:
+                    self.get_logger().warn('STAB: timeout — proceeding to hold')
+                    self._collect_phase = 'hold'
+                    self._phase_start = elapsed
+
+            # ---- HOLD: keep fork in food to ensure pierce ----
+            elif self._collect_phase == 'hold':
+                self.get_logger().info(
+                    f'HOLD: fork in food '
+                    f'(force={self.current_force:.2f}N, {phase_elapsed:.1f}s)',
+                    throttle_duration_sec=2.0)
+
+                # Transition: held for 3 seconds
+                if phase_elapsed > 3.0:
+                    self._collect_phase = 'lift'
+                    self._phase_start = elapsed
+                    self.get_logger().info('HOLD done — lifting food')
+
+            # ---- LIFT: raise fork off plate ----
+            elif self._collect_phase == 'lift':
                 lift_pose = list(POSES['plate_above'])
-                lift_pose[1] = lift_pose[1] - 0.4   # shoulder back (lift up)
-                lift_pose[3] = lift_pose[3] + 0.3   # tilt fork less (hold food horizontal)
+                lift_pose[1] = lift_pose[1] - 0.4   # shoulder back (raise up)
+                lift_pose[3] = lift_pose[3] + 0.3   # level fork to hold food
                 self._command_pose(lift_pose, duration_sec=4)
                 self.get_logger().info(
-                    f'Phase 4: Lifting food (force={self.current_force:.2f}N)',
-                    throttle_duration_sec=3.0)
+                    f'LIFT: raising fork '
+                    f'(force={self.current_force:.2f}N, sonar={self.plate_distance:.1f}cm)',
+                    throttle_duration_sec=2.0)
 
-            elif elapsed < 17.0:
-                # Phase 5: Hold lifted position — confirm food is on fork (3s)
-                self.get_logger().info(
-                    f'Phase 5: Food on fork? (force={self.current_force:.2f}N)',
-                    throttle_duration_sec=3.0)
+                # Transition: sonar shows increased distance (fork lifted) OR timeout
+                if self.plate_distance > 10.0 and phase_elapsed > 2.0:
+                    self.get_logger().info(
+                        f'LIFT: cleared plate (sonar={self.plate_distance:.1f}cm)')
+                    self._collect_phase = 'verify'
+                    self._phase_start = elapsed
+                elif phase_elapsed > 5.0:
+                    self._collect_phase = 'verify'
+                    self._phase_start = elapsed
 
-            else:
-                # Phase 6: Done — move to patient
+            # ---- VERIFY: check food is still on fork via camera ----
+            elif self._collect_phase == 'verify':
                 self.get_logger().info(
-                    f'Food collected (force={self.current_force:.2f}N) — moving to patient')
-                self._set_state(FeedingState.DETECT_PATIENT)
+                    f'VERIFY: food on fork? '
+                    f'(food_visible={self.food_visible}, force={self.current_force:.2f}N)',
+                    throttle_duration_sec=2.0)
+
+                if phase_elapsed > 3.0:
+                    if self.food_visible:
+                        self.get_logger().info(
+                            'VERIFY: camera still sees food — food is on fork!')
+                    else:
+                        self.get_logger().info(
+                            'VERIFY: food not visible — may be on fork (proceeding)')
+
+                    # Clean up phase tracking and move to patient
+                    del self._collect_phase
+                    del self._phase_start
+                    del self._stab_force_baseline
+                    self.get_logger().info(
+                        f'Food collected — moving to patient')
+                    self._set_state(FeedingState.DETECT_PATIENT)
 
         # ---- DETECT_PATIENT ----
         elif self.state == FeedingState.DETECT_PATIENT:
