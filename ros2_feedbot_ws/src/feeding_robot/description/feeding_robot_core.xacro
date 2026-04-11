@@ -68,6 +68,7 @@
           <mesh filename="${mesh_vis}/base_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="dark_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -121,6 +122,7 @@
           <mesh filename="${mesh_vis}/shoulder_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0.025 0 -0.088" rpy="0 0 0"/>
+        <material name="dark_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -174,6 +176,7 @@
           <mesh filename="${mesh_vis}/lower_arm_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0.016 0 -0.131" rpy="0 0 0"/>
+        <material name="light_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -234,6 +237,7 @@
           <mesh filename="${mesh_vis}/upper_arm_link.stl" scale="${stl_scale}"/>
         </geometry>
         <origin xyz="0.005 0 -0.331" rpy="0 0 0"/>
+        <material name="light_grey"/>
       </visual>
       <collision>
         <geometry>
@@ -294,6 +298,7 @@
         </geometry>
         <!-- Offset: shift mesh so wrist joint (CAD X=194,Y=0,Z=351) is at link origin -->
         <origin xyz="-0.194 0 -0.351" rpy="0 0 0"/>
+        <material name="black"/>
       </visual>
       <collision>
         <geometry>

@@ -549,13 +549,12 @@ class FeedingFSMNode(Node):
                     self._collect_phase = 'stab'
                     self._phase_start = elapsed
 
-            # ---- STAB: fork goes STRAIGHT DOWN into plate interior ----
+            # ---- STAB: fork goes gently DOWN into food ----
             elif self._collect_phase == 'stab':
                 stab_pose = list(POSES['plate_above'])
-                # ONLY change feeder joint — pure vertical descent
-                # Plate rim is 6cm — fork must stay inside the rim circle
-                stab_pose[3] = stab_pose[3] - 0.35  # moderate depth (don't hit plate bottom hard)
-                self._command_pose(stab_pose, duration_sec=3)
+                # Gentle feeder tilt — just enough to pierce food, not slam plate
+                stab_pose[3] = stab_pose[3] - 0.2  # gentle stab (was -0.35)
+                self._command_pose(stab_pose, duration_sec=4)  # slow (4 seconds)
 
                 force_change = abs(self.current_force - self._stab_force_baseline)
                 self.get_logger().info(
@@ -563,11 +562,16 @@ class FeedingFSMNode(Node):
                     f'sonar={self.plate_distance:.1f}cm',
                     throttle_duration_sec=1.0)
 
-                if force_change > 0.3 or phase_elapsed > 4.0:
+                # Stop as soon as force detected — don't keep pushing into plate
+                if force_change > 0.2:
+                    self.get_logger().info(
+                        f'STAB: contact detected ({force_change:.2f}N) — stop pushing')
                     self._collect_phase = 'hold'
                     self._phase_start = elapsed
-                    self.get_logger().info(
-                        f'STAB contact (force change={force_change:.2f}N)')
+                elif phase_elapsed > 4.0:
+                    self.get_logger().info('STAB: max time — holding')
+                    self._collect_phase = 'hold'
+                    self._phase_start = elapsed
 
             # ---- HOLD: keep fork pressed in food (3s) ----
             elif self._collect_phase == 'hold':
