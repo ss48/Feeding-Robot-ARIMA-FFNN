@@ -2194,6 +2194,259 @@ time,j1_target,j1_actual,j1_error,j1_predicted,j1_pred_error,...,fsm_state
 
 ---
 
+## Autonomous Feeding Sequence — Updated 2026-04-11
+
+### Calibrated Poses (from real hardware)
+
+All poses were manually calibrated using teleop on 2026-04-10:
+
+| Pose | base_y | lower_z | upper_z | feeder | Description |
+|------|--------|---------|---------|--------|-------------|
+| **home** | 0.121 | -0.325 | 0.227 | -1.448 | Camera sees plate from above |
+| **plate_above** | 0.077 | 0.529 | 0.026 | -1.643 | Fork positioned over plate center |
+| **pre_feed** | -1.342 | 0.652 | -1.727 | -1.083 | Rotated to patient, fork raised |
+| **feed** | -1.465 | 0.284 | -1.115 | -0.716 | Fork at patient's mouth |
+| **retract** | -1.342 | 0.163 | -1.724 | -1.083 | Pulling back from patient |
+
+Patient sits to the **left** of the robot (negative base_y rotation).
+
+### How to Recalibrate Poses
+
+```bash
+# 1. Launch hardware
+ros2 launch feeding_robot hardware.launch.py
+
+# 2. Start teleop in another terminal
+ros2 run feedbot_fusion teleop_arm
+
+# 3. Position the arm for each pose, then read joint angles
+ros2 topic echo /joint_states --once
+
+# 4. Update POSES dict in feeding_fsm_node.py with the values
+```
+
+### Complete Feeding Cycle
+
+```
+STARTUP:
+  1. Wait 5s for controllers
+  2. Lift arm to clear plate (3s)
+  3. Move to HOME position (4s)
+
+CYCLE (auto-repeats):
+  WAITING ──[plate + food detected]──> IDLE
+  IDLE ──[food visible]──> DETECT_FOOD
+  DETECT_FOOD ──[food classified]──> LOCATE_FOOD
+
+  LOCATE_FOOD (visual servoing):
+    1. Move to plate_above (4s settle)
+    2. Detect fork tip in camera
+    3. Detect food position in camera
+    4. Adjust base rotation to align fork tip with food
+    5. When fork tip aligned over food (error < 50px) → COLLECT_FOOD
+
+  COLLECT_FOOD (sensor-verified, 3 retries):
+    APPROACH: settle at plate_above (4s)
+    STAB: feeder joint down -0.2 rad (4s, force-limited)
+       → stops when force change > 0.2N (food contact)
+    HOLD: keep fork in food (3s)
+    LIFT_FORK: tilt feeder up +0.8 rad (3s, clears 6cm plate rim)
+    LIFT_ARM: raise shoulder (4s)
+    VERIFY: camera + force check
+       → force diff > 0.2N OR food disappeared from plate = SUCCESS
+       → food still on plate = RETRY (up to 3 attempts)
+
+  DETECT_PATIENT ──[face detected + expression "ready"]──> PRE_FEED
+  PRE_FEED ──[face approach IK + safe]──> FEED
+
+  FEED:
+    Wait for mouth open (5 consecutive frames = 0.5s)
+    Move to feed pose
+    Hold at mouth (3s for patient to take food)
+    → RETRACT
+
+  RETRACT:
+    Move to retract pose (4s)
+    Move to home (3s)
+    Pause at home (3s)
+    → WAITING (auto-restart)
+```
+
+### Visual Servoing — Fork-to-Food Alignment
+
+The camera sees both the fork tip and the food on the plate. The FSM uses this for precise alignment:
+
+```
+Camera view:
+  ┌─────────────────────────┐
+  │     🍎 food (cx,cy)     │
+  │                         │
+  │    ┃ fork tip (fx,fy)   │
+  │    ▼                    │
+  └─────────────────────────┘
+
+error_x = food_cx - fork_tip_x
+→ Adjust base rotation to minimize error_x
+→ When |error_x| < 50px → aligned → stab straight down
+```
+
+**Topics:**
+- `/fork_tip_position` (Point) — x,y in pixels, z=1.0 if detected
+- Fork tip drawn as **magenta circle** on `/vision/annotated_image`
+
+### Plate Mapping
+
+The vision node detects the plate as a circle:
+- `/plate_map` (Point) — x=center_x, y=center_y, z=radius (all in pixels)
+- Plate drawn as **yellow circle** on annotated image
+- FSM checks if food is near plate edge (within 30% of radius) and warns
+
+**Physical plate:** 18cm diameter, 6cm tall rim
+
+### Sensor-Verified Forking
+
+Each forking attempt uses three sensors for verification:
+
+| Sensor | Check | What It Confirms |
+|--------|-------|-----------------|
+| **Force** | Force change > 0.2N during stab | Fork hit food (contact) |
+| **Force** | Force change > 0.2N after lift | Food is on fork (weight) |
+| **Camera** | Food disappeared from plate after lift | Fork took the food |
+| **Sonar** | Distance > 10cm after lift | Fork cleared the plate |
+
+If verification **fails** (food still on plate + no force change):
+- Retries up to **3 times** (goes back to LOCATE_FOOD to re-align)
+- After 3 failures: proceeds anyway
+
+### Force-Limited Stabbing
+
+The fork stops pushing as soon as it detects contact:
+- Stab depth: feeder joint -0.2 rad (gentle)
+- Stab speed: 4 seconds (slow)
+- **Stops immediately** when force change > 0.2N
+- Prevents slamming fork into plate bottom
+
+### Two-Step Lift (Clears 6cm Plate Rim)
+
+1. **LIFT_FORK first**: Tilt feeder up +0.8 rad — fork clears the rim vertically
+2. **LIFT_ARM second**: Then raise shoulder — no horizontal drag across rim edge
+
+### Physical Sensor Positions (from measurements)
+
+| Component | Position Relative to Feeder Joint | Notes |
+|-----------|----------------------------------|-------|
+| Camera | 5cm forward, 3.2cm above fork | Sees plate, food, and fork tip |
+| Fork tip | 15cm forward of feeder joint | 10cm forward, 3.2cm below camera |
+| Sonar | 6.1cm forward, 1cm below camera | 8.9cm behind fork tip |
+| Force sensor | At feeder_length from joint | On fork shaft |
+
+### URDF Joint Axes
+
+All three pitch joints use inverted Y-axis to match Dynamixel servo direction:
+
+| Joint | Axis | Direction |
+|-------|------|-----------|
+| `base_y_joint` | `0 0 1` | Z-axis yaw (unchanged) |
+| `lower_z_joint` | `0 -1 0` | Inverted Y-axis pitch |
+| `upper_z_joint` | `0 -1 0` | Inverted Y-axis pitch |
+| `feeder_joint` | `0 -1 0` | Inverted Y-axis pitch |
+
+### Robot Dimensions (from URDF)
+
+```
+Base height:      0.088m (base_top_z)
+Shoulder height:  0.131m (shoulder_joint_z)
+Vertical arm:     0.200m (elbow_z - shoulder_z = 0.331 - 0.131)
+Horizontal arm:   0.199m (upper_arm_length)
+Feeder length:    0.148m
+Fork tip offset:  +0.02m (total reach from feeder joint: 0.168m)
+Plate distance:   0.30m from base axis (25cm from base front)
+Plate diameter:   0.18m (18cm)
+Plate rim height: 0.06m (6cm)
+```
+
+---
+
+## Complete Hardware Launch — All Nodes (Updated 2026-04-11)
+
+`ros2 launch feeding_robot hardware.launch.py` starts:
+
+| Node | Package | Purpose |
+|------|---------|---------|
+| `ros2_control_node` | controller_manager | Dynamixel hardware interface (4 joints) |
+| `robot_state_publisher` | robot_state_publisher | TF tree from URDF |
+| `joint_state_broadcaster` | controller_manager | Publishes `/joint_states` |
+| `arm_controller` | controller_manager | Joint trajectory controller (100 Hz) |
+| `feeding_camera` | v4l2_camera | Pi Camera → `/feeding_robot/camera/image_raw` |
+| `vision_node` | feedbot_fusion | Object/food/plate/fork detection (MediaPipe + HSV) |
+| `fusion_node` | feedbot_fusion | 6-state EKF sensor fusion |
+| `force_node` | feedbot_fusion | Force filtering (moving average) |
+| `fuzzy_controller` | feedbot_fusion | Fuzzy force/angle regulation |
+| `feeding_fsm_node` | feedbot_fusion | Autonomous feeding state machine |
+| `teensy_bridge` | feedbot_fusion | Teensy serial → force + sonar topics |
+| `sonar_bridge` | feedbot_fusion | Routes sonar to plate/mouth distance |
+| `face_node` | feedbot_fusion | MediaPipe face/mouth detection |
+| `estop_node` | feedbot_fusion | GPIO E-Stop button monitor |
+| `benchmark_node` | feedbot_fusion | Performance metrics (conditional) |
+| `arima_ffnn_node` | feedbot_fusion | ARIMA predictor (conditional, pid_arima mode) |
+| `rviz2` | rviz2 | Digital twin (conditional, digital_twin:=true) |
+
+### Launch Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `port_name` | `/dev/dynamixel` | Dynamixel USB port |
+| `teensy_port` | `/dev/teensy` | Teensy serial port |
+| `camera_device` | `/dev/video0` | Camera device path |
+| `use_meshes` | `true` | Use STL mesh files in URDF |
+| `digital_twin` | `false` | Launch RViz2 as digital twin |
+| `benchmark` | `false` | Enable performance benchmarking |
+| `mode` | `pid_only` | Control mode: `pid_only` or `pid_arima` |
+
+---
+
+## Complete ROS 2 Topic Map (Updated 2026-04-11)
+
+| Topic | Type | Source | Purpose |
+|-------|------|--------|---------|
+| `/joint_states` | JointState | joint_state_broadcaster | Joint positions/velocities |
+| `/feeding_robot/camera/image_raw` | Image | v4l2_camera | Camera feed (640x480) |
+| `/feeding_robot/camera/camera_info` | CameraInfo | v4l2_camera | Camera intrinsics |
+| `/vision/annotated_image` | Image | vision_node | Camera with bounding boxes drawn |
+| `/food_visible` | Bool | vision_node | Food detected flag |
+| `/food_center` | Point | vision_node | Food position in pixels |
+| `/food_type` | String | vision_node | Food class name |
+| `/food_bearing` | Point | vision_node | Food bearing + depth |
+| `/detected_fruits` | Float64MultiArray | vision_node | All food detections |
+| `/plate_detected` | Bool | vision_node | Plate found |
+| `/plate_map` | Point | vision_node | Plate center + radius (pixels) |
+| `/fork_tip_position` | Point | vision_node | Fork tip x,y in pixels |
+| `/objects_detected` | String | vision_node | All detected objects |
+| `/face_detected` | Bool | face_node | Face found |
+| `/face_center` | Point | face_node | Face position in pixels |
+| `/face_bearing` | Point | face_node | Face bearing + depth |
+| `/mouth_open` | Bool | face_node | Mouth open/closed |
+| `/mouth_aspect_ratio` | Float64 | face_node | Raw MAR value |
+| `/face_expression` | String | face_node | "ready"/"not_ready"/"no_face" |
+| `/mouth_ready_prediction` | Bool | face_node | Combined readiness |
+| `/spoon_force` | Float64 | teensy_bridge | Force sensor (N) |
+| `/spoon/wrench` | WrenchStamped | teensy_bridge | Force as wrench |
+| `/feeding_robot/ultrasonic/range` | Range | teensy_bridge | Sonar range |
+| `/sonar_raw_cm` | Float64 | teensy_bridge | Raw sonar (cm) |
+| `/sonar_plate_distance` | Float64 | sonar_bridge | Distance to plate (cm) |
+| `/sonar_mouth_distance` | Float64 | sonar_bridge | Distance to mouth (cm) |
+| `/food_position_3d` | Point | fusion_node | EKF-fused 3D food position |
+| `/face_position_3d` | Point | fusion_node | EMA-smoothed face position |
+| `/plate_distance` | Float64 | fusion_node | Fused plate distance (cm) |
+| `/mouth_distance` | Float64 | fusion_node | Fused mouth distance (cm) |
+| `/fusion_confidence` | Float64 | fusion_node | Overall confidence [0-1] |
+| `/sensor_health` | Float64MultiArray | fusion_node | Per-sensor health scores |
+| `/emergency_stop` | Bool | estop_node | E-Stop state |
+| `/feeding_state` | String | feeding_fsm | Current FSM state |
+| `/benchmark/metrics` | String | benchmark_node | JSON performance metrics |
+
+---
+
 ## Quick Start Checklist
 
 ```bash
@@ -2204,7 +2457,7 @@ ssh ss@<pi-ip>
 sudo chmod 666 /dev/ttyACM*
 sudo udevadm control --reload-rules && sudo udevadm trigger
 
-# 3. Build
+# 3. Build (from workspace directory — NOT repo root)
 cd ~/feeding_robot_ws/ros2_feedbot_ws
 colcon build --symlink-install
 source install/setup.bash
@@ -2219,11 +2472,19 @@ ros2 launch feeding_robot hardware.launch.py digital_twin:=true
 source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
 ros2 run feedbot_fusion teleop_arm
 
-# 6. Monitor sensors (separate terminal)
+# 6. Monitor autonomous feeding (separate terminal)
 source ~/feeding_robot_ws/ros2_feedbot_ws/install/setup.bash
-ros2 topic echo /face_detected --once
-ros2 topic echo /food_visible --once
-ros2 topic echo /objects_detected
-ros2 topic echo /spoon_force --once
-ros2 topic echo /joint_states --once
+ros2 topic echo /feeding_state          # FSM state
+ros2 topic echo /objects_detected       # What camera sees
+ros2 topic echo /fork_tip_position      # Fork tip tracking
+ros2 topic echo /plate_map              # Plate circle detection
+ros2 topic echo /face_detected --once   # Face detection
+ros2 topic echo /spoon_force --once     # Force sensor
+ros2 topic echo /sonar_raw_cm --once    # Sonar distance
+
+# 7. Manual start (if auto-start doesn't trigger)
+ros2 topic pub /feeding_start std_msgs/msg/Bool "{data: true}" --once
+
+# 8. Software E-Stop
+ros2 topic pub /emergency_stop_sw std_msgs/msg/Bool "{data: true}" --once
 ```
