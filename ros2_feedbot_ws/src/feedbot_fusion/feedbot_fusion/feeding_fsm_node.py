@@ -175,11 +175,22 @@ class FeedingFSMNode(Node):
         self.state_pub = self.create_publisher(String, '/feeding_state', 10)
         self.food_type_pub = self.create_publisher(String, '/food_type', 10)
 
+        # Send home pose on startup after a short delay
+        self._homed = False
+        self.create_timer(5.0, self._go_home_once)
+
         # 10 Hz FSM tick
         self.timer = self.create_timer(0.1, self.tick)
 
         self.get_logger().info(
             'Feeding FSM started (real hardware — FollowJointTrajectory action)')
+
+    def _go_home_once(self):
+        """Send arm to home position once on startup."""
+        if not self._homed:
+            self._homed = True
+            self.get_logger().info('Moving arm to HOME position on startup...')
+            self._command_pose(POSES['home'], duration_sec=5)
 
     # ---- Callbacks ----
     def joint_cb(self, msg):
