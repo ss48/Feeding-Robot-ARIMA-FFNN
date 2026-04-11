@@ -625,50 +625,65 @@ class FeedingFSMNode(Node):
                     self._collect_phase = 'verify'
                     self._phase_start = elapsed
 
-            # ---- VERIFY: check if food is actually on the fork ----
+            # ---- INSPECT: tilt camera to look at fork tip ----
             elif self._collect_phase == 'verify':
-                # Two checks:
-                # 1. Force: if force dropped significantly after lift, food fell off
-                # 2. Camera: if food is still visible on plate = fork missed
-                force_after = self.current_force
-                force_diff = abs(force_after - self._stab_force_baseline)
-                food_still_on_plate = self.food_visible
+                if phase_elapsed < 3.0:
+                    # Step 1: Tilt feeder so camera looks at the fork tip
+                    # Camera is above fork — tilt feeder to angle camera down at fork
+                    inspect_pose = list(POSES['home'])
+                    inspect_pose[3] = -0.5  # camera angled to see fork tip
+                    self._command_pose(inspect_pose, duration_sec=2)
+                    self.get_logger().info(
+                        f'INSPECT: tilting camera to check fork...',
+                        throttle_duration_sec=2.0)
 
-                self.get_logger().info(
-                    f'VERIFY: force={force_after:.2f}N (baseline={self._stab_force_baseline:.2f}N, '
-                    f'diff={force_diff:.2f}N), food_on_plate={food_still_on_plate}',
-                    throttle_duration_sec=1.0)
+                elif phase_elapsed < 6.0:
+                    # Step 2: Camera is now looking at fork area — check for food
+                    force_after = self.current_force
+                    force_diff = abs(force_after - self._stab_force_baseline)
+                    food_visible_on_fork = self.food_visible
 
-                if phase_elapsed > 3.0:
-                    # Decide: food on fork or retry?
+                    self.get_logger().info(
+                        f'INSPECT: looking at fork — '
+                        f'food_visible={food_visible_on_fork}, '
+                        f'force={force_after:.2f}N (diff={force_diff:.2f}N)',
+                        throttle_duration_sec=1.0)
+
+                else:
+                    # Step 3: Decide — food on fork or retry?
+                    force_after = self.current_force
+                    force_diff = abs(force_after - self._stab_force_baseline)
+                    food_on_fork = self.food_visible
                     forked = False
 
-                    if force_diff > 0.2:
-                        self.get_logger().info('VERIFY: force confirms food on fork!')
+                    if food_on_fork:
+                        self.get_logger().info(
+                            'INSPECT: camera SEES food on fork!')
                         forked = True
-                    elif not food_still_on_plate:
-                        self.get_logger().info('VERIFY: food disappeared from plate — likely forked!')
+                    elif force_diff > 0.2:
+                        self.get_logger().info(
+                            f'INSPECT: force confirms food on fork ({force_diff:.2f}N)')
                         forked = True
+                    else:
+                        self.get_logger().warn(
+                            'INSPECT: NO food detected on fork')
 
                     if forked:
-                        # Success — clean up and move to patient
                         self._stab_attempts = 0
                         self._cleanup_collect()
-                        self.get_logger().info('Food forked successfully — moving to patient')
+                        self.get_logger().info(
+                            'Food confirmed on fork — moving to patient')
                         self._set_state(FeedingState.DETECT_PATIENT)
                     else:
-                        # Failed — retry or give up
                         self._stab_attempts += 1
                         if self._stab_attempts < 3:
                             self.get_logger().warn(
-                                f'VERIFY FAILED: food still on plate — '
-                                f'retry {self._stab_attempts}/3')
+                                f'Fork empty — retry {self._stab_attempts}/3')
                             self._cleanup_collect()
-                            # Go back to LOCATE_FOOD to re-center and try again
                             self._set_state(FeedingState.LOCATE_FOOD)
                         else:
                             self.get_logger().warn(
-                                'VERIFY FAILED: 3 attempts exhausted — proceeding anyway')
+                                '3 attempts failed — proceeding anyway')
                             self._stab_attempts = 0
                             self._cleanup_collect()
                             self._set_state(FeedingState.DETECT_PATIENT)
