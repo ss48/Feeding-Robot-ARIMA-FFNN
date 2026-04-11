@@ -367,6 +367,7 @@
       </geometry>
       <origin xyz="${-0.194 - 0.03} 0 ${-0.351 + 0.05}" rpy="0 0 0"/>
     </collision>
+    </collision>
     <inertial>
       <mass value="0.003"/>
       <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
@@ -377,7 +378,7 @@
   <joint name="camera_joint" type="fixed">
     <parent link="feeder_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.03 0 0.05" rpy="0 0 0"/>
+    <origin xyz="0.03 0 -0.05" rpy="0 0 0"/>
   </joint>
 
   <link name="camera_optical_frame"/>
@@ -412,7 +413,7 @@
   <joint name="ultrasonic_joint" type="fixed">
     <parent link="feeder_link"/>
     <child link="ultrasonic_link"/>
-    <origin xyz="0.03 0 -0.04" rpy="0 0 0"/>
+    <origin xyz="0.03 0 0.04" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== LOAD CELL (HX711) ==================== -->
@@ -466,8 +467,8 @@
   <joint name="plate_joint" type="fixed">
     <parent link="world"/>
     <child link="plate_link"/>
-    <!-- Plate: 25cm from base front, on table surface below feeder head -->
-    <origin xyz="-0.25 0 -0.10" rpy="0 0 0"/>
+    <!-- Plate: below feeder head (arm extends to -X in RViz due to flipped axes) -->
+    <origin xyz="-0.25 0.0 -0.15" rpy="0 0 0"/>
   </joint>
 
 </robot>
