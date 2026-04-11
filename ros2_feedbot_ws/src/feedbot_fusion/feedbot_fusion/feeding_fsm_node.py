@@ -192,19 +192,31 @@ class FeedingFSMNode(Node):
             'Feeding FSM started (real hardware — FollowJointTrajectory action)')
 
     def _go_home_once(self):
-        """Startup: lift arm up, then position for top-down plate view."""
+        """Startup: lift fork FIRST (clear plate), then raise arm."""
         if not self._homed:
             self._homed = True
-            # Step 1: Lift arm straight up from any position (clear plate)
+            # Step 1: ONLY tilt feeder up — don't move shoulder yet!
+            # This lifts the fork straight up out of the plate without dragging
             cur = [self.current_positions[j] for j in JOINT_NAMES]
-            lift_pose = list(cur)
-            lift_pose[1] = -0.5   # shoulder back (lift up)
-            lift_pose[3] = -0.3   # feeder less tilted (fork clears plate)
-            self.get_logger().info('Step 1: Lifting arm to clear plate...')
-            self._command_pose(lift_pose, duration_sec=4)
+            lift_fork_pose = list(cur)
+            lift_fork_pose[3] = -0.3  # feeder tilts up (fork clears plate rim)
+            # Keep shoulder, elbow unchanged — no horizontal motion
+            self.get_logger().info('Step 1: Lifting fork out of plate (no drag)...')
+            self._command_pose(lift_fork_pose, duration_sec=3)
 
-            # Step 2: Move to top-down plate view
-            self.create_timer(5.0, self._go_to_top_view)
+            # Step 2: Now raise the arm (fork is already clear)
+            self.create_timer(4.0, self._raise_arm)
+
+    def _raise_arm(self):
+        """Raise arm after fork has cleared the plate."""
+        cur = [self.current_positions[j] for j in JOINT_NAMES]
+        raise_pose = list(cur)
+        raise_pose[1] = -0.3  # shoulder back (lift arm up)
+        self.get_logger().info('Step 2: Raising arm (fork already clear)...')
+        self._command_pose(raise_pose, duration_sec=3)
+
+        # Step 3: Move to top-down plate view
+        self.create_timer(4.0, self._go_to_top_view)
 
     def _go_to_top_view(self):
         """Position arm above plate with camera looking straight down."""
