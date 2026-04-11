@@ -357,14 +357,15 @@
   <link name="camera_link">
     <visual>
       <geometry>
-        <box size="0.025 0.024 0.009"/>
+        <mesh filename="${mesh_vis}/camera.stl" scale="${stl_scale}"/>
       </geometry>
-      <material name="green"/>
+      <origin xyz="${-0.194 - 0.03} 0 ${-0.351 + 0.05}" rpy="0 0 0"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.025 0.024 0.009"/>
+        <mesh filename="${mesh_vis}/camera.stl" scale="${stl_scale}"/>
       </geometry>
+      <origin xyz="${-0.194 - 0.03} 0 ${-0.351 + 0.05}" rpy="0 0 0"/>
     </collision>
     <inertial>
       <mass value="0.003"/>
@@ -391,14 +392,15 @@
   <link name="ultrasonic_link">
     <visual>
       <geometry>
-        <box size="0.045 0.020 0.015"/>
+        <mesh filename="${mesh_vis}/sonar.stl" scale="${stl_scale}"/>
       </geometry>
-      <material name="blue"/>
+      <origin xyz="${-0.194 - 0.03} -0.116 ${-0.351 - 0.04}" rpy="0 0 0"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.045 0.020 0.015"/>
+        <mesh filename="${mesh_vis}/sonar.stl" scale="${stl_scale}"/>
       </geometry>
+      <origin xyz="${-0.194 - 0.03} -0.116 ${-0.351 - 0.04}" rpy="0 0 0"/>
     </collision>
     <inertial>
       <mass value="0.010"/>
@@ -465,7 +467,7 @@
     <parent link="world"/>
     <child link="plate_link"/>
     <!-- Plate: 25cm from base front, on table surface below feeder head -->
-    <origin xyz="0.25 0.25 -0.10" rpy="0 0 0"/>
+    <origin xyz="-0.25 0 -0.10" rpy="0 0 0"/>
   </joint>
 
 </robot>
