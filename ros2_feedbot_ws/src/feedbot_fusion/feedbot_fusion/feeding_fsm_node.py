@@ -186,11 +186,24 @@ class FeedingFSMNode(Node):
             'Feeding FSM started (real hardware — FollowJointTrajectory action)')
 
     def _go_home_once(self):
-        """Send arm to home position once on startup."""
+        """Lift arm first to clear the plate, then go home."""
         if not self._homed:
             self._homed = True
-            self.get_logger().info('Moving arm to HOME position on startup...')
-            self._command_pose(POSES['home'], duration_sec=5)
+            # Step 1: Lift straight up from current position (clear the plate)
+            cur = [self.current_positions[j] for j in JOINT_NAMES]
+            lift_pose = list(cur)
+            lift_pose[1] = -0.5   # shoulder back (lift up)
+            lift_pose[3] = -0.5   # feeder less tilted (fork clears plate)
+            self.get_logger().info('Lifting arm to clear plate...')
+            self._command_pose(lift_pose, duration_sec=3)
+
+            # Step 2: Go home after lift (delayed)
+            self.create_timer(4.0, self._go_home_after_lift)
+
+    def _go_home_after_lift(self):
+        """Move to home after lifting clear of plate."""
+        self.get_logger().info('Moving to HOME position...')
+        self._command_pose(POSES['home'], duration_sec=4)
 
     # ---- Callbacks ----
     def joint_cb(self, msg):
@@ -446,51 +459,56 @@ class FeedingFSMNode(Node):
                 self.pickup_pose = None
                 self._set_state(FeedingState.COLLECT_FOOD)
 
-        # ---- COLLECT_FOOD (multi-phase: approach → descend → stab → verify → lift) ----
+        # ---- COLLECT_FOOD (multi-phase: approach → stab → hold → lift → confirm) ----
         elif self.state == FeedingState.COLLECT_FOOD:
-            FORK_FORCE_THRESHOLD = 1.0  # N — force confirming fork contact with food
-            LIFT_FORCE_THRESHOLD = 0.5  # N — force confirming food is on fork after lifting
+            FORK_FORCE_THRESHOLD = 1.0   # N — fork contact with food
+            LIFT_FORCE_THRESHOLD = 0.5   # N — food on fork after lifting
 
-            if elapsed < 2.0:
-                # Phase 1: Position above the food
+            if elapsed < 3.0:
+                # Phase 1: Position above the food (3s to settle)
                 if self.pickup_pose is not None:
-                    # IK-computed approach from sensor data
                     approach = list(self.pickup_pose)
-                    approach[3] = -1.2  # feeder tilted down but not fully stabbing yet
+                    approach[3] = -1.2
                     self._command_pose(approach)
                 else:
                     self._command_pose(POSES['plate_above'])
                 self.get_logger().info(
-                    f'Approaching food (sonar={self.plate_distance:.1f}cm, '
-                    f'force={self.current_force:.2f}N)',
+                    f'Phase 1: Approaching food (sonar={self.plate_distance:.1f}cm)',
+                    throttle_duration_sec=3.0)
+
+            elif elapsed < 6.0:
+                # Phase 2: Descend and stab food (3s)
+                self._command_pose(POSES['plate_above'])
+                self.get_logger().info(
+                    f'Phase 2: Stabbing (force={self.current_force:.2f}N)',
                     throttle_duration_sec=2.0)
 
-            elif elapsed < 5.0:
-                # Phase 2: Descend and stab — go to full plate_above (fork down into food)
+            elif elapsed < 9.0:
+                # Phase 3: HOLD in food — keep fork in food for 3s to ensure pierce
                 self._command_pose(POSES['plate_above'])
-                if self.current_force > FORK_FORCE_THRESHOLD:
-                    self.get_logger().info(
-                        f'Fork contact! force={self.current_force:.2f}N — '
-                        f'food stabbed at sonar={self.plate_distance:.1f}cm')
+                self.get_logger().info(
+                    f'Phase 3: Holding in food (force={self.current_force:.2f}N)',
+                    throttle_duration_sec=3.0)
 
-            elif elapsed < 8.0:
-                # Phase 3: Lift food off plate — raise shoulder, keep fork tilted
-                lift_pose = list(POSES['plate_above'])
-                lift_pose[1] = lift_pose[1] - 0.3  # raise shoulder (less forward lean)
-                lift_pose[3] = -1.0  # tilt fork slightly less to hold food
-                self._command_pose(lift_pose)
+            elif elapsed < 13.0:
+                # Phase 4: Lift food off plate (4s slow lift)
+                lift_pose = list(POSES['home'])
+                lift_pose[3] = -1.0  # keep fork tilted to hold food
+                self._command_pose(lift_pose, duration_sec=4)
+                self.get_logger().info(
+                    f'Phase 4: Lifting food (force={self.current_force:.2f}N)',
+                    throttle_duration_sec=3.0)
 
-                if self.current_force > LIFT_FORCE_THRESHOLD:
-                    self.get_logger().info(
-                        f'Food on fork confirmed (force={self.current_force:.2f}N) — '
-                        f'moving to patient')
-                    self._set_state(FeedingState.DETECT_PATIENT)
+            elif elapsed < 15.0:
+                # Phase 5: Pause to confirm food is on fork (2s)
+                self.get_logger().info(
+                    f'Phase 5: Confirming food on fork (force={self.current_force:.2f}N)',
+                    throttle_duration_sec=2.0)
 
             else:
-                # Phase 4: Timeout — assume food collected, proceed
+                # Phase 6: Done — move to patient
                 self.get_logger().info(
-                    f'Collection complete (force={self.current_force:.2f}N, '
-                    f'sonar={self.plate_distance:.1f}cm) — moving to patient')
+                    f'Food collected (force={self.current_force:.2f}N) — moving to patient')
                 self._set_state(FeedingState.DETECT_PATIENT)
 
         # ---- DETECT_PATIENT ----
@@ -561,10 +579,16 @@ class FeedingFSMNode(Node):
             if self.consecutive_mouth_open >= MOUTH_OPEN_CONFIRM_FRAMES or self.override:
                 self._command_pose(POSES['feed'])
                 if self._at_target() or elapsed > 5.0:
-                    self.feed_count += 1
-                    self.get_logger().info(f'Feed #{self.feed_count} delivered!')
-                    self.consecutive_mouth_open = 0
-                    self._set_state(FeedingState.RETRACT)
+                    # Hold at mouth for 3 seconds so patient can take food
+                    if elapsed > 8.0:
+                        self.feed_count += 1
+                        self.get_logger().info(f'Feed #{self.feed_count} delivered!')
+                        self.consecutive_mouth_open = 0
+                        self._set_state(FeedingState.RETRACT)
+                    else:
+                        self.get_logger().info(
+                            'Holding at mouth — patient taking food...',
+                            throttle_duration_sec=2.0)
             elif elapsed % 2.0 < 0.15:
                 self.get_logger().info(
                     f'Waiting for mouth ({self.consecutive_mouth_open}/'
@@ -576,8 +600,18 @@ class FeedingFSMNode(Node):
 
         # ---- RETRACT ----
         elif self.state == FeedingState.RETRACT:
-            self._command_pose(POSES['retract'])
-            if self._at_target() or elapsed > 5.0:
+            if elapsed < 4.0:
+                # Phase 1: Move to retract position (4s)
+                self._command_pose(POSES['retract'], duration_sec=4)
+            elif elapsed < 7.0:
+                # Phase 2: Move to home (3s)
+                self._command_pose(POSES['home'], duration_sec=3)
+            elif elapsed < 10.0:
+                # Phase 3: Pause at home (3s) before restarting
+                self.get_logger().info(
+                    'Pausing at home before next cycle...',
+                    throttle_duration_sec=3.0)
+            else:
                 self.get_logger().info(f'Cycle #{self.feed_count} complete — auto-restarting')
                 self._set_state(FeedingState.WAITING)
 
