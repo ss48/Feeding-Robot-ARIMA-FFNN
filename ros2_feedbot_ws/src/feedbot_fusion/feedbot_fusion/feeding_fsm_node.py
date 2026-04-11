@@ -192,23 +192,36 @@ class FeedingFSMNode(Node):
             'Feeding FSM started (real hardware — FollowJointTrajectory action)')
 
     def _go_home_once(self):
-        """Lift arm first to clear the plate, then go home."""
+        """Startup: lift arm up, then position for top-down plate view."""
         if not self._homed:
             self._homed = True
-            # Step 1: Lift straight up from current position (clear the plate)
+            # Step 1: Lift arm straight up from any position (clear plate)
             cur = [self.current_positions[j] for j in JOINT_NAMES]
             lift_pose = list(cur)
             lift_pose[1] = -0.5   # shoulder back (lift up)
-            lift_pose[3] = -0.5   # feeder less tilted (fork clears plate)
-            self.get_logger().info('Lifting arm to clear plate...')
-            self._command_pose(lift_pose, duration_sec=3)
+            lift_pose[3] = -0.3   # feeder less tilted (fork clears plate)
+            self.get_logger().info('Step 1: Lifting arm to clear plate...')
+            self._command_pose(lift_pose, duration_sec=4)
 
-            # Step 2: Go home after lift (delayed)
-            self.create_timer(4.0, self._go_home_after_lift)
+            # Step 2: Move to top-down plate view
+            self.create_timer(5.0, self._go_to_top_view)
 
-    def _go_home_after_lift(self):
-        """Move to home after lifting clear of plate."""
-        self.get_logger().info('Moving to HOME position...')
+    def _go_to_top_view(self):
+        """Position arm above plate with camera looking straight down."""
+        # Arm up tall, feeder pointing down → camera has top-down view of plate
+        top_view_pose = list(POSES['plate_above'])
+        # Adjust for clear top-down view: shoulder less forward, feeder straight down
+        top_view_pose[1] = 0.2    # shoulder slightly forward (arm over plate)
+        top_view_pose[3] = -1.5   # feeder pointing straight down (top-down camera view)
+        self.get_logger().info('Step 2: Moving to top-down plate view...')
+        self._command_pose(top_view_pose, duration_sec=4)
+
+        # Step 3: Settle at home after scanning
+        self.create_timer(6.0, self._go_home_after_scan)
+
+    def _go_home_after_scan(self):
+        """Move to home position after initial plate scan."""
+        self.get_logger().info('Step 3: Moving to HOME...')
         self._command_pose(POSES['home'], duration_sec=4)
 
     # ---- Callbacks ----
