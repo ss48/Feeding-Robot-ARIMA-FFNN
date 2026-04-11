@@ -121,6 +121,8 @@ class FeedingFSMNode(Node):
         self.mouth_open = False
         self.face_expression = 'no_face'
         self.plate_detected = False
+        self.plate_center = (320.0, 240.0)  # plate center in pixels
+        self.plate_radius = 0.0             # plate radius in pixels
         self.consecutive_mouth_open = 0
         self.face_lost_count = 0
 
@@ -158,6 +160,7 @@ class FeedingFSMNode(Node):
         self.create_subscription(Bool, '/mouth_open', self.mouth_open_cb, 10)
         self.create_subscription(String, '/face_expression', self.expression_cb, 10)
         self.create_subscription(Bool, '/plate_detected', self.plate_detected_cb, 10)
+        self.create_subscription(Point, '/plate_map', self.plate_map_cb, 10)
 
         # ---- Subscribers: EKF fusion ----
         self.create_subscription(Float64, '/plate_distance', self.plate_dist_cb, 10)
@@ -240,6 +243,9 @@ class FeedingFSMNode(Node):
     def mouth_open_cb(self, msg): self.mouth_open = msg.data
     def expression_cb(self, msg): self.face_expression = msg.data
     def plate_detected_cb(self, msg): self.plate_detected = msg.data
+    def plate_map_cb(self, msg):
+        self.plate_center = (msg.x, msg.y)
+        self.plate_radius = msg.z
 
     def plate_dist_cb(self, msg): self.plate_distance = msg.data
     def mouth_dist_cb(self, msg): self.mouth_distance = msg.data
@@ -424,136 +430,171 @@ class FeedingFSMNode(Node):
             elif elapsed > STATE_TIMEOUT:
                 self._set_state(FeedingState.IDLE)
 
-        # ---- LOCATE_FOOD (visual servoing: adjust base to center food in camera) ----
+        # ---- LOCATE_FOOD (map plate + food, plan approach from above) ----
         elif self.state == FeedingState.LOCATE_FOOD:
-            # Phase 1: Move to plate_above to get camera view of food (4s settle)
+            # Phase 1: Move to plate_above to get camera view (4s settle)
             if elapsed < 4.0:
                 self._command_pose(POSES['plate_above'])
-                self.get_logger().info('Moving to plate_above to scan food...',
+                self.get_logger().info('Scanning plate and food...',
                                        throttle_duration_sec=4.0)
                 return
 
-            # Phase 2: Visual servoing — adjust base rotation to center food in camera
-            if self.food_visible and self.food_center[2] > 0:
-                cx = self.food_center[0]  # food x in pixels
-                img_center_x = 320.0      # camera center (640/2)
-                error_x = cx - img_center_x  # positive = food is right of center
-
-                # If food is roughly centered (within 80px), proceed to collect
-                if abs(error_x) < 80:
-                    self.get_logger().info(
-                        f'Food centered in camera (cx={cx:.0f}, error={error_x:.0f}px) '
-                        f'— ready to collect')
+            if not self.food_visible or self.food_center[2] <= 0:
+                if elapsed > STATE_TIMEOUT:
+                    self.get_logger().warn('Food lost — proceeding anyway')
                     self._set_state(FeedingState.COLLECT_FOOD)
-                else:
-                    # Adjust base rotation to center the food
-                    # Small proportional correction: ~0.002 rad per pixel of error
-                    correction = error_x * 0.002
-                    adjusted_pose = list(POSES['plate_above'])
-                    cur_base = self.current_positions['base_y_joint']
-                    adjusted_pose[0] = cur_base + correction
-                    adjusted_pose[0] = max(JOINT_LIMITS['base_y_joint'][0],
-                                           min(adjusted_pose[0], JOINT_LIMITS['base_y_joint'][1]))
-                    self._command_pose(adjusted_pose, duration_sec=2)
-                    self.get_logger().info(
-                        f'Visual servoing: food at cx={cx:.0f}, error={error_x:.0f}px, '
-                        f'adjusting base by {math.degrees(correction):.1f}°',
-                        throttle_duration_sec=1.0)
+                return
 
-            elif elapsed > STATE_TIMEOUT:
-                self.get_logger().warn('Food lost during locate — proceeding anyway')
+            # Phase 2: Map plate and food positions
+            food_cx = self.food_center[0]
+            food_cy = self.food_center[1]
+            plate_cx = self.plate_center[0]
+            plate_cy = self.plate_center[1]
+            plate_r = self.plate_radius
+
+            # Check if food is near the plate edge
+            if plate_r > 10:
+                dist_from_center = math.sqrt(
+                    (food_cx - plate_cx)**2 + (food_cy - plate_cy)**2)
+                edge_margin = plate_r - dist_from_center
+                near_edge = edge_margin < (plate_r * 0.3)  # within 30% of edge
+            else:
+                near_edge = False
+                edge_margin = 999
+
+            self.get_logger().info(
+                f'Plate map: center=({plate_cx:.0f},{plate_cy:.0f}) r={plate_r:.0f}px | '
+                f'Food at ({food_cx:.0f},{food_cy:.0f}) | '
+                f'Edge margin={edge_margin:.0f}px {"(NEAR EDGE!)" if near_edge else ""}',
+                throttle_duration_sec=2.0)
+
+            # Phase 3: Adjust base to position fork DIRECTLY ABOVE the food
+            img_center_x = 320.0
+            error_x = food_cx - img_center_x
+
+            if abs(error_x) < 60:
+                # Food is centered under fork — ready to collect
+                self.get_logger().info(
+                    f'Fork aligned above food (error={error_x:.0f}px) — ready to stab')
+                # Store whether food is near edge for approach planning
+                self._food_near_edge = near_edge
+                self._set_state(FeedingState.COLLECT_FOOD)
+            else:
+                # Adjust base rotation to center food under fork
+                correction = error_x * 0.0015  # gentler correction
+                adjusted_pose = list(POSES['plate_above'])
+                cur_base = self.current_positions['base_y_joint']
+                adjusted_pose[0] = cur_base + correction
+                adjusted_pose[0] = max(JOINT_LIMITS['base_y_joint'][0],
+                                       min(adjusted_pose[0], JOINT_LIMITS['base_y_joint'][1]))
+                self._command_pose(adjusted_pose, duration_sec=2)
+
+            if elapsed > STATE_TIMEOUT:
+                self._food_near_edge = False
                 self._set_state(FeedingState.COLLECT_FOOD)
 
-        # ---- COLLECT_FOOD (sensor-verified: camera + sonar + force feedback) ----
+        # ---- COLLECT_FOOD (plate-aware: approach from above, stab down, verify) ----
         elif self.state == FeedingState.COLLECT_FOOD:
-            # Track which phase we're in (persists across ticks)
             if not hasattr(self, '_collect_phase'):
                 self._collect_phase = 'approach'
                 self._phase_start = elapsed
                 self._stab_force_baseline = self.current_force
+                self._food_near_edge = getattr(self, '_food_near_edge', False)
 
             phase_elapsed = elapsed - self._phase_start
 
-            # ---- APPROACH: position fork above food ----
+            # ---- APPROACH: settle fork directly above food ----
             if self._collect_phase == 'approach':
                 self._command_pose(POSES['plate_above'], duration_sec=3)
                 self.get_logger().info(
-                    f'APPROACH: positioning above food '
+                    f'APPROACH: fork above food '
                     f'(sonar={self.plate_distance:.1f}cm, force={self.current_force:.2f}N)',
                     throttle_duration_sec=2.0)
 
-                # Transition: arm settled at plate_above OR 4s timeout
                 if (self._at_target() and phase_elapsed > 2.0) or phase_elapsed > 4.0:
                     self._stab_force_baseline = self.current_force
                     self._collect_phase = 'stab'
                     self._phase_start = elapsed
-                    self.get_logger().info('APPROACH done — starting stab')
+                    self.get_logger().info('APPROACH done — stabbing STRAIGHT DOWN')
 
-            # ---- STAB: push fork down into food ----
+            # ---- STAB: push fork STRAIGHT DOWN (feeder joint only, not shoulder) ----
             elif self._collect_phase == 'stab':
+                # Key fix: move fork DOWN by changing feeder joint (not shoulder)
+                # This keeps the fork vertical and avoids catching plate edges
                 stab_pose = list(POSES['plate_above'])
-                stab_pose[1] = stab_pose[1] + 0.15  # shoulder forward (deeper)
-                stab_pose[3] = stab_pose[3] - 0.1   # fork more down
+                # Only deepen the feeder tilt — go more negative (straight down)
+                stab_pose[3] = stab_pose[3] - 0.3   # fork pushes further down
+                # Do NOT change shoulder — this would move fork sideways into plate edge
                 self._command_pose(stab_pose, duration_sec=2)
 
                 force_change = abs(self.current_force - self._stab_force_baseline)
                 self.get_logger().info(
-                    f'STAB: pushing fork down '
+                    f'STAB DOWN: feeder pushing down '
                     f'(force={self.current_force:.2f}N, change={force_change:.2f}N, '
                     f'sonar={self.plate_distance:.1f}cm)',
                     throttle_duration_sec=1.0)
 
-                # Transition: force increased (fork hit food) OR sonar close OR timeout
-                if force_change > 0.5:
+                # Sensor feedback: force change OR sonar contact OR timeout
+                if force_change > 0.3:
                     self.get_logger().info(
-                        f'STAB: force contact detected ({force_change:.2f}N change)')
+                        f'STAB: force contact! ({force_change:.2f}N change)')
                     self._collect_phase = 'hold'
                     self._phase_start = elapsed
                 elif self.plate_distance < 5.0 and phase_elapsed > 2.0:
                     self.get_logger().info(
-                        f'STAB: sonar confirms plate contact ({self.plate_distance:.1f}cm)')
+                        f'STAB: sonar plate contact ({self.plate_distance:.1f}cm)')
                     self._collect_phase = 'hold'
                     self._phase_start = elapsed
-                elif phase_elapsed > 6.0:
-                    self.get_logger().warn('STAB: timeout — proceeding to hold')
+                elif phase_elapsed > 5.0:
+                    self.get_logger().warn('STAB: timeout — proceeding')
                     self._collect_phase = 'hold'
                     self._phase_start = elapsed
 
-            # ---- HOLD: keep fork in food to ensure pierce ----
+            # ---- HOLD: keep fork in food (3s) ----
             elif self._collect_phase == 'hold':
                 self.get_logger().info(
-                    f'HOLD: fork in food '
-                    f'(force={self.current_force:.2f}N, {phase_elapsed:.1f}s)',
+                    f'HOLD: fork in food ({phase_elapsed:.1f}s, '
+                    f'force={self.current_force:.2f}N)',
                     throttle_duration_sec=2.0)
 
-                # Transition: held for 3 seconds
                 if phase_elapsed > 3.0:
                     self._collect_phase = 'lift'
                     self._phase_start = elapsed
-                    self.get_logger().info('HOLD done — lifting food')
+                    self.get_logger().info('HOLD done — lifting STRAIGHT UP')
 
-            # ---- LIFT: raise fork off plate ----
+            # ---- LIFT: raise fork straight UP (reverse feeder, then shoulder) ----
             elif self._collect_phase == 'lift':
+                # First raise feeder (fork goes up), then pull shoulder back
+                # This lifts straight up — avoids dragging fork across plate edge
                 lift_pose = list(POSES['plate_above'])
-                lift_pose[1] = lift_pose[1] - 0.4   # shoulder back (raise up)
-                lift_pose[3] = lift_pose[3] + 0.3   # level fork to hold food
-                self._command_pose(lift_pose, duration_sec=4)
-                self.get_logger().info(
-                    f'LIFT: raising fork '
-                    f'(force={self.current_force:.2f}N, sonar={self.plate_distance:.1f}cm)',
-                    throttle_duration_sec=2.0)
+                if phase_elapsed < 2.0:
+                    # Step 1: Tilt feeder up FIRST (clears plate rim)
+                    lift_pose[3] = lift_pose[3] + 0.5   # fork tilts up significantly
+                    self._command_pose(lift_pose, duration_sec=2)
+                    self.get_logger().info(
+                        f'LIFT step 1: fork tilting up (clear rim)',
+                        throttle_duration_sec=2.0)
+                else:
+                    # Step 2: Then pull shoulder back (raise entire arm)
+                    lift_pose[1] = lift_pose[1] - 0.4   # shoulder back
+                    lift_pose[3] = lift_pose[3] + 0.5   # keep fork up
+                    self._command_pose(lift_pose, duration_sec=3)
+                    self.get_logger().info(
+                        f'LIFT step 2: shoulder raising '
+                        f'(sonar={self.plate_distance:.1f}cm)',
+                        throttle_duration_sec=2.0)
 
-                # Transition: sonar shows increased distance (fork lifted) OR timeout
-                if self.plate_distance > 10.0 and phase_elapsed > 2.0:
+                # Sensor: sonar confirms clearance
+                if self.plate_distance > 10.0 and phase_elapsed > 3.0:
                     self.get_logger().info(
                         f'LIFT: cleared plate (sonar={self.plate_distance:.1f}cm)')
                     self._collect_phase = 'verify'
                     self._phase_start = elapsed
-                elif phase_elapsed > 5.0:
+                elif phase_elapsed > 6.0:
                     self._collect_phase = 'verify'
                     self._phase_start = elapsed
 
-            # ---- VERIFY: check food is still on fork via camera ----
+            # ---- VERIFY: camera checks food is on fork ----
             elif self._collect_phase == 'verify':
                 self.get_logger().info(
                     f'VERIFY: food on fork? '
@@ -562,18 +603,14 @@ class FeedingFSMNode(Node):
 
                 if phase_elapsed > 3.0:
                     if self.food_visible:
-                        self.get_logger().info(
-                            'VERIFY: camera still sees food — food is on fork!')
+                        self.get_logger().info('VERIFY: camera sees food — forked!')
                     else:
-                        self.get_logger().info(
-                            'VERIFY: food not visible — may be on fork (proceeding)')
+                        self.get_logger().info('VERIFY: proceeding to patient')
 
-                    # Clean up phase tracking and move to patient
+                    # Clean up and move to patient
                     del self._collect_phase
                     del self._phase_start
                     del self._stab_force_baseline
-                    self.get_logger().info(
-                        f'Food collected — moving to patient')
                     self._set_state(FeedingState.DETECT_PATIENT)
 
         # ---- DETECT_PATIENT ----

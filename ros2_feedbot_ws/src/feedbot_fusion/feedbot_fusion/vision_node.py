@@ -176,6 +176,7 @@ class VisionNode(Node):
         self.fruits_pub = self.create_publisher(Float64MultiArray, '/detected_fruits', 10)
         self.bearing_pub = self.create_publisher(Point, '/food_bearing', 10)
         self.plate_pub = self.create_publisher(Bool, '/plate_detected', 10)
+        self.plate_map_pub = self.create_publisher(Point, '/plate_map', 10)  # x=cx, y=cy, z=radius (pixels)
         self.objects_pub = self.create_publisher(String, '/objects_detected', 10)
         self.annotated_pub = self.create_publisher(Image, '/vision/annotated_image', 10)
 
@@ -377,19 +378,21 @@ class VisionNode(Node):
     # Plate detection via shape analysis
     # ────────────────────────────────────────────────────────────────
     def _detect_plate(self, frame, all_names):
-        """Detect plate — from ML detections or shape analysis fallback."""
-        # Check if ML already found a plate/bowl
-        for name in all_names:
-            obj = name.split('(')[0]  # strip confidence
-            if obj in PLATE_NAMES:
-                return True
+        """Detect plate circle — returns (found, center_x, center_y, radius) in pixels."""
+        self._plate_cx = -1.0
+        self._plate_cy = -1.0
+        self._plate_radius = 0.0
 
-        # Shape-based fallback
+        # Shape-based: find largest circular contour
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (11, 11), 0)
-        edges = cv2.Canny(blurred, 50, 150)
+        edges = cv2.Canny(blurred, 30, 120)
         contours, _ = cv2.findContours(
             edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        best_plate = None
+        best_area = 0
+
         for cnt in contours:
             area = cv2.contourArea(cnt)
             if area < 5000:
@@ -398,8 +401,39 @@ class VisionNode(Node):
             if perimeter < 1:
                 continue
             circularity = 4 * math.pi * area / (perimeter * perimeter)
-            if circularity > 0.4:
+            if circularity > 0.3 and area > best_area:
+                best_area = area
+                best_plate = cnt
+
+        if best_plate is not None:
+            # Fit minimum enclosing circle
+            (cx, cy), radius = cv2.minEnclosingCircle(best_plate)
+            self._plate_cx = cx
+            self._plate_cy = cy
+            self._plate_radius = radius
+
+            # Draw plate circle on frame
+            cv2.circle(frame, (int(cx), int(cy)), int(radius), (0, 255, 255), 2)
+            cv2.circle(frame, (int(cx), int(cy)), 5, (0, 255, 255), -1)
+            cv2.putText(frame, f'plate r={int(radius)}px',
+                        (int(cx) - 50, int(cy) - int(radius) - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1)
+
+            # Publish plate map
+            plate_map_msg = Point()
+            plate_map_msg.x = float(cx)
+            plate_map_msg.y = float(cy)
+            plate_map_msg.z = float(radius)
+            self.plate_map_pub.publish(plate_map_msg)
+
+            return True
+
+        # Check ML names as fallback
+        for name in all_names:
+            obj = name.split('(')[0]
+            if obj in PLATE_NAMES:
                 return True
+
         return False
 
     # ────────────────────────────────────────────────────────────────
