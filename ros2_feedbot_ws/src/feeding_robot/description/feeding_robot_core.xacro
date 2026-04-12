@@ -120,6 +120,7 @@
         <geometry>
           <mesh filename="${mesh_vis}/shoulder_link.stl" scale="${stl_scale}"/>
         </geometry>
+        <!-- Shift mesh so base_y_joint (CAD 0,0,88) is at link origin -->
         <origin xyz="0 0 -0.088" rpy="0 0 0"/>
         <material name="dark_grey"/>
       </visual>
@@ -158,7 +159,8 @@
   <joint name="lower_z_joint" type="revolute">
     <parent link="shoulder_link"/>
     <child link="lower_arm_link"/>
-    <origin xyz="0 0 ${shoulder_joint_z - base_top_z}" rpy="0 0 0"/>
+    <!-- Shoulder joint in CAD: (-16, 0, 131) mm, relative to base top (0,0,88) -->
+    <origin xyz="-0.016 0 ${shoulder_joint_z - base_top_z}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <limit lower="${-90.0 * pi / 180.0}" upper="${90.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
@@ -219,7 +221,8 @@
   <joint name="upper_z_joint" type="revolute">
     <parent link="lower_arm_link"/>
     <child link="upper_arm_link"/>
-    <origin xyz="0 0 ${lower_arm_length}" rpy="0 0 0"/>
+    <!-- Elbow joint in CAD: (-5, 0, 331) mm, relative to shoulder (-16, 0, 131) -->
+    <origin xyz="0.011 0 ${lower_arm_length}" rpy="0 0 0"/>
     <axis xyz="0 -1 0"/>
     <limit lower="${-120.0 * pi / 180.0}" upper="${75.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
@@ -466,7 +469,8 @@
     <parent link="world"/>
     <child link="plate_link"/>
     <!-- Plate: below feeder head (arm extends to -X in RViz due to flipped axes) -->
-    <origin xyz="-0.25 0.0 -0.15" rpy="0 0 0"/>
+    <!--origin xyz="-0.25 0.0 -0.15" rpy="0 0 0"/-->
+    <origin xyz="0.25 -0.25 0.050" rpy="0 0 0"/>
   </joint>
 
 </robot>
