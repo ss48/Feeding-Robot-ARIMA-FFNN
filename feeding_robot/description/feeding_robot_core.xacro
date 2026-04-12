@@ -467,7 +467,7 @@
     <parent link="world"/>
     <child link="plate_link"/>
     <!-- Plate: below feeder head (arm extends to -X in RViz due to flipped axes) -->
-    <origin xyz="0.25 -0.25 0.050" rpy="0 0 0"/>
+    <origin xyz="0.3 -0.25 0.0750" rpy="0 0 0"/>
   </joint>
 
 </robot>
