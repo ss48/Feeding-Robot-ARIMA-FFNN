@@ -120,14 +120,14 @@
         <geometry>
           <mesh filename="${mesh_vis}/shoulder_link.stl" scale="${stl_scale}"/>
         </geometry>
-        <origin xyz="0.025 0 -0.088" rpy="0 0 0"/>
+        <origin xyz="0 0 -0.088" rpy="0 0 0"/>
         <material name="dark_grey"/>
       </visual>
       <collision>
         <geometry>
           <mesh filename="${mesh_col}/shoulder_link.stl" scale="${stl_scale}"/>
         </geometry>
-        <origin xyz="0.025 0 -0.088" rpy="0 0 0"/>
+        <origin xyz="0 0 -0.088" rpy="0 0 0"/>
       </collision>
     </xacro:if>
     <xacro:unless value="${use_meshes}">
