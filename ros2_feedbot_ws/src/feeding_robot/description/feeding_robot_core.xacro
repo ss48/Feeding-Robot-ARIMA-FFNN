@@ -159,8 +159,7 @@
   <joint name="lower_z_joint" type="revolute">
     <parent link="shoulder_link"/>
     <child link="lower_arm_link"/>
-    <!-- Shoulder joint in CAD: (-16, 0, 131) mm, relative to base top (0,0,88) -->
-    <origin xyz="-0.016 0 ${shoulder_joint_z - base_top_z}" rpy="0 0 0"/>
+    <origin xyz="0 0 ${shoulder_joint_z - base_top_z}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <limit lower="${-90.0 * pi / 180.0}" upper="${90.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
@@ -221,8 +220,7 @@
   <joint name="upper_z_joint" type="revolute">
     <parent link="lower_arm_link"/>
     <child link="upper_arm_link"/>
-    <!-- Elbow joint in CAD: (-5, 0, 331) mm, relative to shoulder (-16, 0, 131) -->
-    <origin xyz="0.011 0 ${lower_arm_length}" rpy="0 0 0"/>
+    <origin xyz="0 0 ${lower_arm_length}" rpy="0 0 0"/>
     <axis xyz="0 -1 0"/>
     <limit lower="${-120.0 * pi / 180.0}" upper="${75.0 * pi / 180.0}"
            velocity="${max_velocity}" effort="${max_effort}"/>
